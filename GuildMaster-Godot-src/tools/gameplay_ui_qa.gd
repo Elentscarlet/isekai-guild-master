@@ -45,6 +45,18 @@ func run():
 	ui._render();await frames()
 	check(ui.announcements.find_child("ActionPopup", true, false) != null, "multiplayer actions show a popup")
 	check(ui.announcements.actions.any(func(item): return item.title == "人物等级提升"), "level-up notification is queued")
+	var popup = ui.announcements.popup
+	check(popup.get_rect().get_center().distance_to(ui.announcements.size / 2) < 1, "action popup is centered horizontally and vertically")
+	check(is_equal_approx(popup.get_theme_stylebox("panel").modulate_color.a, 0.72) and is_equal_approx(popup.modulate.a, 1), "popup background is translucent while text stays opaque")
+	await capture("mobile-action-popup" if ui.mobile else "desktop-action-popup")
+	var click = InputEventMouseButton.new();click.button_index = MOUSE_BUTTON_LEFT;click.pressed = true;click.position = popup.get_global_rect().get_center()
+	ui.get_viewport().push_input(click, true);await frames()
+	check(ui.announcements.popup == null and ui.announcements.actions.is_empty(), "one click dismisses the popup and its queued notices")
+	ui.announcements.action("行动步骤", "新的行动仍然显示");await frames()
+	check(is_instance_valid(ui.announcements.popup), "new actions still show after dismissal")
+	var tap = InputEventScreenTouch.new();tap.pressed = true;tap.index = 0;tap.position = ui.announcements.popup.get_global_rect().get_center()
+	ui.get_viewport().push_input(tap, true);await frames()
+	check(ui.announcements.popup == null, "one touch dismisses the popup on mobile")
 	ui.dialogs.hero_detail(me);check(has_text(ui.dialog, "当前等级 2"), "hero dialog shows current level")
 	var ordinary = -1
 	for key in ui.store.catalog.cards:

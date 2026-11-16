@@ -1,12 +1,15 @@
-# 异世界公会长 4.2.0
+# 异世界公会长 4.2.1
 
 基于台湾友人 [cat90132-beep 的 refactor v4.0 发布版](https://github.com/cat90132-beep/isekai-guild-master/releases/tag/refactor)继续更新，保留扫描卡面、繁简切换、同机客座、交接确认、本机存读档、扩充规则与操作改进。上游完整说明见 [UPSTREAM_README](docs/UPSTREAM_README.md)。
 
-本次构建位于 `dist/`：Windows 解压 `GuildMaster-Windows-4.2.0.zip` 后运行 `GuildMaster.exe`；Android 安装 `GuildMaster-Android-4.2.0.apk`。Android 需要 Android 7.0 以上、64 位 ARM 或 x86_64，横屏使用，已内嵌离线 Python 规则引擎，无需另外安装运行库。
+本次构建位于 `dist/`：Windows 解压 `GuildMaster-Windows-4.2.1.zip` 后运行 `GuildMaster.exe`；Android 安装 `GuildMaster-Android-4.2.1.apk`。Android 需要 Android 7.0 以上、64 位 ARM 或 x86_64，横屏使用，已内嵌离线 Python 规则引擎，无需另外安装运行库。
 
 ![本轮更新日志](docs/更新日志_4.2.png)
 
 ## 本次修改
+
+- 4.2.1：行动步骤窗口移到画面正中央，背景半透明，点击或轻触可隐藏。
+- 修复死灵王的大军势（A-029）的终局计分：每张带战力支付图示的正面事件卡得2分，包含自身，与实付战力无关；重复卡逐张计入。修正打出时秘药收益，多人本人合计3瓶、其他玩家各1瓶；单人按原规则不结算全体收益。
 
 - 修复「被诅咒的妖狐的封印」（卡牌99）费用误写为18的问题：正确费用为9金币，卡牌说明、界面显示与实际支付同步修正。
 - 修复经典桌面、总览和手机版行动倒计时显示；基础时间与备用时间分别显示，等待服务器快照时也持续更新。
@@ -35,7 +38,7 @@
 
 默认游戏服务器 `guanpeng666.cn:6677`；回放为 `http://guanpeng666.cn:6767`，介绍与更新长图在 `http://guanpeng666.cn:6680`。4.2客户端与服务端需一起更新。只更新源码不会改变已经运行的服务。
 
-服务器使用 `dist/guild-server-4.2.0.zip`，或直接使用仓库 `guild-server/`。仅需 Python 3.9以上及标准库；保留自己的 `server_config.json`、`replays/`，在没有进行中对局时停止旧服务，替换程序及网页后重启：
+服务器使用 `dist/guild-server-4.2.1.zip`，或直接使用仓库 `guild-server/`。仅需 Python 3.9以上及标准库；保留自己的 `server_config.json`、`replays/`，在没有进行中对局时停止旧服务，替换程序及网页后重启：
 
 ```sh
 python3 server.py --host 0.0.0.0 --port 6677 --web-port 6767 --site-port 6680

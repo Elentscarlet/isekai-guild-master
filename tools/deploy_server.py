@@ -110,6 +110,10 @@ def main():
         probe="""import guild_engine,guild_network,json,time
 from guild_content import HEROES,CARDS
 assert CARDS[99]['price']==9, 'Cursed fox seal must cost 9 gold'
+army_check=guild_engine.Engine([dict(id=0,name='RuleProbe',hero='bai_white')],options=dict(solo=True,setup_draft=False),seed=18)
+army_player=army_check._player(0);army_player.update(played=[20,6,6],card_states=[])
+army_points=army_check._points(army_player,CARDS[20])
+assert army_points==6, 'Necromancer army must award 2 points per printed strength-payment card'
 c=guild_network.Client('127.0.0.1',6677,'ReleaseProbe',lobby=True).connect()
 seen=set()
 try:
@@ -122,7 +126,7 @@ try:
   time.sleep(.01)
  assert {'server_welcome','directory'}<=seen, 'Missing application welcome or directory'
 finally:c.close()
-print(json.dumps({'module':guild_engine.__file__,'version':guild_network.CLIENT_VERSION,'heroes':len(HEROES),'card99_price':CARDS[99]['price'],'handshake_complete':True,'directory_received':True}))
+print(json.dumps({'module':guild_engine.__file__,'version':guild_network.CLIENT_VERSION,'heroes':len(HEROES),'card99_price':CARDS[99]['price'],'card20_three_symbols_points':army_points,'handshake_complete':True,'directory_received':True}))
 """
         result=json.loads(subprocess.run([sys.executable,'-c',probe],cwd=production,capture_output=True,text=True,check=True,timeout=20).stdout)
         if result['version']!='4.1.0' or Path(result['module']).parent!=production:raise RuntimeError('Production module identity mismatch')

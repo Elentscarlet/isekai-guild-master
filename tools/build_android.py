@@ -29,6 +29,8 @@ def main():
     parser.add_argument('--skip-assets', action='store_true')
     args = parser.parse_args()
     version = json.loads((ROOT / 'release.json').read_text('utf-8'))['version']
+    major, minor, patch = map(int, version.split('.'))
+    version_code = major * 10000 + minor * 100 + patch
     os.environ['JAVA_HOME'] = r'C:\Program Files\Eclipse Adoptium\jdk-21.0.5.11-hotspot'
     os.environ['ANDROID_HOME'] = str(SDK)
     os.environ['ANDROID_SDK_ROOT'] = str(SDK)
@@ -62,7 +64,7 @@ def main():
     (BUILD / 'local.properties').write_text('sdk.dir=' + SDK.as_posix() + '\n', 'utf-8')
     with zipfile.ZipFile(ROOT.parent / '.qa-runtime/godot-sdk/templates/android_source.zip') as archive:
         properties = archive.read('gradle.properties').decode()
-    properties += '\nexport_enabled_abis=arm64-v8a|x86_64\nexport_package_name=cn.guildmaster.game\nexport_version_code=40200\nexport_version_name=' + version + '\nperform_signing=true\nperform_zipalign=true\ndoNotStrip=true\nandroid.suppressUnsupportedCompileSdk=36\norg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8\n'
+    properties += '\nexport_enabled_abis=arm64-v8a|x86_64\nexport_package_name=cn.guildmaster.game\nexport_version_code=' + str(version_code) + '\nexport_version_name=' + version + '\nperform_signing=true\nperform_zipalign=true\ndoNotStrip=true\nandroid.suppressUnsupportedCompileSdk=36\norg.gradle.jvmargs=-Xmx4096m -Dfile.encoding=UTF-8\n'
     (BUILD / 'gradle.properties').write_text(properties, 'utf-8')
     # Reuse a single project signing identity across mobile rebuilds.
     (BUILD / 'res/values/strings.xml').write_text('<resources><string name="godot_project_name_string" translatable="false">异世界公会长</string></resources>', 'utf-8')

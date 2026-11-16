@@ -59,6 +59,8 @@ class ResolutionRules:
         return any(x.get(name) for x in self._passives(p))
 
     def _stat(self, p, stat):
+        if stat == 'strength_payment_cards':
+            return sum(bool(card.get('can_trans')) for _, card, _ in self._active_cards(p))
         if stat == 'extra_cost_cards':
             return sum(bool(c.get('costs') or c.get('consume_piece')) for _, c, _ in self._active_cards(p))
         if stat in ('holes', 'holes_or_variable', 'strong_tiles', 'boss_tiles'):

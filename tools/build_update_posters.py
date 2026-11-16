@@ -104,12 +104,15 @@ def release_notes():
     image.save(ROOT/'docs/更新日志_4.1.png',optimize=True);print('Release notes:',image.size)
 
 def release_notes_42():
+    version=json.loads((ROOT/'release.json').read_text('utf8'))['version']
     items=[
+        ('死灵王的大军势计分修复','每张带战力支付图示的正面事件卡计2分，包含自身；实际是否使用战力支付不影响计分。重复卡逐张计算，终局正常结算。'),
+        ('妖狐封印费用修复','「被诅咒的妖狐的封印」正确费用为9金币。卡牌说明、费用显示与实际扣费同步修正。'),
         ('行动倒计时恢复显示','经典桌面、总览与手机版均显示基础时间和备用时间；等待服务器快照时持续更新，顶部计时不会被按钮遮挡。'),
         ('聊天改为滚动弹幕','消息以「玩家名：内容」飘过画面。发送框可收起，聊天不再占用卡牌结算弹窗。'),
         ('斯卡蒂白版支付修复','普通事件卡、王权和其他金币费用可选择投入战力，允许保留金币。每点战力抵5金币，超额抵付不找零。'),
         ('人物升级与等级显示','人物升级时显示提示；人物详情默认打开当前等级卡面，桌面与公会详情同步显示等级。'),
-        ('多人行动步骤提示','公开行动和后续结算步骤加入自动消失的提示窗，展示行动玩家与操作内容；私人选项仍仅本人可见。'),
+        ('行动提示窗居中优化','提示窗横向、纵向居中；背景半透明，文字保持清晰。鼠标点击或手机轻触即可隐藏，后续新行动仍正常提示。'),
         ('Phrase百货结算核验','按已打出正面事件卡的当前声望结算，包含计数标记与可变声望，忽略翻面卡；结算回归测试通过。'),
     ]
     rows=[]
@@ -117,18 +120,16 @@ def release_notes_42():
         pair=items[index:index+2]
         height=105+max(len(lines(body,750,31))*47 for _,body in pair)+30
         rows.append((pair,height))
-    shot=Image.open(ROOT/'qa/gameplay-ui/mobile-table.png').convert('RGB')
+    shot=Image.open(ROOT/'qa/popup-center/mobile-action-popup.png').convert('RGB')
     shot=shot.resize((1656,round(1656*shot.height/shot.width)),Image.Resampling.LANCZOS)
     total=570+sum(h+24 for _,h in rows)+220+shot.height+240
     image=Image.new('RGB',(1800,total),BG)
-    header(image,'RELEASE NOTES  /  2026.11.16','异世界公会长 · v4.2.0','本轮修复汇总  /  卡牌费用 · 行动与聊天 · Android手机版')
+    header(image,'RELEASE NOTES  /  2026.11.16','异世界公会长 · v'+version,'本轮修复汇总  /  行动提示窗优化 · 死灵王计分修复')
     d=ImageDraw.Draw(image)
     d.rounded_rectangle((60,320,1740,540),radius=16,fill=PAPER,outline=GOLD,width=3)
-    d.text((94,340),'卡牌费用修复',font=font(30,True),fill=RUST)
-    d.text((94,392),'被诅咒的妖狐的封印',font=font(45,True),fill=INK)
-    d.text((1350,348),'9',font=font(100,True),fill=RUST)
-    d.text((1432,411),'金币',font=font(34,True),fill=RUST)
-    paragraph(d,(96,469),'原18金币 → 9金币；界面说明、费用显示与实际扣费同步修正。',1530,28,MUTED)
+    d.text((94,340),'本次修复重点',font=font(30,True),fill=RUST)
+    d.text((94,392),'行动提示：居中 · 半透明 · 点击隐藏',font=font(45,True),fill=INK)
+    paragraph(d,(96,469),'死灵王按带战力支付图示的正面事件卡数量×2计分（包含自身）。',1530,28,MUTED)
     y=570
     for pair,height in rows:
         for j,(title,body) in enumerate(pair):

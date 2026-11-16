@@ -12,6 +12,7 @@ var lane = 0
 func setup(owner_ui):
 	ui = owner_ui;mouse_filter = MOUSE_FILTER_IGNORE;z_index = 65
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	resized.connect(_center_popup)
 
 func chat(name_text: String, message: String):
 	messages.append(name_text + "：" + message.replace("\n", " ").replace("\r", " "))
@@ -21,7 +22,15 @@ func action(title: String, message: String):
 
 func clear_actions():
 	actions.clear()
-	if is_instance_valid(popup): popup.queue_free();popup = null
+	if is_instance_valid(popup): popup.hide();popup.queue_free();popup = null
+
+func _center_popup():
+	if is_instance_valid(popup): popup.position = (size - popup.size) / 2
+
+func _popup_input(event: InputEvent):
+	if (event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+		popup.accept_event()
+		clear_actions()
 
 func _process(delta):
 	next_message -= delta
@@ -37,10 +46,13 @@ func _process(delta):
 	if is_instance_valid(popup) and popup_seconds <= 0: popup.queue_free();popup = null
 	if not is_instance_valid(popup) and not actions.is_empty():
 		var item = actions.pop_front();var body = VBoxContainer.new()
-		popup = ui.panel(body, 18);popup.name = "ActionPopup";popup.mouse_filter = MOUSE_FILTER_IGNORE;add_child(popup)
+		popup = ui.panel(body, 18);popup.name = "ActionPopup";popup.mouse_filter = MOUSE_FILTER_STOP;body.mouse_filter = MOUSE_FILTER_IGNORE
+		popup.mouse_default_cursor_shape = CURSOR_POINTING_HAND
+		var background = GuildPaperSkin.paper("paper", 18);background.modulate_color.a = 0.72
+		popup.add_theme_stylebox_override("panel", background);add_child(popup)
+		popup.gui_input.connect(_popup_input);popup.resized.connect(_center_popup)
 		var width = 490.0 if ui.mobile else 620.0
 		var title = ui.label(item.title, 28, ui.GOLD);title.mouse_filter = MOUSE_FILTER_IGNORE;body.add_child(title)
 		var text = ui.label(item.message, 25 if ui.mobile else 23);text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART;text.custom_minimum_size.x = width - 36;text.mouse_filter = MOUSE_FILTER_IGNORE;body.add_child(text)
-		popup.size.x = width;popup.position = Vector2(size.x - width - 22, 218 if ui.mobile else 124)
-		if ui.mobile: popup.position = Vector2(22, maxf(220, size.y - popup.get_combined_minimum_size().y - 24))
+		popup.size.x = width;_center_popup()
 		popup_seconds = 4.0 if actions.size() < 3 else 2.5
