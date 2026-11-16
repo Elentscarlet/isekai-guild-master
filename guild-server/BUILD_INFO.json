@@ -1,6 +1,6 @@
 {
-  "version": "4.2.1",
-  "revision": "20261116-centered-popup-necromancer",
+  "version": "4.2.2",
+  "revision": "20261116-top-centered-popup",
   "upstream": "cat90132-beep/isekai-guild-master@refactor",
   "files": {
     "API.md": "75226742c8b058463668d9a43f4711645cfa1ee8d13cd06d54562b63239411e0",
@@ -795,15 +795,15 @@
     "server_config.json": "d00cce20e72af532e4e13103a0e8ba1afb43acbd537f8e06f9a19d0eb5bfa538",
     "site/app.js": "bbadb3b11da2f440aa001baa7d4e9779a355e888379445010816d16c022c5577",
     "site/favicon.svg": "330cf6e77dc4fef794bd9ce406e407356d3122717caff94fed53ff785243ce63",
-    "site/index.html": "7ad39d85d4bb38ba68eb7141d25a329d3a4b7ade4e9737782cffde4f1416367e",
+    "site/index.html": "f6b90a207f5db0ba0de8c49d4509314adcfa26c96a70b094c1225c389b9d4e4c",
     "site/shots/dlc-guide-4.1.png": "6aa9ca78db85c6a9578a4289a46f7f813bcdf52c38363b7b7ffee406eafcbbe4",
     "site/shots/growth.jpg": "154843eb5077bf406f17dfea1b698c3a708e7f26bfb25d5613f3a22d3c6ea5e3",
     "site/shots/overview.jpg": "9baaa8bc8d8aad49c3946a5a20a28c0e4646806de301f1af106b55f7ea278d16",
     "site/shots/rules.jpg": "76e49afa26df53d1183a50c75529cb1a7dfd9f43cc5ab590e9047f493a673d4c",
     "site/shots/table.jpg": "84aa119ed4795b80f6acd843300d347b226a0542809d89fb963ff24a5c78db5d",
     "site/shots/update-4.1.png": "2b7882a3736ce8d4676e3541499206ae7bc14379b7981c35de027a129e023752",
-    "site/shots/update-4.2.png": "2f9e7a95b5d9bfe486d52b525ebf610e618357ae404a8af29641967a8b1e241a",
-    "site/site.json": "ae0d9d563c842be5fc91766971617643bb7a8c17dc0a986be03be1034e67614f",
+    "site/shots/update-4.2.png": "374a8bcef76377ffc2e7eab3c1dc076ec5257b2b82bba3fb9813f021bf051581",
+    "site/site.json": "3ccdb4ab7f24ed0b546763bf4e8b1777249fba6d18fb0fcb5eb323dd8ee08acd",
     "site/style.css": "62aa8be11dae6487b28f8aa756006f059d1eea83d2c429cc6fae2b7b555b8327"
   },
   "voice_validation": {

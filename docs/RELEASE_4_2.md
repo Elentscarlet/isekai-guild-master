@@ -1,6 +1,6 @@
-Windows 下载 **GuildMaster-Windows-4.2.1.zip**，完整解压后运行 **GuildMaster.exe**。Android 安装 **GuildMaster-Android-4.2.1.apk**，需要 Android 7.0 以上的 ARM64 / x86_64 设备。默认服务器仍为 `guanpeng666.cn:6677`。
+Windows 下载 **GuildMaster-Windows-4.2.2.zip**，完整解压后运行 **GuildMaster.exe**。Android 安装 **GuildMaster-Android-4.2.2.apk**，需要 Android 7.0 以上的 ARM64 / x86_64 设备。默认服务器仍为 `guanpeng666.cn:6677`。
 
-- **行动步骤窗口**：移至画面正中央，背景半透明、文字保持清晰；鼠标点击或手机轻触可立即隐藏，后续新行动仍会正常提示。
+- **4.2.2 行动步骤窗口位置修正**：位于顶部状态栏下方，水平方向居中；背景半透明、文字保持清晰，鼠标点击或手机轻触可立即隐藏，后续新行动仍会正常提示。
 - **死灵王的大军势（A-029）**：修正固定2分的错误，每张带战力支付图示的正面事件卡计2分，包含自身；不要求实际使用战力支付。重复卡逐张计入，翻面卡不计入。多人打出时本人共得3秘药、其他玩家各1；单人保留跳过全体收益的规则，得2秘药。
 - **被诅咒的妖狐的封印**：费用由错误的18金币修正为9金币，界面说明、费用显示与实际扣费同步修正。
 - **行动倒计时**：恢复经典桌面、总览与手机版的基础时间／备用时间显示，等待服务器快照时持续更新。
@@ -11,6 +11,6 @@ Windows 下载 **GuildMaster-Windows-4.2.1.zip**，完整解压后运行 **Guild
 - **Phrase百货**：结算核验通过，按正面事件卡的当前声望计算，包含计数标记与可变声望，忽略翻面卡。
 - **Android手机版**：横屏触控布局，放大字体和主要按钮，重排桌面、选牌、出牌与效果结算界面；包含离线单人、2–5人同机客座及本机存档。
 
-联机请同步更新 **guild-server-4.2.1.zip**；服务器配置与回放应保留。APK已完成构建和签名检查，安卓设备运行尚未实测。
+本次窗口位置修正兼容4.2.1服务器；首次从旧版升级可使用 **guild-server-4.2.2.zip**，保留服务器配置与回放。APK已完成构建和签名检查，安卓设备运行尚未实测。
 
-![更新日志长图](https://github.com/shuiwen879867/isekai-guild-master/releases/download/v4.2.1/update-log-4.2.png)
+![更新日志长图](https://github.com/shuiwen879867/isekai-guild-master/releases/download/v4.2.2/update-log-4.2.png)

@@ -112,7 +112,7 @@ def release_notes_42():
         ('聊天改为滚动弹幕','消息以「玩家名：内容」飘过画面。发送框可收起，聊天不再占用卡牌结算弹窗。'),
         ('斯卡蒂白版支付修复','普通事件卡、王权和其他金币费用可选择投入战力，允许保留金币。每点战力抵5金币，超额抵付不找零。'),
         ('人物升级与等级显示','人物升级时显示提示；人物详情默认打开当前等级卡面，桌面与公会详情同步显示等级。'),
-        ('行动提示窗居中优化','提示窗横向、纵向居中；背景半透明，文字保持清晰。鼠标点击或手机轻触即可隐藏，后续新行动仍正常提示。'),
+        ('行动提示窗顶部居中','提示窗位于顶部状态栏下方，水平方向居中；背景半透明，文字保持清晰。鼠标点击或手机轻触即可隐藏，后续新行动仍正常提示。'),
         ('Phrase百货结算核验','按已打出正面事件卡的当前声望结算，包含计数标记与可变声望，忽略翻面卡；结算回归测试通过。'),
     ]
     rows=[]
@@ -120,15 +120,15 @@ def release_notes_42():
         pair=items[index:index+2]
         height=105+max(len(lines(body,750,31))*47 for _,body in pair)+30
         rows.append((pair,height))
-    shot=Image.open(ROOT/'qa/popup-center/mobile-action-popup.png').convert('RGB')
+    shot=Image.open(ROOT/'qa/popup-top-center/mobile-action-popup.png').convert('RGB')
     shot=shot.resize((1656,round(1656*shot.height/shot.width)),Image.Resampling.LANCZOS)
     total=570+sum(h+24 for _,h in rows)+220+shot.height+240
     image=Image.new('RGB',(1800,total),BG)
-    header(image,'RELEASE NOTES  /  2026.11.16','异世界公会长 · v'+version,'本轮修复汇总  /  行动提示窗优化 · 死灵王计分修复')
+    header(image,'RELEASE NOTES  /  2026.11.16','异世界公会长 · v'+version,'本轮修复汇总  /  行动提示窗顶部居中 · 死灵王计分修复')
     d=ImageDraw.Draw(image)
     d.rounded_rectangle((60,320,1740,540),radius=16,fill=PAPER,outline=GOLD,width=3)
     d.text((94,340),'本次修复重点',font=font(30,True),fill=RUST)
-    d.text((94,392),'行动提示：居中 · 半透明 · 点击隐藏',font=font(45,True),fill=INK)
+    d.text((94,392),'行动提示：顶部居中 · 半透明 · 点击隐藏',font=font(45,True),fill=INK)
     paragraph(d,(96,469),'死灵王按带战力支付图示的正面事件卡数量×2计分（包含自身）。',1530,28,MUTED)
     y=570
     for pair,height in rows:

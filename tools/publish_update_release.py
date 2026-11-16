@@ -81,7 +81,7 @@ def main():
     def matches(item,path):return item.get('digest')=='sha256:'+sha(path) and item['size']==path.stat().st_size
 
     if not args.publish:
-        api(base+'/releases/'+str(release_id),dict(tag_name=TAG,target_commitish=commit,draft=True,name='异世界公会长 v'+VERSION+' · 行动提示窗与死灵王计分修复',body=(ROOT/'docs/RELEASE_4_2.md').read_text('utf8')))
+        api(base+'/releases/'+str(release_id),dict(tag_name=TAG,target_commitish=commit,draft=True,name='异世界公会长 v'+VERSION+' · 行动提示窗顶部居中修正',body=(ROOT/'docs/RELEASE_4_2.md').read_text('utf8')))
         staged=[]
         for path,name,mime in assets:
             current={item['name']:item for item in api(base+'/releases/'+str(release_id)+'/assets')}
@@ -123,7 +123,7 @@ def main():
         current={item['name']:item for item in api(base+'/releases/'+str(release_id)+'/assets')}
         for path,name,mime in assets:
             if name not in current or not matches(current[name],path):raise RuntimeError('Release assets are not ready: '+name)
-        api(base+'/releases/'+str(release_id),dict(tag_name=TAG,target_commitish=commit,draft=False,prerelease=False,name='异世界公会长 v'+VERSION+' · 行动提示窗与死灵王计分修复',body=(ROOT/'docs/RELEASE_4_2.md').read_text('utf8'),make_latest='true'))
+        api(base+'/releases/'+str(release_id),dict(tag_name=TAG,target_commitish=commit,draft=False,prerelease=False,name='异世界公会长 v'+VERSION+' · 行动提示窗顶部居中修正',body=(ROOT/'docs/RELEASE_4_2.md').read_text('utf8'),make_latest='true'))
     release=api(base+'/releases/'+str(release_id))
     remote={item['name']:item for item in api(base+'/releases/'+str(release_id)+'/assets')}
     receipt=dict(repository='https://github.com/'+REPO,release_id=release_id,commit=commit,draft=release['draft'],release_url=release['html_url'],voice_manifest_sha256=manifest_sha,assets=[dict(name=name,url=remote[name]['browser_download_url'],size=remote[name]['size'],sha256=sha(path)) for path,name,mime in assets])

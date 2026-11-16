@@ -46,7 +46,7 @@ func run():
 	check(ui.announcements.find_child("ActionPopup", true, false) != null, "multiplayer actions show a popup")
 	check(ui.announcements.actions.any(func(item): return item.title == "人物等级提升"), "level-up notification is queued")
 	var popup = ui.announcements.popup
-	check(popup.get_rect().get_center().distance_to(ui.announcements.size / 2) < 1, "action popup is centered horizontally and vertically")
+	check(absf(popup.get_rect().get_center().x - ui.announcements.size.x / 2) < 1 and is_equal_approx(popup.position.y, 172.0 if ui.mobile else 124.0), "action popup is horizontally centered near the top below the header")
 	check(is_equal_approx(popup.get_theme_stylebox("panel").modulate_color.a, 0.72) and is_equal_approx(popup.modulate.a, 1), "popup background is translucent while text stays opaque")
 	await capture("mobile-action-popup" if ui.mobile else "desktop-action-popup")
 	var click = InputEventMouseButton.new();click.button_index = MOUSE_BUTTON_LEFT;click.pressed = true;click.position = popup.get_global_rect().get_center()

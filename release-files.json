@@ -1,21 +1,21 @@
 {
-  "version": "4.2.1",
-  "revision": "20261116-centered-popup-necromancer",
+  "version": "4.2.2",
+  "revision": "20261116-top-centered-popup",
   "artifacts": [
     {
-      "name": "GuildMaster-Windows-4.2.1.zip",
-      "size_bytes": 295114741,
-      "sha256": "dd7d70f4ae0d8d26ade3cfae334b7459e9b360b183c25231393533e263eda7b6"
+      "name": "GuildMaster-Windows-4.2.2.zip",
+      "size_bytes": 295123274,
+      "sha256": "ab1b6f421fbfc7da101069ebd584b2bf325199785aad9733b3dc39eefa3a85a8"
     },
     {
-      "name": "guild-server-4.2.1.zip",
-      "size_bytes": 72037742,
-      "sha256": "894788752efaed44dfe9e7f7763b0520e8f614fdd6c5697c5ddc277f4ab919d7"
+      "name": "guild-server-4.2.2.zip",
+      "size_bytes": 72046292,
+      "sha256": "b28b2e8d1e18fcb36495d208b5afe60a68a9816a246075d7955652fe151bd938"
     },
     {
-      "name": "GuildMaster-Android-4.2.1.apk",
-      "size_bytes": 326218670,
-      "sha256": "bc799f126456733c30ed517879e5340b4406b9fd0bcc8011b2969fa79a2b0526"
+      "name": "GuildMaster-Android-4.2.2.apk",
+      "size_bytes": 326218714,
+      "sha256": "ab523183702bd9b024b1978f8b2db9c9989ccacd2c0870b547cc9558279bcb61"
     }
   ]
 }
