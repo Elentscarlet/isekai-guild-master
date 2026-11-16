@@ -64,7 +64,7 @@ func verify_network(port: int):
 	if await wait_for( func(): return ui.session.greeted):
 		ui.session.connect_stamp = Time.get_ticks_msec() - 16000
 	check( await wait_for( func(): return not ui.session.active), "exported client ends unacknowledged handshake with timeout")
-	check("同步超时" in ui.toast_label.text, "exported timeout explains failed server synchronization")
+	check("同步超时" in ui.toaster.label.text, "exported timeout explains failed server synchronization")
 	ui.session.close();ui.rerender(); await frames()
 
 func run(client):
@@ -128,16 +128,17 @@ func run(client):
 	ui.close_dialog(false)
 	check(ResourceLoader.exists("res://ui/backdrop.gdshader"), "animated backdrop shader exported")
 	await capture("home")
-	ui.hover_source = card.source;ui.last_hover_source = card.source;ui._update_preview(); await frames()
-	check( not ui.preview_panel.visible, "exported hover does not open picture")
+	ui.preview.hover(card.source, Vector2(150, 208), 2.5)
+	await frames()
+	check( not ui.preview.visible, "exported hover does not open picture")
 	# Windows does not reliably accept synthetic modifier-key state for a
 	# hidden window. Supply the held state to test the actual preview renderer;
 	# normal gameplay continues polling the physical Alt key in _process.
-	ui.alt_zoom = true;ui._update_preview()
-	check(ui.preview_panel.visible and ui.preview_art.custom_minimum_size.y > 500, "held Alt preview opens exported card")
-	ui.alt_zoom = false;ui._update_preview()
-	check(not ui.preview_panel.visible, "Alt release hides preview")
-	ui.hover_source = "";ui.last_hover_source = "";ui._update_preview()
+	ui.preview.set_zoomed(true)
+	check(ui.preview.visible and ui.preview.art.custom_minimum_size.y > 500, "held Alt preview opens exported card")
+	ui.preview.set_zoomed(false)
+	check(not ui.preview.visible, "Alt release hides preview")
+	ui.preview.clear()
 	if qa_port > 0: await verify_network(qa_port)
 	ui.session.start_local("PackageQA")
 	check( await wait_for( func(): return not ui.session.room.is_empty()), "bundled portable Python connects inside exported client")

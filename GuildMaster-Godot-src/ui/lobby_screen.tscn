@@ -1,0 +1,100 @@
+[gd_scene format=3 uid="uid://c0ecbbkhssgf1"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/paper_frame.tres" id="1_paper"]
+[ext_resource type="Script" uid="uid://dk6t8klbuv2v5" path="res://scripts/lobby_screen.gd" id="2_script"]
+
+[node name="LobbyScreen" type="Control" unique_id=1114227675]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_script")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1745615109]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Root" type="VBoxContainer" parent="Margin" unique_id=1729179561]
+layout_mode = 2
+
+[node name="Header" type="PanelContainer" parent="Margin/Root" unique_id=1081027093]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("1_paper")
+
+[node name="Row" type="HBoxContainer" parent="Margin/Root/Header" unique_id=1597859165]
+layout_mode = 2
+
+[node name="Brand" type="Label" parent="Margin/Root/Header/Row" unique_id=970287605]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 28
+text = "异世界公会长"
+
+[node name="Sub" type="Label" parent="Margin/Root/Header/Row" unique_id=1671669335]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.42, 0.392, 0.376, 1)
+theme_override_font_sizes/font_size = 14
+text = "GUILD MASTER"
+
+[node name="Gallery" type="Button" parent="Margin/Root/Header/Row" unique_id=1156378501]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "图鉴"
+
+[node name="Settings" type="Button" parent="Margin/Root/Header/Row" unique_id=400929530]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "设置"
+
+[node name="Leave" type="Button" parent="Margin/Root/Header/Row" unique_id=2022818268]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "离开"
+
+[node name="Sheet" type="PanelContainer" parent="Margin/Root" unique_id=521595842]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = ExtResource("1_paper")
+
+[node name="SheetBox" type="VBoxContainer" parent="Margin/Root/Sheet" unique_id=1065902348]
+layout_mode = 2
+
+[node name="Bar" type="HBoxContainer" parent="Margin/Root/Sheet/SheetBox" unique_id=737954520]
+layout_mode = 2
+
+[node name="Heading" type="Label" parent="Margin/Root/Sheet/SheetBox/Bar" unique_id=1512980528]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 34
+text = "旅人的公会大厅"
+
+[node name="Refresh" type="Button" parent="Margin/Root/Sheet/SheetBox/Bar" unique_id=142278658]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "刷新"
+
+[node name="Create" type="Button" parent="Margin/Root/Sheet/SheetBox/Bar" unique_id=1339838328]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "创建公会房间"
+
+[node name="RoomsScroll" type="ScrollContainer" parent="Margin/Root/Sheet/SheetBox" unique_id=1007519996]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Rooms" type="VBoxContainer" parent="Margin/Root/Sheet/SheetBox/RoomsScroll" unique_id=1584253367]
+layout_mode = 2
+size_flags_horizontal = 3

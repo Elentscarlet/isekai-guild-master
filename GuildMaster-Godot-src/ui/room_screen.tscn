@@ -1,0 +1,444 @@
+[gd_scene format=3 uid="uid://oq0iiuxcxhr2"]
+
+[ext_resource type="Script" uid="uid://dmjgtaoto0ydn" path="res://scripts/room_screen.gd" id="1_room"]
+[ext_resource type="FontFile" uid="uid://ba15cmpajgml6" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="2_title"]
+[ext_resource type="FontFile" uid="uid://cii3oduf68wbd" path="res://fonts/SourceHanSansLite.ttf" id="3_body"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="style_banner_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_hover.tres" id="style_banner_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_normal.tres" id="style_banner_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_pressed.tres" id="style_banner_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="style_banner_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="style_banner_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="style_banner_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_disabled.tres" id="style_paper_button_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_hover.tres" id="style_paper_button_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_normal.tres" id="style_paper_button_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_pressed.tres" id="style_paper_button_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_frame.tres" id="style_paper_frame"]
+
+[node name="RoomScreen" type="Control" unique_id=2108503896]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_room")
+
+[node name="Title" type="Label" parent="." unique_id=1080866262]
+layout_mode = 0
+offset_left = 33.0
+offset_top = 63.0
+offset_right = 1593.0
+offset_bottom = 128.0
+theme_override_colors/font_color = Color(1, 0.9725, 0.9216, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 48
+text = "公会房间"
+
+[node name="Caption" type="Label" parent="." unique_id=1221835334]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 139.0
+offset_right = 1586.0
+offset_bottom = 179.0
+theme_override_colors/font_color = Color(0.9176, 0.8627, 0.8118, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 25
+text = "全部准备后开始对局，再抽取候选角色"
+
+[node name="Leave" type="Button" parent="." unique_id=1071857133]
+layout_mode = 0
+offset_left = 1726.0
+offset_top = 60.0
+offset_right = 1896.0
+offset_bottom = 125.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "离开房间"
+
+[node name="Seat0" type="Panel" parent="." unique_id=1897903335]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 210.0
+offset_right = 364.0
+offset_bottom = 350.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Name" type="Label" parent="Seat0" unique_id=1487374126]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 27
+text = "等待伙伴"
+
+[node name="Status" type="Label" parent="Seat0" unique_id=543451688]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 320.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "未准备"
+
+[node name="Kick" type="Button" parent="Seat0" unique_id=1760325672]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 88.0
+offset_right = 320.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_paper_button_normal")
+theme_override_styles/pressed = ExtResource("style_paper_button_pressed")
+theme_override_styles/hover = ExtResource("style_paper_button_hover")
+theme_override_styles/disabled = ExtResource("style_paper_button_disabled")
+text = "踢出"
+
+[node name="Seat1" type="Panel" parent="." unique_id=1677940907]
+layout_mode = 0
+offset_left = 382.0
+offset_top = 210.0
+offset_right = 722.0
+offset_bottom = 350.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Name" type="Label" parent="Seat1" unique_id=1851760762]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 27
+text = "等待伙伴"
+
+[node name="Status" type="Label" parent="Seat1" unique_id=1859753552]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 320.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "未准备"
+
+[node name="Kick" type="Button" parent="Seat1" unique_id=872733003]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 88.0
+offset_right = 320.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_paper_button_normal")
+theme_override_styles/pressed = ExtResource("style_paper_button_pressed")
+theme_override_styles/hover = ExtResource("style_paper_button_hover")
+theme_override_styles/disabled = ExtResource("style_paper_button_disabled")
+text = "踢出"
+
+[node name="Seat2" type="Panel" parent="." unique_id=1062066500]
+layout_mode = 0
+offset_left = 740.0
+offset_top = 210.0
+offset_right = 1080.0
+offset_bottom = 350.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Name" type="Label" parent="Seat2" unique_id=1436579184]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 27
+text = "等待伙伴"
+
+[node name="Status" type="Label" parent="Seat2" unique_id=2143533048]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 320.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "未准备"
+
+[node name="Kick" type="Button" parent="Seat2" unique_id=1366357771]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 88.0
+offset_right = 320.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_paper_button_normal")
+theme_override_styles/pressed = ExtResource("style_paper_button_pressed")
+theme_override_styles/hover = ExtResource("style_paper_button_hover")
+theme_override_styles/disabled = ExtResource("style_paper_button_disabled")
+text = "踢出"
+
+[node name="Seat3" type="Panel" parent="." unique_id=195474832]
+layout_mode = 0
+offset_left = 1098.0
+offset_top = 210.0
+offset_right = 1438.0
+offset_bottom = 350.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Name" type="Label" parent="Seat3" unique_id=739316574]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 27
+text = "等待伙伴"
+
+[node name="Status" type="Label" parent="Seat3" unique_id=1578134267]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 320.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "未准备"
+
+[node name="Kick" type="Button" parent="Seat3" unique_id=929327094]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 88.0
+offset_right = 320.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_paper_button_normal")
+theme_override_styles/pressed = ExtResource("style_paper_button_pressed")
+theme_override_styles/hover = ExtResource("style_paper_button_hover")
+theme_override_styles/disabled = ExtResource("style_paper_button_disabled")
+text = "踢出"
+
+[node name="Seat4" type="Panel" parent="." unique_id=503113283]
+layout_mode = 0
+offset_left = 1456.0
+offset_top = 210.0
+offset_right = 1796.0
+offset_bottom = 350.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Name" type="Label" parent="Seat4" unique_id=2091803313]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 18.0
+offset_right = 320.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 27
+text = "等待伙伴"
+
+[node name="Status" type="Label" parent="Seat4" unique_id=2116693790]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 85.0
+offset_right = 320.0
+offset_bottom = 113.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "未准备"
+
+[node name="Kick" type="Button" parent="Seat4" unique_id=905960971]
+layout_mode = 0
+offset_left = 240.0
+offset_top = 88.0
+offset_right = 320.0
+offset_bottom = 130.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_paper_button_normal")
+theme_override_styles/pressed = ExtResource("style_paper_button_pressed")
+theme_override_styles/hover = ExtResource("style_paper_button_hover")
+theme_override_styles/disabled = ExtResource("style_paper_button_disabled")
+text = "踢出"
+
+[node name="LeftPanel" type="Panel" parent="." unique_id=1085918005]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 385.0
+offset_right = 1224.0
+offset_bottom = 1010.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="RulesTitle" type="Label" parent="LeftPanel" unique_id=122089537]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 24.0
+offset_right = 1106.0
+offset_bottom = 69.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 32
+text = "对局规则"
+
+[node name="RulesHost" type="Button" parent="LeftPanel" unique_id=483565636]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 365.0
+offset_right = 386.0
+offset_bottom = 430.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_primary")
+theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("style_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "修改规则与候选张数"
+
+[node name="RightPanel" type="Panel" parent="." unique_id=1265071695]
+layout_mode = 0
+offset_left = 1250.0
+offset_top = 385.0
+offset_right = 1896.0
+offset_bottom = 1010.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="InfoTitle" type="Label" parent="RightPanel" unique_id=2099521084]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 28.0
+offset_right = 600.0
+offset_bottom = 73.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 32
+text = "房间信息"
+
+[node name="GuestLabel" type="Label" parent="RightPanel" unique_id=941441145]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 96.0
+offset_right = 616.0
+offset_bottom = 126.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 22
+text = "客座模式：1 位客座玩家"
+
+[node name="GuestButton" type="Button" parent="RightPanel" unique_id=1970347201]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 134.0
+offset_right = 616.0
+offset_bottom = 194.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "客座模式 · 选择客座人数"
+
+[node name="LoadButton" type="Button" parent="RightPanel" unique_id=1532716507]
+visible = false
+layout_mode = 0
+offset_left = 30.0
+offset_top = 202.0
+offset_right = 616.0
+offset_bottom = 262.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "读取进度 · 选择存档"
+
+[node name="NamesButton" type="Button" parent="RightPanel" unique_id=234748245]
+visible = false
+layout_mode = 0
+offset_left = 30.0
+offset_top = 270.0
+offset_right = 616.0
+offset_bottom = 330.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "玩家昵称 · 客座改名"
+
+[node name="ReadyButton" type="Button" parent="RightPanel" unique_id=1677840124]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 180.0
+offset_right = 616.0
+offset_bottom = 245.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_primary")
+theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("style_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "准备好了"
+
+[node name="StartButton" type="Button" parent="RightPanel" unique_id=838119711]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 269.0
+offset_right = 616.0
+offset_bottom = 334.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_primary")
+theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("style_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "开始冒险"
+
+[node name="ChatButton" type="Button" parent="RightPanel" unique_id=842089309]
+layout_mode = 0
+offset_left = 30.0
+offset_top = 358.0
+offset_right = 616.0
+offset_bottom = 408.0
+theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "房间聊天"

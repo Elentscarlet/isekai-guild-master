@@ -35,11 +35,11 @@ python3 server.py --host 0.0.0.0 --port 6677 --web-port 6767 --site-port 6680
 
 ## 从源代码运行
 
-客户端源码在 `GuildMaster-Godot-src/`，使用 Godot 4.7.2。将 `GuildMaster-Godot/` 下 `art/`、`rules/`、`runtime/` 复制至源码目录，可按 F5 运行。规则源文件以 `guild-server/` 为准，`python tools/prepare_update.py` 同步到离线客户端。
+客户端源码在 `GuildMaster-Godot-src/`，使用 Godot 4.7.2。将 `GuildMaster-Godot/` 下 `art/`、`rules/`、`runtime/` 复制至源码目录，可按 F5 运行。规则源文件以 `guild-server/` 为准，`python tools/prepare_update.py` 同步到离线客户端。目录职责与「想改哪里」见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 构建：`python tools/build_update_release.py`，输出在 `dist/`。可通过 `GODOT_BIN` 指定Godot控制台程序；导出模板在Godot中安装或填写 `export_presets.cfg`。GitHub源码不包含exe与Python标准库zip，首次构建需从完整客户端包复制 `runtime/`，或使用官方Python 3.13嵌入式运行库。
 
-验证：`python -m unittest discover -s tests -v`。`GuildMaster-Godot-src/tools/update_qa.gd` 检查新卡面、配音开关、默认语言与2/5人布局。上游规则回归脚本保留在 `GuildMaster-Godot/tools/`。
+验证：`python -m unittest discover -s tests -v`（服务器与素材）。客户端可跑 `GuildMaster-Godot-src/tools/dialog_qa.gd`（逐个打开全部弹窗）、`tools/update_qa.gd`（新卡面、配音开关、默认语言与2/5人布局），以及 `tools/regression/run.ps1` + `compare.py` 做改动前后的截图逐像素对比。上游规则回归脚本保留在 `GuildMaster-Godot/tools/`。
 
 ## 来源与许可
 

@@ -1,0 +1,47 @@
+[gd_scene format=3 uid="uid://b1c5yjeffkrk5"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="1_player"]
+[ext_resource type="StyleBox" path="res://ui/styles/main_frame.tres" id="2_main"]
+
+[node name="TableScreen" type="Control" unique_id=1255339773]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Header" type="Panel" parent="." unique_id=507324582]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 22.0
+offset_right = 1908.0
+offset_bottom = 94.0
+theme_override_styles/panel = ExtResource("1_player")
+
+[node name="MapPanel" type="Panel" parent="." unique_id=560234685]
+visible = false
+layout_mode = 0
+offset_left = 362.0
+offset_top = 116.0
+offset_right = 1352.0
+offset_bottom = 810.0
+theme_override_styles/panel = ExtResource("2_main")
+
+[node name="CommandsPanel" type="Panel" parent="." unique_id=1742181369]
+visible = false
+layout_mode = 0
+offset_left = 1374.0
+offset_top = 116.0
+offset_right = 1908.0
+offset_bottom = 810.0
+theme_override_styles/panel = ExtResource("2_main")
+
+[node name="HandStrip" type="Panel" parent="." unique_id=1688739760]
+visible = false
+layout_mode = 0
+offset_left = 362.0
+offset_top = 832.0
+offset_right = 1908.0
+offset_bottom = 1022.0
+theme_override_styles/panel = ExtResource("1_player")

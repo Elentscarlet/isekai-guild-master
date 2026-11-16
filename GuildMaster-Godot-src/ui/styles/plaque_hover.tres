@@ -1,0 +1,15 @@
+[gd_resource type="StyleBox" script_class="GuildBannerBox" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/banner_box.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://ui/buttons/plaque_normal.png" id="2_texture"]
+
+[resource]
+script = ExtResource("1_script")
+texture = ExtResource("2_texture")
+cap_left = 184.0
+cap_right = 172.0
+tint = Color(1.12, 1.07, 1, 1)
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 6.0
+content_margin_bottom = 2.0

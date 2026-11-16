@@ -1,0 +1,331 @@
+[gd_scene format=3 uid="uid://dmssgdnspp45p"]
+
+[ext_resource type="Script" uid="uid://brgccjhyucrsw" path="res://scripts/home_screen.gd" id="1_home"]
+[ext_resource type="FontFile" uid="uid://ba15cmpajgml6" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="2_title"]
+[ext_resource type="FontFile" uid="uid://cii3oduf68wbd" path="res://fonts/SourceHanSansLite.ttf" id="3_body"]
+[ext_resource type="Script" uid="uid://ba1sku7cjacbn" path="res://scripts/portrait.gd" id="4_portrait"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="style_banner_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_hover.tres" id="style_banner_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_normal.tres" id="style_banner_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_pressed.tres" id="style_banner_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="style_banner_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="style_banner_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="style_banner_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_frame.tres" id="style_paper_frame"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_disabled.tres" id="style_plaque_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_hover.tres" id="style_plaque_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_normal.tres" id="style_plaque_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_pressed.tres" id="style_plaque_pressed"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_arrow_normal"]
+bg_color = Color(0.09, 0.07, 0.09, 0.34)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.95, 0.82, 0.64, 0.35)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_arrow_pressed"]
+bg_color = Color(0.09, 0.07, 0.09, 0.56)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.95, 0.82, 0.64, 0.35)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_arrow_hover"]
+bg_color = Color(0.09, 0.07, 0.09, 0.56)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.95, 0.82, 0.64, 0.35)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[node name="HomeScreen" type="Control" unique_id=1807936492]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_home")
+
+[node name="TitleWorld" type="Label" parent="." unique_id=1457714663]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 174.0
+offset_right = 808.0
+offset_bottom = 260.0
+theme_override_colors/font_color = Color(0.953, 0.824, 0.651, 1)
+theme_override_colors/font_shadow_color = Color(0.1, 0.06, 0.08, 0.65)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 64
+text = "异世界"
+
+[node name="TitleMain" type="Label" parent="." unique_id=1945341691]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 250.0
+offset_right = 808.0
+offset_bottom = 385.0
+theme_override_colors/font_color = Color(1, 0.973, 0.922, 1)
+theme_override_colors/font_shadow_color = Color(0.1, 0.06, 0.08, 0.65)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 112
+text = "公会长"
+
+[node name="Subtitle" type="Label" parent="." unique_id=89197238]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 410.0
+offset_right = 908.0
+offset_bottom = 456.0
+theme_override_colors/font_color = Color(1, 0.973, 0.922, 1)
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 28
+text = "从一张委托，走向属于你的冒险。"
+
+[node name="Tagline" type="Label" parent="." unique_id=960478684]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 464.0
+offset_right = 908.0
+offset_bottom = 499.0
+theme_override_colors/font_color = Color(0.918, 0.863, 0.812, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 23
+text = "经营公会 / 探索迷宫 / 与同伴一起成长"
+
+[node name="MenuConnect" type="Button" parent="." unique_id=795068194]
+layout_mode = 0
+offset_left = 92.0
+offset_top = 520.0
+offset_right = 753.0
+offset_bottom = 616.0
+theme_override_colors/font_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_hover_color = Color(1, 0.992, 0.969, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_primary")
+theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("style_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "连接游戏服务器 开房 / 加入 / 观战"
+
+[node name="MenuOffline" type="Button" parent="." unique_id=525898627]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 634.0
+offset_right = 318.0
+offset_bottom = 702.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "离线单人"
+
+[node name="MenuConnectSettings" type="Button" parent="." unique_id=1809790902]
+layout_mode = 0
+offset_left = 334.0
+offset_top = 634.0
+offset_right = 544.0
+offset_bottom = 702.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "连接设置"
+
+[node name="MenuRules" type="Button" parent="." unique_id=1065846333]
+layout_mode = 0
+offset_left = 560.0
+offset_top = 634.0
+offset_right = 768.0
+offset_bottom = 702.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "规则"
+
+[node name="MenuGallery" type="Button" parent="." unique_id=1687541428]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 898.0
+offset_right = 216.0
+offset_bottom = 959.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_plaque_normal")
+theme_override_styles/pressed = ExtResource("style_plaque_pressed")
+theme_override_styles/hover = ExtResource("style_plaque_hover")
+theme_override_styles/disabled = ExtResource("style_plaque_disabled")
+text = "卡牌图鉴"
+
+[node name="MenuGuide" type="Button" parent="." unique_id=2053534936]
+layout_mode = 0
+offset_left = 236.0
+offset_top = 898.0
+offset_right = 356.0
+offset_bottom = 959.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_plaque_normal")
+theme_override_styles/pressed = ExtResource("style_plaque_pressed")
+theme_override_styles/hover = ExtResource("style_plaque_hover")
+theme_override_styles/disabled = ExtResource("style_plaque_disabled")
+text = "游玩指南"
+
+[node name="MenuPreferences" type="Button" parent="." unique_id=1229882978]
+layout_mode = 0
+offset_left = 376.0
+offset_top = 898.0
+offset_right = 496.0
+offset_bottom = 959.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_plaque_normal")
+theme_override_styles/pressed = ExtResource("style_plaque_pressed")
+theme_override_styles/hover = ExtResource("style_plaque_hover")
+theme_override_styles/disabled = ExtResource("style_plaque_disabled")
+text = "偏好设置"
+
+[node name="MenuAbout" type="Button" parent="." unique_id=1242820013]
+layout_mode = 0
+offset_left = 516.0
+offset_top = 898.0
+offset_right = 636.0
+offset_bottom = 959.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_plaque_normal")
+theme_override_styles/pressed = ExtResource("style_plaque_pressed")
+theme_override_styles/hover = ExtResource("style_plaque_hover")
+theme_override_styles/disabled = ExtResource("style_plaque_disabled")
+text = "关于"
+
+[node name="MenuQuit" type="Button" parent="." unique_id=46283969]
+layout_mode = 0
+offset_left = 656.0
+offset_top = 898.0
+offset_right = 776.0
+offset_bottom = 959.0
+theme_override_colors/font_color = Color(0.204, 0.192, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("style_plaque_normal")
+theme_override_styles/pressed = ExtResource("style_plaque_pressed")
+theme_override_styles/hover = ExtResource("style_plaque_hover")
+theme_override_styles/disabled = ExtResource("style_plaque_disabled")
+text = "退出"
+
+[node name="PortraitCard" type="Panel" parent="." unique_id=2083323363]
+layout_mode = 0
+offset_left = 1124.0
+offset_top = 112.0
+offset_right = 1738.0
+offset_bottom = 962.0
+theme_override_styles/panel = ExtResource("style_paper_frame")
+
+[node name="Portrait" type="TextureRect" parent="PortraitCard" unique_id=771582337]
+clip_contents = true
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 594.0
+offset_bottom = 830.0
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+expand_mode = 1
+stretch_mode = 5
+script = ExtResource("4_portrait")
+
+[node name="Prev" type="Button" parent="PortraitCard" unique_id=367431875]
+layout_mode = 0
+offset_left = 26.0
+offset_top = 396.0
+offset_right = 80.0
+offset_bottom = 454.0
+theme_override_colors/font_color = Color(1, 0.973, 0.922, 1)
+theme_override_colors/font_pressed_color = Color(0.953, 0.824, 0.651, 1)
+theme_override_colors/font_hover_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.08, 0.1, 0.85)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_arrow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_arrow_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_arrow_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_arrow_normal")
+text = "◀"
+
+[node name="Next" type="Button" parent="PortraitCard" unique_id=1284258534]
+layout_mode = 0
+offset_left = 534.0
+offset_top = 396.0
+offset_right = 588.0
+offset_bottom = 454.0
+theme_override_colors/font_color = Color(1, 0.973, 0.922, 1)
+theme_override_colors/font_pressed_color = Color(0.953, 0.824, 0.651, 1)
+theme_override_colors/font_hover_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_outline_color = Color(0.12, 0.08, 0.1, 0.85)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_arrow_normal")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_arrow_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_arrow_hover")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_arrow_normal")
+text = "▶"
+
+[node name="FooterLeft" type="Label" parent="." unique_id=476719501]
+layout_mode = 0
+offset_left = 108.0
+offset_top = 994.0
+offset_right = 908.0
+offset_bottom = 1024.0
+theme_override_colors/font_color = Color(0.824, 0.769, 0.714, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 18
+text = "异世界公会长  /  4.1.1"
+
+[node name="FooterRight" type="Label" parent="." unique_id=156909591]
+layout_mode = 0
+offset_left = 1124.0
+offset_top = 994.0
+offset_right = 1874.0
+offset_bottom = 1024.0
+theme_override_colors/font_color = Color(0.824, 0.769, 0.714, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 20
+text = "慢慢来，公会的灯为你亮着。"

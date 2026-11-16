@@ -1,4 +1,4 @@
-class_name GuildRenpyLogic
+class_name GuildRulesLogic
 extends RefCounted
 
 static func can_pay_gold(me: Dictionary, amount: int) -> bool:

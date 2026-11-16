@@ -21,3 +21,11 @@ GuildMaster-Godot-src/rules/
 GuildMaster-Godot-src/runtime/
 guild-server/replays/
 guild-server/downloads/
+
+# 忽略 IDE 設定與本機編輯器外掛（外掛只影響編輯器，不隨遊戲發佈）
+.idea/
+.vscode/
+GuildMaster-Godot-src/addons/
+
+# 忽略 UI 回歸截圖輸出（執行 tools/regression/run.ps1 產生）
+GuildMaster-Godot-src/tools/regression/out/
