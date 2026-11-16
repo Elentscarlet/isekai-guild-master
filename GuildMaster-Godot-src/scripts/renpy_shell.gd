@@ -90,7 +90,7 @@ static func room(ui, parent: Control):
 			GuildRenpyTable.at(left, ui.card(hero.source[0], Vector2(390, 278)), Rect2(272 + i * 426, 79, 390, 278))
 			GuildRenpyTable.caption(ui, left, "金币 %s / 力量 %s / 秘药 %s" % [int(hero.get("gold", 0)), int(hero.get("strength", 0)), int(hero.get("pot", 0))], Rect2(272 + i * 426, 372, 390, 30), 20)
 			GuildRenpyTable.action(ui, left, "已选择" if mine.get("hero_chosen", false) and mine.get("hero") == key else "选择白版" if i == 0 else "选择黑版", Rect2(272 + i * 426, 417, 390, 65), func(): ui.session.send({"type": "set_hero", "character": ui.browsing_character, "variant": variant}), hero.get("available", false), "Choose_" + variant, true)
-			GuildRenpyTable.action(ui, left, "三级能力", Rect2(272 + i * 426, 497, 390, 50), func(): ui.dialogs.hero_detail({"hero": key}))
+			GuildRenpyTable.action(ui, left, "三级能力", Rect2(272 + i * 426, 497, 390, 50), func(): ui.dialogs.hero_preview(solo_replacement if not solo_replacement.is_empty() else key))
 	else:
 		GuildRenpyTable.caption(ui, left, "伙伴正在选择本局角色" if draft else "对局规则", Rect2(26, 24, 1080, 45), 32, ui.GOLD)
 		var labels = rule_labels(ui, room)

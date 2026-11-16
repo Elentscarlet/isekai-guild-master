@@ -253,7 +253,7 @@ E(97,"花之妖精爱克莉亚",15,kind="passive",tags=["civ","character"],costs
   scoring=[{"stat":"controlled","per":2,"point":1}])
 E(98,"吸血皇女古蕾伊兹",17,kind="passive",tags=["character"],requirements={"tags":{"civ":1,"gold":1},"pieces":1},costs={"gold_pro":2},str_pro=2,strength=1,point=2,
   passive={"tiles_as_strength":True})
-E(99,"诅咒的狐妖封印",18,kind="passive",tags=["character"],requirements={"pieces":1},gold_pro=4,point=6,
+E(99,"诅咒的狐妖封印",9,kind="passive",tags=["character"],requirements={"pieces":1},gold_pro=4,point=6,
   scoring=[{"stat":"tiles","per":1,"point":-1}],steps=[{"op":"supply"}])
 E(100,"真・龙坠少女",23,kind="passive",tags=["character","character"],requirements={"untagged":3},costs={"gold_pro":4},str_pro=5,point=1,
   scoring=[{"stat":"strong_tiles","per":1,"point":1},{"stat":"boss_tiles","per":1,"point":3}])

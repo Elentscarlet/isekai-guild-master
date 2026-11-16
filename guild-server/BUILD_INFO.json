@@ -1,6 +1,6 @@
 {
-  "version": "4.1.1",
-  "revision": "20261101-4.1.1-ai-portrait-fix",
+  "version": "4.2.0",
+  "revision": "20261116-ui-mobile-card99",
   "upstream": "cat90132-beep/isekai-guild-master@refactor",
   "files": {
     "API.md": "75226742c8b058463668d9a43f4711645cfa1ee8d13cd06d54562b63239411e0",
@@ -534,8 +534,8 @@
     "guild_clock.py": "11d35f495cd6d9fe179c1a0a916cc3aaea34adfca30b04861993fb25df9fe57a",
     "guild_content.py": "4da3b0bcbdb18895b5ea83e3129baf07eaa8325da0c777c3a8fc34261dcf77ff",
     "guild_draft.py": "ce76937b553da6d22b81ada9763d40dbc72c9d12dd77ef9426ffd144f8443e63",
-    "guild_engine.py": "ec1cda6f34b6fc2b6453b5827e2095ef42cd9bc084103784578dc7a88c732509",
-    "guild_expansion_data.py": "00afb6dcfc4dbb6753472ee315eee3a00abc2a434f86792932cbda174e90ddbd",
+    "guild_engine.py": "9b4a0c3db2b40bd1ae1ff174fe8e3426b9cead623ab5cf3ffe3f929e35b94b26",
+    "guild_expansion_data.py": "a14e45c5d61f46589bb5792891bee8d687dafacd834f787b87a69a12ea6b75e3",
     "guild_full_rules.py": "e5365f16979539bf998db4b2f746a638f9b025a3db2d2f4c9cf711e4af5224a6",
     "guild_hero_rules.py": "a893b71a2723ff4618f3ac39c65eff39a88374419ac58742f0c8944e65cbe016",
     "guild_lobby.py": "4693f399fbff5872707eb8a1833c769b805d4c2975486ea8d05e75e62895e116",
@@ -795,14 +795,15 @@
     "server_config.json": "d00cce20e72af532e4e13103a0e8ba1afb43acbd537f8e06f9a19d0eb5bfa538",
     "site/app.js": "bbadb3b11da2f440aa001baa7d4e9779a355e888379445010816d16c022c5577",
     "site/favicon.svg": "330cf6e77dc4fef794bd9ce406e407356d3122717caff94fed53ff785243ce63",
-    "site/index.html": "9fec6cf41e1a5f21d9db84acd20e860b014ed21e685f3d465a799d216cd9fdc0",
+    "site/index.html": "3b893f55227d2a96ab27de9a15b25aa6383988c5eb56a80ae7ea58afcbdadc56",
     "site/shots/dlc-guide-4.1.png": "6aa9ca78db85c6a9578a4289a46f7f813bcdf52c38363b7b7ffee406eafcbbe4",
     "site/shots/growth.jpg": "154843eb5077bf406f17dfea1b698c3a708e7f26bfb25d5613f3a22d3c6ea5e3",
     "site/shots/overview.jpg": "9baaa8bc8d8aad49c3946a5a20a28c0e4646806de301f1af106b55f7ea278d16",
     "site/shots/rules.jpg": "76e49afa26df53d1183a50c75529cb1a7dfd9f43cc5ab590e9047f493a673d4c",
     "site/shots/table.jpg": "84aa119ed4795b80f6acd843300d347b226a0542809d89fb963ff24a5c78db5d",
     "site/shots/update-4.1.png": "2b7882a3736ce8d4676e3541499206ae7bc14379b7981c35de027a129e023752",
-    "site/site.json": "3fd05a01dea7970f9222d0eaee861db1343b05140e9b406ff9e4d5a2ab0449cb",
+    "site/shots/update-4.2.png": "cbbb7a1d8a9a209bfd955c626abeb0691ca21e3e3d3a3a02ce5a5afffb10ffc1",
+    "site/site.json": "616fb0c1f88beae521302932194320abc717238dbae8e37549e928595029994c",
     "site/style.css": "62aa8be11dae6487b28f8aa756006f059d1eea83d2c429cc6fae2b7b555b8327"
   },
   "voice_validation": {

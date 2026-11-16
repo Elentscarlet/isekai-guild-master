@@ -796,7 +796,7 @@ class CoreEngine:
         if not self._requirements(player, card.get("requirement", {})) or not self._requirements(player, card.get("requirements", {})):
             raise ValueError("Achievement requirements are not met")
         strength = _integer(action.get("strength", 0), "strength")
-        if strength and not card.get("can_trans", False):
+        if strength and not (card.get("can_trans", False) or HEROES[player['hero']].get('passive', {}).get('strength_as_gold')):
             raise ValueError("This card cannot use strength for its gold price")
         maximum = (max(0,card.get('price',0)-discount)+4)//5
         if strength > maximum:
@@ -961,7 +961,7 @@ class CoreEngine:
             if not self._requirements(player, card.get("requirement", {})) or not self._requirements(player, card.get("requirements", {})):
                 continue
             price = max(0, card.get("price", 0))
-            spend_cap = (price + 4) // 5 if card.get("can_trans") else 0
+            spend_cap = (price + 4) // 5 if card.get("can_trans") or HEROES[player['hero']].get('passive', {}).get('strength_as_gold') else 0
             for spend in range(spend_cap + 1):
                 costs = dict(card.get("costs", {}))
                 if spend:

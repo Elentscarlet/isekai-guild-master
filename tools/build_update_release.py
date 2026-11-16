@@ -63,10 +63,10 @@ def main():
     if not args.skip_export and not args.server_only:
         if not editor.is_file():raise SystemExit('Set GODOT_BIN to the Godot 4.7.2 console executable.')
         preset=(SRC/'export_presets.cfg').read_text('utf8')
-        preset=preset.replace('name="GuildMaster"','name="Windows"').replace('runnable=false','runnable=true')
-        preset=re.sub(r'export_path="[^"]*"','export_path="../GuildMaster-Godot/GuildMaster.exe"',preset)
+        preset=preset.replace('name="GuildMaster"','name="Windows"')
+        preset=re.sub(r'export_path="[^"]*"','export_path="../GuildMaster-Godot/GuildMaster.exe"',preset,count=1)
         preset=preset.replace('exclude_filter="art/*, rules/*, ui/bottons/*, reference/*"','exclude_filter="art/*,rules/*,runtime/*,tools/*,data/qa-*.json,data/demo.json,reference/*"')
-        if template.exists():preset=re.sub(r'custom_template/release="[^"]*"','custom_template/release="'+Path(os.path.relpath(template,SRC)).as_posix()+'"',preset)
+        if template.exists():preset=re.sub(r'custom_template/release="[^"]*"','custom_template/release="'+Path(os.path.relpath(template,SRC)).as_posix()+'"',preset,count=1)
         (SRC/'export_presets.cfg').write_text(preset,'utf8')
         env=os.environ.copy();env['APPDATA']=str(ROOT/'qa/build-appdata');env['LOCALAPPDATA']=str(ROOT/'qa/build-localappdata')
         for key in ('APPDATA','LOCALAPPDATA'):Path(env[key]).mkdir(parents=True,exist_ok=True)
@@ -77,7 +77,7 @@ def main():
         if result.returncode or errors:raise SystemExit('\n'.join(errors[-20:]) or report[-2000:])
         export_receipt.write_text(json.dumps(dict(source_fingerprint=export_fingerprint(),pck_sha256=hashlib.sha256((PACK/'GuildMaster.pck').read_bytes()).hexdigest()),indent=2),'utf8')
     (PACK/'docs').mkdir(exist_ok=True)
-    for name in ['DLC玩法总览.png','更新日志_4.1.png']:shutil.copy2(ROOT/'docs'/name,PACK/'docs'/name)
+    for name in ['DLC玩法总览.png','更新日志_4.1.png','更新日志_4.2.png']:shutil.copy2(ROOT/'docs'/name,PACK/'docs'/name)
     for folder in (PACK,SERVER):
         (folder/'docs').mkdir(exist_ok=True)
         for name in ['CHARACTER_VOICES.json','VOICE_VALIDATION.json','SUPPLIED_VOICE_OVERRIDES.json','PORTRAIT_STATUS.json','AI_PORTRAITS.json']:
@@ -139,12 +139,14 @@ def main():
     for folder,width in [('cardfull',800),('cards',240)]:
         im=Image.open(PACK/'art/supplied/lazy_life.webp').convert('RGB');im.thumbnail((width,width));im.save(SERVER/'replay_web'/folder/'303.jpg',quality=90)
     shots=SERVER/'site/shots';shots.mkdir(exist_ok=True)
-    for source,name in [('DLC玩法总览.png','dlc-guide-4.1.png'),('更新日志_4.1.png','update-4.1.png')]:shutil.copy2(ROOT/'docs'/source,shots/name)
+    for source,name in [('DLC玩法总览.png','dlc-guide-4.1.png'),('更新日志_4.1.png','update-4.1.png'),('更新日志_4.2.png','update-4.2.png')]:shutil.copy2(ROOT/'docs'/source,shots/name)
     config=SERVER/'site/site.json';data=json.loads(config.read_text('utf8'));data['version']=VERSION;config.write_text(json.dumps(data,ensure_ascii=False,indent=2),'utf8')
     for folder in ([SERVER] if args.server_only else [PACK,SERVER]):manifest(folder)
     dist=ROOT/'dist';dist.mkdir(exist_ok=True)
     client=next(a for a in json.loads((ROOT/'release-files.json').read_text('utf8'))['artifacts'] if a['name']==f'GuildMaster-Windows-{VERSION}.zip') if args.server_only else package(PACK,dist/f'GuildMaster-Windows-{VERSION}.zip')
     artifacts=[client,package(SERVER,dist/f'guild-server-{VERSION}.zip')]
+    android=dist/f'GuildMaster-Android-{VERSION}.apk'
+    if android.is_file():artifacts.append(dict(name=android.name,size_bytes=android.stat().st_size,sha256=hashlib.sha256(android.read_bytes()).hexdigest()))
     (ROOT/'release-files.json').write_text(json.dumps(dict(version=VERSION,revision=REVISION,artifacts=artifacts),ensure_ascii=False,indent=2),'utf8')
     print(json.dumps(artifacts,indent=2))
 

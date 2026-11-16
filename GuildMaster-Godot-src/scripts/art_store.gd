@@ -41,7 +41,7 @@ func texture(source: String) -> Texture2D:
 		return remember(source, result)
 
 
-	var root = ProjectSettings.globalize_path("res://") if OS.has_feature("editor") else OS.get_executable_path().get_base_dir()
+	var root = "res://" if OS.has_feature("android") else ProjectSettings.globalize_path("res://") if OS.has_feature("editor") else OS.get_executable_path().get_base_dir()
 	var path = root.path_join("art").path_join(source)
 	if not FileAccess.file_exists(path) and source.begins_with("images/"):
 		path = root.path_join("art").path_join(source.trim_prefix("images/"))
@@ -57,6 +57,12 @@ func natural_size(source: String) -> Vector2:
 	return tex.get_size() if tex else Vector2(720, 1024)
 
 func card(number) -> Dictionary: return catalog.cards.get(str(int(number)), {})
+
+func hero_face(player: Dictionary, rank: int = -1) -> String:
+	var sources = catalog.heroes.get(player.get("hero", ""), {}).get("source", [])
+	if sources.is_empty(): return ""
+	var index = int(player.get("hero_level", 1)) - 1 if rank < 0 else rank
+	return str(sources[clampi(index, 0, sources.size() - 1)])
 
 func portrait_source(hero_key: String) -> String:
 	return str(portrait_sources.get(hero_key, ""))

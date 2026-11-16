@@ -51,6 +51,12 @@ var final_notice: Control
 var final_notice_serial = 0
 var feedback_scope = ""
 var last_action_count = -1
+var mobile = OS.has_feature("android") or OS.get_cmdline_user_args().has("--mobile-ui")
+var announcements: GuildAnnouncements
+var chat_composer: Control
+var last_log_id = -1
+var known_levels = {}
+var last_pending_notice = -1
 
 func rerender():
 	dirty = true;last_signature = ""
@@ -60,6 +66,9 @@ func undo():
 	if state.get("available", false): session.action("undo", {"undo_id": state.get("id")})
 
 func _ready():
+	if mobile:
+		get_window().content_scale_size = Vector2i(1280, 720)
+		get_window().content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 	renpy_reference = JSON.parse_string(FileAccess.get_file_as_string("res://data/renpy_layout_reference.json"))
 	_load_preferences();GuildLang.traditional = str(prefs.language) == "zh_TW";_apply_frame_settings();_build_theme();session.rules_catalog = store.catalog;add_child(session)
 	DisplayServer.window_set_title(GuildLang.t("异世界公会长 · Godot"))
@@ -72,16 +81,21 @@ func _ready():
 	toast_label.add_theme_stylebox_override("normal", GuildPaperSkin.paper("paper", 18))
 	toast_label.add_theme_font_size_override("font_size", 21)
 	dialogs = GuildRenpyDialogs.new();dialogs.ui = self
+	announcements = GuildAnnouncements.new();add_child(announcements);announcements.setup(self)
 	_setup_audio()
 	voice = GuildVoice.new();add_child(voice);voice.setup(self)
 	session.changed.connect( func(): dirty = true)
 	session.notice.connect(show_toast)
+	session.chat_received.connect(announcements.chat)
+	session.gold_payment_requested.connect(dialogs.gold_payment)
 	session.connected.connect( func(): show_toast("公会连接成功。" if session.local_mode else "服务器已确认连接。"))
 	resized.connect(_position_preview)
 	resized.connect(_position_final_notice)
 	_render()
 	var args = OS.get_cmdline_user_args()
 	debug_mode = args.has("--ui-test")
+	if args.has("--verify-mobile"):
+		package_check = null;connection_check = load("res://scripts/mobile_check.gd").new();connection_check.run(self);return
 	if args.has("--verify-public-connection"):
 		connection_check = load("res://scripts/connection_check.gd").new();connection_check.run(self);return
 	if args.has("--verify-package"):
@@ -120,12 +134,14 @@ func box(fill: Color, border: Color, radius: int = 12, padding: int = 16) -> Sty
 	return result
 
 func label(text: String, points: int = 20, color: Color = INK) -> Label:
+	if mobile: points = maxi(points, 26)
 	var node = Label.new();node.text = GuildLang.t(text);node.add_theme_font_size_override("font_size", points);node.add_theme_color_override("font_color", color)
 	if points >= 27: node.add_theme_font_override("font", GuildPaperSkin.title_font())
 	return node
 
 func button(text: String, callback: Callable, enabled: bool = true, primary: bool = false) -> Button:
 	var node = Button.new();node.text = GuildLang.t(text);node.custom_minimum_size.y = 46;node.disabled = not enabled
+	if mobile: node.custom_minimum_size.y = 72;node.add_theme_font_size_override("font_size", 28)
 	node.mouse_default_cursor_shape = CURSOR_POINTING_HAND
 	if primary:
 		for state in ["normal", "hover", "pressed"]: node.add_theme_stylebox_override(state, GuildPaperSkin.banner(GuildPaperSkin.primary_state(state), 46))
@@ -158,7 +174,7 @@ func box_button(text: String, callback: Callable, enabled: bool = true, primary:
 func step_button(label: String, callback: Callable, enabled: bool = true) -> Button:
 	# 所有加减步进钮：统一 46×46 方形与 plaque 样式。
 	var node = button(label, callback, enabled)
-	node.custom_minimum_size = Vector2(46, 46)
+	node.custom_minimum_size = Vector2(72, 72) if mobile else Vector2(46, 46)
 	for state in ["normal", "hover", "pressed", "disabled"]: node.add_theme_stylebox_override(state, GuildPaperSkin.plaque(state, 8))
 	return node
 
@@ -291,12 +307,32 @@ func _process(_delta):
 		var signature = JSON.stringify([session.room, copy, session.rooms, session.active, session.synchronized, session.directory, session.room_connected, session.role, session.player_id])
 		if signature != last_signature: last_signature = signature;_render();dialogs.refresh_snapshot()
 	if is_instance_valid(game_clock):
-		var banks = session.game.get("clock")
-		var timebank = banks.get(str(session.player_id), {}) if banks is Dictionary else {}
-		game_clock.text = ("基础 %ss / 备用 %ss" % [int(timebank.get("base", 0)), int(timebank.get("reserve", 0))]) if not timebank.is_empty() else ""
-	var banks = session.game.get("clock", {});banks = banks if banks is Dictionary else {}
+		var actor = session.player_id
+		for player in session.game.get("players", []):
+			var banks = session.game.get("clock", {})
+			if banks is Dictionary and banks.get(str(int(player.id)), {}).get("active", false): actor = int(player.id);break
+		game_clock.text = clock_text(actor)
 	for item in player_clocks:
-		if is_instance_valid(item.label) and banks.has(item.id): item.label.text = "%ss + %ss" % [int(banks[item.id].base), int(banks[item.id].reserve)]
+		if is_instance_valid(item.label): item.label.text = GuildLang.t(str(item.get("prefix", ""))) + clock_text(int(item.id), item.get("compact", false))
+
+func clock_text(player_id: int, compact: bool = false) -> String:
+	var banks = session.game.get("clock", {})
+	if not banks is Dictionary or not banks.has(str(player_id)): return ""
+	var bank = banks[str(player_id)];var elapsed = 0.0
+	if bank.get("active", false) and session.active and not session.room.get("paused", false): elapsed = maxf(0, float(Time.get_ticks_msec() - session.clock_received_msec) / 1000.0)
+	var base = maxf(0, float(bank.get("base", 0)) - elapsed)
+	var reserve = maxf(0, float(bank.get("reserve", 0)) - maxf(0, elapsed - float(bank.get("base", 0))))
+	return ("%ss + %ss" if compact else GuildLang.t("基础 %ss / 备用 %ss")) % [ceili(base), ceili(reserve)]
+
+func toggle_chat():
+	if is_instance_valid(chat_composer): chat_composer.queue_free();chat_composer = null;return
+	if session.local_mode: return
+	var row = HBoxContainer.new();chat_composer = panel(row, 12);add_child(chat_composer);chat_composer.name = "ChatComposer";chat_composer.z_index = 75
+	chat_composer.size = Vector2(minf(880, size.x - 32), 94 if mobile else 72);chat_composer.position = Vector2((size.x - chat_composer.size.x) / 2, size.y - chat_composer.size.y - 16)
+	var field = LineEdit.new();field.name = "DanmakuInput";field.placeholder_text = GuildLang.t("发送弹幕…");field.max_length = 180;field.size_flags_horizontal = Control.SIZE_EXPAND_FILL;row.add_child(field)
+	var send = func():
+		if not field.text.strip_edges().is_empty(): session.send({"type": "chat", "message": field.text.strip_edges()});field.clear()
+	row.add_child(button("发送", send, true, true));row.add_child(button("收起", toggle_chat));field.text_submitted.connect(func(_text): send.call());field.grab_focus()
 
 func _input(event):
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -364,6 +400,25 @@ func _sync_game_feedback():
 	var game = session.game; var phase = game.get("phase", ""); var feedback = game.get("feedback", {})
 	var scope = session.room_id; var event_id = int(feedback.get("id", 0)); var round_number = int(game.get("round", 1)); var actions = int(game.get("action_count", 0))
 	var was_scope = feedback_scope; var was_phase = last_phase
+	var log_entries = game.get("log", [])
+	var current_log = int(log_entries[-1].get("id", 0)) if not log_entries.is_empty() else 0
+	if was_scope == scope and not was_phase.is_empty() and last_log_id >= 0:
+		var fresh = []
+		for entry in log_entries:
+			if int(entry.get("id", 0)) > last_log_id: fresh.append(str(entry.get("message", "")))
+		if not fresh.is_empty(): announcements.action("行动步骤", "\n".join(fresh))
+		for player in game.get("players", []):
+			var key = str(int(player.id)) + ":" + str(player.hero)
+			if known_levels.has(key) and int(player.get("hero_level", 1)) > int(known_levels[key]):
+				announcements.action("人物等级提升", "%s：%s 升至 %s 级" % [player.name, store.catalog.heroes.get(player.hero, {}).get("name", "看板娘"), int(player.hero_level)])
+		var choice = game.get("pending")
+		if choice is Dictionary and int(choice.id) != last_pending_notice:
+			for player in game.get("players", []):
+				if int(player.id) == int(choice.player): announcements.action("行动步骤", "%s：%s" % [player.name, choice.get("title", "正在结算卡牌效果")]);break
+		last_pending_notice = int(choice.id) if choice is Dictionary else -1
+	else: announcements.clear_actions()
+	last_log_id = current_log;known_levels.clear()
+	for player in game.get("players", []): known_levels[str(int(player.id)) + ":" + str(player.hero)] = int(player.get("hero_level", 1))
 	if not was_phase.is_empty() and was_scope == scope:
 		if phase == "final" and was_phase != "final": play_sound("final");_show_final_notice()
 		elif last_feedback != event_id: play_sound(feedback.get("kind", "card"));show_toast(feedback.get("message", ""))
@@ -402,8 +457,11 @@ func close_dialog(restore_pending: bool = true):
 	if restore_pending: rerender()
 
 func _render():
+	game_clock = null;player_clocks = []
 	if is_instance_valid(voice): voice.sync()
 	if session.game.is_empty():
+		announcements.clear_actions();known_levels.clear();last_log_id = -1;last_pending_notice = -1
+		if session.room.is_empty() and is_instance_valid(chat_composer): chat_composer.queue_free();chat_composer = null
 		_hide_final_notice();last_phase = "";last_feedback = -1;last_round = -1;last_action_count = -1;feedback_scope = "";last_view_player = -1;last_quest_report = -1
 	elif session.game.get("phase") == "finished" and last_phase != "finished":
 		_hide_final_notice()
@@ -414,8 +472,14 @@ func _render():
 	if freshly_home and not backdrop.home: home_portrait = ""
 	backdrop.home = freshly_home;backdrop.queue_redraw()
 	if session.game.is_empty(): selection_scroll_states.clear()
-	if session.game.is_empty() and not session.room.is_empty(): GuildRenpyShell.room(self, content);return
-	if session.game.is_empty() and not session.directory: GuildRenpyShell.home(self, content);return
+	if session.game.is_empty() and not session.room.is_empty():
+		if mobile: GuildMobileUI.room(self, content)
+		else: GuildRenpyShell.room(self, content)
+		return
+	if session.game.is_empty() and not session.directory:
+		if mobile: GuildMobileUI.home(self, content)
+		else: GuildRenpyShell.home(self, content)
+		return
 	if not session.game.is_empty():
 		_render_game(content)
 		_sync_game_feedback()

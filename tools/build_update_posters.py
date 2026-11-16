@@ -2,6 +2,7 @@
 from pathlib import Path
 import json
 from PIL import Image,ImageDraw,ImageFont
+import argparse
 
 ROOT=Path(__file__).resolve().parents[1]
 BG='#efe5d5';PAPER='#fffaf0';INK='#343133';MUTED='#756b63';RUST='#874449';GOLD='#b19057'
@@ -17,7 +18,7 @@ def lines(text,width,size):
     for paragraph in str(text).split('\n'):
         line=''
         for ch in paragraph:
-            if f.getlength(line+ch)>width and line:result.append(line);line=ch
+            if f.getlength(line+ch)>width and line and ch not in '，。；：！？、）》」』】,.!?;:':result.append(line);line=ch
             else:line+=ch
         result.append(line)
     return result
@@ -102,4 +103,52 @@ def release_notes():
     image=image.crop((0,0,1800,min(total,y+210)))
     image.save(ROOT/'docs/更新日志_4.1.png',optimize=True);print('Release notes:',image.size)
 
-if __name__=='__main__':guide();release_notes()
+def release_notes_42():
+    items=[
+        ('行动倒计时恢复显示','经典桌面、总览与手机版均显示基础时间和备用时间；等待服务器快照时持续更新，顶部计时不会被按钮遮挡。'),
+        ('聊天改为滚动弹幕','消息以「玩家名：内容」飘过画面。发送框可收起，聊天不再占用卡牌结算弹窗。'),
+        ('斯卡蒂白版支付修复','普通事件卡、王权和其他金币费用可选择投入战力，允许保留金币。每点战力抵5金币，超额抵付不找零。'),
+        ('人物升级与等级显示','人物升级时显示提示；人物详情默认打开当前等级卡面，桌面与公会详情同步显示等级。'),
+        ('多人行动步骤提示','公开行动和后续结算步骤加入自动消失的提示窗，展示行动玩家与操作内容；私人选项仍仅本人可见。'),
+        ('Phrase百货结算核验','按已打出正面事件卡的当前声望结算，包含计数标记与可变声望，忽略翻面卡；结算回归测试通过。'),
+    ]
+    rows=[]
+    for index in range(0,len(items),2):
+        pair=items[index:index+2]
+        height=105+max(len(lines(body,750,31))*47 for _,body in pair)+30
+        rows.append((pair,height))
+    shot=Image.open(ROOT/'qa/gameplay-ui/mobile-table.png').convert('RGB')
+    shot=shot.resize((1656,round(1656*shot.height/shot.width)),Image.Resampling.LANCZOS)
+    total=570+sum(h+24 for _,h in rows)+220+shot.height+240
+    image=Image.new('RGB',(1800,total),BG)
+    header(image,'RELEASE NOTES  /  2026.11.16','异世界公会长 · v4.2.0','本轮修复汇总  /  卡牌费用 · 行动与聊天 · Android手机版')
+    d=ImageDraw.Draw(image)
+    d.rounded_rectangle((60,320,1740,540),radius=16,fill=PAPER,outline=GOLD,width=3)
+    d.text((94,340),'卡牌费用修复',font=font(30,True),fill=RUST)
+    d.text((94,392),'被诅咒的妖狐的封印',font=font(45,True),fill=INK)
+    d.text((1350,348),'9',font=font(100,True),fill=RUST)
+    d.text((1432,411),'金币',font=font(34,True),fill=RUST)
+    paragraph(d,(96,469),'原18金币 → 9金币；界面说明、费用显示与实际扣费同步修正。',1530,28,MUTED)
+    y=570
+    for pair,height in rows:
+        for j,(title,body) in enumerate(pair):
+            x=60+j*852
+            d.rounded_rectangle((x,y,x+828,y+height),radius=14,fill=PAPER,outline='#d0bda6',width=2)
+            d.text((x+30,y+25),title,font=font(35,True),fill=RUST)
+            paragraph(d,(x+30,y+93),body,750,31,INK,16)
+        y+=height+24
+    d.text((72,y+12),'Android手机版 · 横屏触控',font=font(43,True),fill=INK)
+    paragraph(d,(72,y+82),'放大字体与主要按钮，重排桌面、选牌、出牌与效果结算界面。\n包含离线单人、2–5人同机客座与本机存档；沿用桌面版规则引擎。',1656,31,INK,14)
+    y+=220
+    image.paste(shot,(72,y));y+=shot.height+32
+    d.line((72,y,1728,y),fill=GOLD,width=3)
+    paragraph(d,(72,y+24),'Windows / Android / 服务端同步提供更新包。联机请同步更新服务端。',1656,27,INK)
+    paragraph(d,(72,y+75),'Android 7.0+，ARM64 / x86_64。APK已打包并通过签名检查，安卓设备运行待实测。',1656,24,MUTED)
+    d.text((72,y+128),'github.com/shuiwen879867/isekai-guild-master',font=font(23),fill=MUTED)
+    target=ROOT/'docs/更新日志_4.2.png';image.save(target,optimize=True)
+    print('Current release poster:',image.size,target.name)
+
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('--current-only',action='store_true');args=parser.parse_args()
+    if not args.current_only:guide();release_notes()
+    release_notes_42()

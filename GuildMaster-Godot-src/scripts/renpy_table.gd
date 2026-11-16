@@ -52,6 +52,8 @@ static func side_button(ui, text: String, callback: Callable, enabled: bool = tr
 	return node
 
 static func draw(ui, parent: Control):
+	if ui.mobile:
+		GuildMobileUI.table(ui, parent);return
 	if ui.prefs.get("layout", "classic") == "dashboard":
 		GuildDashboardTable.draw(ui, parent);return
 	var game = ui.session.game; var me = ui.session.me(); var phase = game.get("phase", "")
@@ -141,6 +143,8 @@ static func header(ui, parent: Control, game: Dictionary, actor: Dictionary):
 	at(frame, progress, Rect2(632, 18, 166, 20), "CivilizationProgress")
 	caption(ui, frame, "文明已达标" if remaining == 0 else "还差 %s 文明" % remaining, Rect2(632, 44, 166, 18), 13, Color("4c6553") if remaining == 0 else ui.MUTED).name = "CivilizationRemaining"
 	caption(ui, frame, "瘴气 %s" % int(game.miasma), Rect2(812, 16, 110, 24), 17, ui.MUTED).name = "MiasmaValue"
+	ui.game_clock = caption(ui, parent, "", Rect2(620, 94, 470, 24), 18, Color("fffdf7"));ui.game_clock.name = "ActionClock"
+	ui.game_clock.add_theme_color_override("font_outline_color", Color("29232b"));ui.game_clock.add_theme_constant_override("outline_size", 3)
 	var callbacks = {"公会记录": func(): ui.dialogs.game_log(), "撤回上一步": func(): ui.undo(), "王权": func(): ui.dialogs.achievements(), "售牌": func(): ui.dialogs.market(), "宝箱": func(): ui.dialogs.treasures(), "离开": func(): ui.dialogs.leave()}
 	var shift = 0.0
 	for data in ui.renpy_reference.get("table", []):
@@ -200,7 +204,8 @@ static func players(ui, parent: Control, game: Dictionary, me: Dictionary):
 		var status = caption(ui, panel, state, Rect2(150, 139, 150, 20) if passed else Rect2(102, 115, 190, 21), 15, ui.GOLD);status.name = "SeatStatus"
 		if passed: status.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		var bank = game.get("clock", {});bank = bank if bank is Dictionary else {}
-		if state.is_empty() and bank.has(str(int(player.id))): ui.player_clocks.append({"label": status, "id": str(int(player.id))})
+		if bank.has(str(int(player.id))):
+			ui.player_clocks.append({"label": status, "id": str(int(player.id)), "prefix": state + " " if not state.is_empty() else "", "compact": true})
 		var counters = HBoxContainer.new();counters.add_theme_constant_override("separation", 8)
 		counters.add_child(GuildTableView.adventurers(ui, player, 17))
 		var hearts = HBoxContainer.new();hearts.add_theme_constant_override("separation", 3);hearts.tooltip_text = GuildLang.t("好感度");hearts.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -225,7 +230,7 @@ static func players(ui, parent: Control, game: Dictionary, me: Dictionary):
 static func stock(ui, parent: Control, focus: Dictionary):
 	var affection = int(focus.get("affection", 0))
 	_action_reminders(ui, parent)
-	caption(ui, parent, "好感度", Rect2(768, 258, 202, 24), 22, ui.GOLD)
+	caption(ui, parent, "好感度 · 等级 %s" % int(focus.get("hero_level", 1)), Rect2(768, 258, 202, 24), 20, ui.GOLD)
 	var hearts_panel = Panel.new();hearts_panel.name = "AffectionHearts"
 	var style = StyleBoxFlat.new();style.bg_color = Color("f5eee0");style.border_color = Color("1c1a1e")
 	style.set_border_width_all(2);style.set_corner_radius_all(9)

@@ -4,6 +4,8 @@ extends Node
 signal changed
 signal notice(message: String)
 signal connected
+signal chat_received(name_text: String, message: String)
+signal gold_payment_requested(kind: String, args: Dictionary, amount: int)
 
 const MAX_FRAME = 262144
 var peer = StreamPeerTCP.new()
@@ -38,6 +40,8 @@ var reconnect_room = {}
 var synchronized = false
 var room_connected = false
 var rules_catalog = {}
+var clock_received_msec = 0
+var offline_plugin
 
 static func normalize(value):
 
@@ -50,6 +54,9 @@ static func normalize(value):
 
 func _process(_delta):
 	if waiting_local:
+		var failure = endpoint.get_basename() + ".error"
+		if FileAccess.file_exists(failure):
+			waiting_local = false;notice.emit("离线规则启动失败：" + FileAccess.get_file_as_string(failure));return
 		if FileAccess.file_exists(endpoint):
 			var record = JSON.parse_string(FileAccess.get_file_as_string(endpoint))
 			if record is Dictionary and record.has("port"):
@@ -161,11 +168,16 @@ func connect_server(host: String, number: int, name_text: String):
 
 func start_local(name_text: String):
 	close();nickname = name_text;local_mode = true
+	endpoint = ProjectSettings.globalize_path("user://local-" + str(Time.get_ticks_usec()) + ".json")
+	if OS.has_feature("android"):
+		if not Engine.has_singleton("GuildOffline"):
+			notice.emit("离线模块未安装，请使用完整手机版 APK。");return
+		offline_plugin = Engine.get_singleton("GuildOffline")
+		offline_plugin.start(endpoint);waiting_local = true;connect_stamp = Time.get_ticks_msec();return
 	var root = ProjectSettings.globalize_path("res://") if OS.has_feature("editor") else OS.get_executable_path().get_base_dir()
 	var python = root.path_join("runtime/pythonw.exe")
 	if not FileAccess.file_exists(python):
 		notice.emit("缺少离线运行库，请使用完整客户端包。");return
-	endpoint = ProjectSettings.globalize_path("user://local-" + str(Time.get_ticks_usec()) + ".json")
 	child_pid = OS.create_process(python, [root.path_join("rules/local_bridge.py"), "--endpoint", endpoint], false)
 	if child_pid < 0:
 		notice.emit("无法启动离线规则模块。");return
@@ -202,6 +214,26 @@ func send(message: Dictionary):
 
 func action(kind: String, args: Dictionary = {}):
 	if role == "spectator": notice.emit("观战者只能查看公开信息。");return
+	var amount = gold_cost(kind, args)
+	if amount > 0 and me().get("strength_as_gold", false) and int(me().get("strength", 0)) > 0:
+		gold_payment_requested.emit(kind, args.duplicate(true), amount);return
+	_send_action(kind, args)
+
+func gold_cost(kind: String, args: Dictionary) -> int:
+	match kind:
+		"research": return GuildRenpyLogic.research_price(me(), game, args.get("cards", []).size())
+		"build":
+			for cell in game.get("board", []):
+				if cell.id == args.get("tile"): return int(cell.get("build_gold", game.get("rules", {}).get("build_cost", 10)))
+		"develop": return maxi(0, 20 - 5 * int(args.get("festival", {}).get("gold", 0))) if args.get("slots", []).has("gold") else 0
+		"hire": return 15
+	return 0
+
+func action_paid(kind: String, args: Dictionary, strength: int):
+	_send_action("payment_preference", {"strength": strength})
+	_send_action(kind, args)
+
+func _send_action(kind: String, args: Dictionary):
 	var command = args.duplicate(true);command["type"] = kind
 	send({"type": "action", "action": command})
 
@@ -243,6 +275,7 @@ func _receive(message: Dictionary):
 			player_id = int(message.get("player_id", -1)) if message.get("player_id") != null else -1
 			role = message.get("role", "player");resume_token = message.get("resume_token", "");room_id = message.get("room_id", "")
 		"snapshot":
+			clock_received_msec = Time.get_ticks_msec()
 			synchronized = true
 			room = message.get("room") if message.get("room") is Dictionary else {}
 			game = message.get("game") if message.get("game") is Dictionary else {}
@@ -252,7 +285,8 @@ func _receive(message: Dictionary):
 		"error":
 			if not handshake_complete: _fail(message.get("message", "服务器拒绝连接。"));return
 			notice.emit(message.get("message", ""))
-		"notice", "chat": notice.emit(message.get("message", ""))
+		"notice": notice.emit(message.get("message", ""))
+		"chat": chat_received.emit(str(message.get("name", "访客")), str(message.get("message", "")))
 	changed.emit()
 
 func me() -> Dictionary:
@@ -285,6 +319,7 @@ func _fail(message: String):
 
 func close():
 	active = false;waiting_local = false;_disconnect_transport()
+	if offline_plugin != null: offline_plugin.stop();offline_plugin = null
 	handshake_complete = false
 	directory_received = false
 	synchronized = false;room_connected = false

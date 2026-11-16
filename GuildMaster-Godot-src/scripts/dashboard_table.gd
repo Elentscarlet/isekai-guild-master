@@ -25,7 +25,9 @@ static func draw(ui, parent: Control):
 		T.caption(ui, row, "P%s  %s" % [int(p.id) + 1, p.name], Rect2(55, 4, 202, 24), 18, ui.GOLD if int(game.turn) == i else ui.INK)
 		T.caption(ui, row, "金币 %s  力量 %s  秘药 %s" % [int(p.gold), int(p.strength), int(p.pot)], Rect2(55, 29, 204, 20), 14)
 		var state = GuildTableView.player_status(ui, p, int(game.turn) == i)
-		T.caption(ui, row, state, Rect2(55, 49, 204, 18), 13, ui.MUTED)
+		var status = T.caption(ui, row, state, Rect2(55, 49, 204, 18), 13, ui.MUTED)
+		var banks = game.get("clock", {})
+		if banks is Dictionary and banks.has(str(int(p.id))): ui.player_clocks.append({"label": status, "id": str(int(p.id)), "prefix": state + " ", "compact": true})
 	var y = 84 + game.players.size() * 75 + 8
 	for entry in [["手牌 / 情报", func(): ui.dialogs.hand(), true], ["特殊行动", func(): ui.dialogs.abilities(), can], ["扩充行动", func(): ui.dialogs.expansions(), not me.is_empty()], ["本季闭店", func(): ui.dialogs.confirm_pass(), can], ["偏好设置", func(): ui.dialogs.settings(), true], ["返回 / 离开", func(): ui.dialogs.leave(), true]]:
 		T.action(ui, left, entry[0], Rect2(12, y, 262, 40), entry[1], entry[2]);y += 45

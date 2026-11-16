@@ -22,13 +22,17 @@ def main():
             key=str(key)
             if key not in catalog[section]:catalog[section][key]=definition
             else:
+                old_price=catalog[section][key].get('price')
                 saved={k:v for k,v in catalog[section][key].items() if k in ('source','portrait','image_path','face_variants','printed_text','name')}
                 catalog[section][key].update(definition);catalog[section][key].update(saved)
+                if section=='cards' and old_price!=definition.get('price') and catalog[section][key].get('ui_summary'):
+                    catalog[section][key]['ui_summary']=catalog[section][key]['ui_summary'].replace('费用%s金币'%old_price,'费用%s金币'%definition['price'],1)
                 if key.startswith('shion'):catalog[section][key]['name']='紫苑'
     catalog['characters']=CHARACTERS
     path.write_text(json.dumps(catalog,ensure_ascii=False,separators=(',',':')),'utf8')
     for folder in ('art','runtime','rules'):
         if not (SRC/folder).exists():shutil.copytree(PACK/folder,SRC/folder)
+    for path in (PACK/'rules').glob('*.py'):shutil.copy2(path,SRC/'rules'/path.name)
     # The art directory may already exist from an earlier build. Synchronize
     # the independently generated portraits needed by source-tree runs.
     portraits=json.loads((SRC/'data/portraits.json').read_text('utf8'))['sources']

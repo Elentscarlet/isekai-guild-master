@@ -9,7 +9,13 @@ var royal_strength = 0
 func overlay(title: String, dimensions: Vector2, key: String = "", close_button: bool = true) -> Control:
 	ui.close_dialog(false);ui.modal_key = key
 	var shade = ColorRect.new();shade.color = Color(0, 0, 0, 0.68);shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);ui.modal_layer.add_child(shade);ui.dialog = shade
-	var frame = GuildRenpyTable.player_surface(ui, shade, Rect2((ui.size - dimensions) / 2, dimensions), "RenpyOverlay")
+	var frame: Control
+	if ui.mobile:
+		var scroller = ScrollContainer.new();shade.add_child(scroller);scroller.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT);scroller.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+		var factor = minf(1.0, (ui.size.x - 24) / dimensions.x)
+		var holder = Control.new();holder.custom_minimum_size = Vector2(dimensions.x * factor, maxf(ui.size.y, dimensions.y * factor + 24));scroller.add_child(holder)
+		frame = GuildRenpyTable.player_surface(ui, holder, Rect2(Vector2(12, 12), dimensions), "RenpyOverlay");frame.scale = Vector2.ONE * factor
+	else: frame = GuildRenpyTable.player_surface(ui, shade, Rect2((ui.size - dimensions) / 2, dimensions), "RenpyOverlay")
 	GuildRenpyTable.caption(ui, frame, title, Rect2(32, 28, dimensions.x - 200, 46), 33, ui.GOLD)
 	if key != "pending" and close_button: GuildRenpyTable.action(ui, frame, "关闭", Rect2(dimensions.x - 120, 28, 88, 49), func(): ui.close_dialog(), true, "CloseDialog")
 	return frame
@@ -31,6 +37,7 @@ func card_detail(number, playable: bool = false, free: bool = false):
 	card_state = {"double": false, "strength": 0, "pieces": []};_card_detail(int(number), playable, free)
 
 func _card_detail(number: int, playable: bool, free: bool):
+	if ui.mobile: GuildMobileUI.card_detail(ui, number, playable, free);return
 	var data = ui.store.card(number); var me = ui.session.me()
 	if data.is_empty(): return
 	var frame = overlay("", Vector2(1230, 944), "card", false)
@@ -43,7 +50,7 @@ func _card_detail(number: int, playable: bool, free: bool):
 		if me.get("hero") == "horn_black": body.add_child(ui.button("● 优先秘药代替板块" if me.get("prefer_pot", false) else "优先使用实际板块", func(): ui.session.action("horn_preference", {"prefer_pot": not me.get("prefer_pot", false)});card_state.pieces = []))
 		body.add_child(ui.box_button("售卖这张事件卡 / +1金币", func(): ui.session.action("sell_event", {"card": number}), ui.session.can_free_action()))
 		body.add_child(wrapped("售卖不消耗回合，闭店后也可以操作。", 19))
-		if data.get("can_trans", false) and not free:
+		if (data.get("can_trans", false) or me.get("strength_as_gold", false)) and not free:
 			var cap = GuildRenpyLogic.strength_cap(data, me, free, 2 if card_state.double else 1)
 			card_state.strength = min(card_state.strength, cap)
 			adjust(body, "战力折抵", cap, card_state.strength, func(value): card_state.strength = value;_card_detail(number, playable, free))
@@ -400,6 +407,22 @@ func payment_preference():
 	var count = integer_row(body, "优先抵付力量", int(me.get("strength", 0)), int(me.get("gold_payment_strength", 0)))
 	body.add_child(ui.button("应用设置", func(): ui.session.action("payment_preference", {"strength": int(count.value)});ui.close_dialog(), ui.session.can_free_action(), true))
 
+func gold_payment(kind: String, args: Dictionary, amount: int):
+	var me = ui.session.me();var reserved = 0
+	if kind == "develop":
+		if args.get("slots", []).has("strength"): reserved = maxi(0, 3 - int(args.get("festival", {}).get("strength", 0)))
+	var cap = mini(maxi(0, int(me.get("strength", 0)) - reserved), ceili(float(amount) / 5))
+	var body = content(overlay("选择金币 / 战力支付", Vector2(980, 580), "gold_payment"), Rect2(32, 100, 916, 440))
+	body.add_child(wrapped("本次费用 %s 金币。每 1 战力可抵 5 金币，可以保留金币；超额抵付不找零。" % amount, 27))
+	var minimum = ceili(float(maxi(0, amount - int(me.get("gold", 0)))) / 5)
+	var count = integer_row(body, "投入战力", cap, minimum)
+	var preview = ui.label("", 29, ui.GOLD);body.add_child(preview)
+	var confirm = ui.button("确认支付", func(): ui.close_dialog(false);ui.session.action_paid(kind, args, int(count.value)), true, true);body.add_child(confirm)
+	var update = func(_value = 0):
+		var gold = maxi(0, amount - int(count.value) * 5)
+		preview.text = GuildLang.t("支付 %s 战力 + %s 金币" % [int(count.value), gold]);confirm.disabled = gold > int(me.get("gold", 0))
+	count.value_changed.connect(update);update.call()
+
 func treasures(player: Dictionary = {}):
 	if player.is_empty(): player = ui.session.me()
 	var frame = overlay("宝箱与公会宝物", Vector2(1200, 880), "treasures"); var body = content(frame, Rect2(32, 98, 1136, 730))
@@ -666,14 +689,25 @@ func confirm_kick(player: Dictionary):
 	var frame = overlay("稍作确认", Vector2(840, 400), "confirm"); var body = content(frame, Rect2(48, 100, 744, 240));body.add_child(wrapped("将%s移出房间？" % player.name, 27))
 	var row = HBoxContainer.new();body.add_child(row);row.add_child(ui.button("再想一下", func(): ui.close_dialog()));row.add_child(ui.button("确认", func(): ui.session.send({"type": "kick", "target_id": int(player.id)});ui.close_dialog(), true, true))
 
-func hero_detail(player: Dictionary): _hero_detail(player, 0)
+func hero_detail(player: Dictionary):
+	_hero_detail(player, clampi(int(player.get("hero_level", 1)) - 1, 0, 2))
+
+func hero_preview(hero: String, rank: int = 2):
+	_hero_detail({"hero": hero}, clampi(rank, 0, 2))
 
 func _hero_detail(player: Dictionary, rank: int):
 	var hero = ui.store.catalog.heroes.get(player.get("hero", ""), {}); var frame = overlay(hero.get("name", "") + " / " + hero.get("subtitle", ""), Vector2(1160, 870), "hero")
-	var body = content(frame, Rect2(32, 94, 1096, 702)); var row = HBoxContainer.new();body.add_child(row)
-	for i in range(3): row.add_child(ui.button("等级 %s" % (i + 1), func(): _hero_detail(player, i)))
-	var sources = hero.get("source", [])
-	if not sources.is_empty(): body.add_child(ui.card(sources[min(rank, sources.size() - 1)], Vector2(716, 510)))
+	ui.dialog.set_meta("player_id", int(player.get("id", -1)));ui.dialog.set_meta("rank", rank);ui.dialog.set_meta("level", int(player.get("hero_level", 1)))
+	var body = content(frame, Rect2(32, 94, 1096, 702))
+	if player.has("hero_level"):
+		var current = ui.label("当前等级 %s · 好感度 %s / 5" % [int(player.hero_level), int(player.get("affection", 0))], 23, ui.GOLD)
+		current.name = "HeroCurrentLevel";body.add_child(current)
+	var row = HBoxContainer.new();body.add_child(row)
+	for i in range(3):
+		var tab = ui.button("等级 %s" % (i + 1), func(): _hero_detail(player, i), true, i == rank)
+		tab.toggle_mode = true;tab.button_pressed = i == rank;row.add_child(tab)
+	var source = ui.store.hero_face(player, rank)
+	if not source.is_empty(): body.add_child(ui.card(source, Vector2(716, 510)))
 	body.add_child(wrapped(hero.get("description", ""), 20))
 
 func guest_picker():
@@ -774,10 +808,12 @@ func titled_rule(text: String) -> Control:
 
 func player_detail(player: Dictionary):
 	var frame = overlay(player.name + " / 公会总览", Vector2(1310, 990), "player"); var body = content(frame, Rect2(32, 98, 1246, 820))
+	ui.dialog.set_meta("player_id", int(player.get("id", -1)))
 	body.add_child(wrapped("当前声望 %s    手牌 %s / 已打出 %s / 撤退 %s" % [int(player.get("score", 0)), int(player.get("hand_count", 0)), player.get("played", []).size(), int(player.get("retreat", 0))], 30))
-	var top = HBoxContainer.new();body.add_child(top); var hero = ui.store.catalog.heroes.get(player.hero, {})
-	top.add_child(ui.card(hero.get("source", [""])[0], Vector2(294, 210), func(): hero_detail(player)))
+	var top = HBoxContainer.new();body.add_child(top)
+	top.add_child(ui.card(ui.store.hero_face(player), Vector2(294, 210), func(): hero_detail(player)))
 	var stocks = VBoxContainer.new();top.add_child(stocks);stocks.add_child(GuildTableView.resources(ui, player, false));stocks.add_child(GuildTableView.resources(ui, player, true))
+	stocks.add_child(ui.label("等级 %s · 好感度 %s / 5" % [int(player.get("hero_level", 1)), int(player.get("affection", 0))], 20, ui.GOLD))
 	var tags = HBoxContainer.new();tags.add_theme_constant_override("separation", 36);top.add_child(tags)
 	var marks = VBoxContainer.new();marks.add_theme_constant_override("separation", 6);tags.add_child(marks)
 	marks.add_child(ui.label("标记", 18, ui.MUTED))
@@ -864,6 +900,7 @@ func _choice_button(text: String, callback: Callable, width: float) -> Button:
 	return node
 
 func pending(pending: Dictionary):
+	if ui.mobile: GuildMobileUI.pending(ui, pending);return
 	var frame = overlay("结算卡牌效果", Vector2(1450, 940), "pending");ui.pending_id = int(pending.id)
 	var options = pending.get("options", []); var cache = ui.choice_states.get(str(ui.pending_id), {"selected": [], "strength": 0, "pot": 0, "flash": false, "lab": false})
 	ui.choice_states = {str(ui.pending_id): cache}; var selected = cache.selected
@@ -992,8 +1029,9 @@ func _achievements():
 			row.add_child(ui.card(data.get("source", ""), Vector2(93, 130), func(): art_detail(data.get("source", ""), data.get("name", "王权"))))
 			var descriptions = VBoxContainer.new();descriptions.custom_minimum_size.x = 660;row.add_child(descriptions);descriptions.add_child(ui.label(data.get("name", key), 27));descriptions.add_child(wrapped(data.get("description", ""), 21));descriptions.add_child(wrapped("支付 %s 金币 / 声望 %s" % [int(data.get("price", 0)), int(data.get("point", 0))], 21))
 			if ready: descriptions.add_child(ui.label("◆ 条件与费用均已满足 / 可达成", 20, Color("8a6a1f")))
-			var buttons = VBoxContainer.new();row.add_child(buttons); var used = min(royal_strength, GuildRenpyLogic.strength_cap(data, me)) if data.get("can_trans", false) else 0
-			buttons.add_child(ui.button("达成成就 / 抵扣%s力" % used if data.get("can_trans", false) else "达成成就", func(): ui.session.action("achievement", {"id": key, "public": public, "strength": used}), ui.session.can_act(), ready))
+			var buttons = VBoxContainer.new();row.add_child(buttons); var transferable = data.get("can_trans", false) or me.get("strength_as_gold", false)
+			var used = min(royal_strength, GuildRenpyLogic.strength_cap(data, me)) if transferable else 0
+			buttons.add_child(ui.button("达成成就 / 抵扣%s力" % used if transferable else "达成成就", func(): ui.session.action("achievement", {"id": key, "public": public, "strength": used}), ui.session.can_act(), ready))
 			if not public: buttons.add_child(ui.button("放弃 / 获得 5 金币", func(): confirm_discard_royal(key)))
 
 func confirm_discard_royal(key: String):
@@ -1001,13 +1039,7 @@ func confirm_discard_royal(key: String):
 	var row = HBoxContainer.new();body.add_child(row);row.add_child(ui.button("再想一下", func(): _achievements()));row.add_child(ui.button("确认", func(): ui.session.action("discard_achievement", {"id": key});_achievements(), true, true))
 
 func chat():
-	var body = content(overlay("房间聊天", Vector2(900, 760), "chat"), Rect2(32, 102, 834, 600))
-	for item in ui.session.room.get("chat", []): body.add_child(wrapped(item.get("name", "访客") + "： " + item.get("message", ""), 23))
-	if ui.session.local_mode: body.add_child(wrapped("本地练习不连接聊天室。", 23));return
-	var field = LineEdit.new();field.max_length = 180;body.add_child(field)
-	var send = func():
-		if not field.text.strip_edges().is_empty(): ui.session.send({"type": "chat", "message": field.text.strip_edges()});field.clear()
-	body.add_child(ui.button("发送", send, true, true));field.text_submitted.connect( func(_text): send.call())
+	ui.toggle_chat()
 
 func leave():
 	var body = content(overlay("稍作确认", Vector2(840, 400), "confirm"), Rect2(48, 100, 744, 240));body.add_child(wrapped("离开房间？席位会显示为断线；轮到你时可在房间设定的等待时间内用原昵称重连。", 27))
@@ -1022,9 +1054,15 @@ func game_log():
 
 func refresh_snapshot():
 	if not is_instance_valid(ui): return
+	if ui.modal_key in ["hero", "player"] and is_instance_valid(ui.dialog):
+		var id = int(ui.dialog.get_meta("player_id", -1));var rank = int(ui.dialog.get_meta("rank", 0));var old_level = int(ui.dialog.get_meta("level", 1))
+		for player in ui.session.game.get("players", []):
+			if int(player.id) != id: continue
+			if ui.modal_key == "player": player_detail(player)
+			else: _hero_detail(player, int(player.get("hero_level", 1)) - 1 if rank == old_level - 1 else rank)
+			break
 	if ui.modal_key == "market": market()
 	elif ui.modal_key == "potions": _potions()
 	elif ui.modal_key == "develop": _develop()
 	elif ui.modal_key == "achievements": _achievements()
-	elif ui.modal_key == "chat": chat()
 	elif ui.modal_key == "treasures": treasures()

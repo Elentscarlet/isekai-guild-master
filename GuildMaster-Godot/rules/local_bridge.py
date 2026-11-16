@@ -11,18 +11,31 @@ import time
 from guild_network import _Decoder,_encode
 from guild_session import Session
 
-def serve(endpoint):
+def serve(endpoint, stop_event=None):
     listener=socket.socket();listener.bind(('127.0.0.1',0));listener.listen(1)
     token=secrets.token_urlsafe(32)
     endpoint.write_text(json.dumps(dict(port=listener.getsockname()[1],token=token)),encoding='utf-8')
-    listener.settimeout(30)
-    connection,_=listener.accept();listener.close()
+    listener.settimeout(.5)
+    deadline=time.monotonic()+30
+    connection=None
+    try:
+        while time.monotonic()<deadline and not (stop_event and stop_event.is_set()):
+            try:
+                connection,_=listener.accept()
+                break
+            except socket.timeout:
+                continue
+    finally:
+        listener.close()
+    if connection is None:
+        endpoint.unlink(missing_ok=True)
+        return
     connection.setblocking(False)
     decoder=_Decoder();session=Session();authenticated=False;out=bytearray();revision=-1
     session.saves_dir_ref=str(endpoint.parent / 'saves')
     (endpoint.parent / 'saves').mkdir(parents=True, exist_ok=True)
     try:
-        while True:
+        while not (stop_event and stop_event.is_set()):
             read,write,_=select.select([connection],[connection] if out else [],[],.04)
             if read:
                 data=connection.recv(65536)

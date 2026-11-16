@@ -16,7 +16,7 @@ func chat():
 
 func special_actions():
 	var body = ui.open_dialog("公会行动与扩展", Vector2(800, 660)); var me = ui.session.me(); var hero = ui.store.catalog.heroes.get(me.get("hero", ""), {})
-	if hero.has("source"): body.add_child(ui.card(hero.source[0], Vector2(740, 270), func(): hero_detail(me)))
+	if hero.has("source"): body.add_child(ui.card(ui.store.hero_face(me), Vector2(740, 270), func(): hero_detail(me)))
 	body.add_child(ui.button("看板娘特别行动", hero_ability, ui.session.can_act() and not hero.get("ability", {}).is_empty() and not me.get("used", []).has("ability"), true))
 	body.add_child(ui.button("扩充行动", expansions, ui.session.can_act()))
 
@@ -52,7 +52,7 @@ func refresh_hero_draw(picker: OptionButton, hint: Label, players: int, banned: 
 	return limit
 
 func submit(kind: String, args: Dictionary = {}):
-	ui.session.action(kind, args);ui.close_dialog()
+	ui.close_dialog();ui.session.action(kind, args)
 
 func initial_resource_row(parent: Control, key: String, title: String, value, fallback: int, minimum: int) -> Dictionary:
 	var row = HBoxContainer.new();parent.add_child(row)
