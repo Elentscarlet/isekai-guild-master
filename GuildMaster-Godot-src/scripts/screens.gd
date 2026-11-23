@@ -2,11 +2,18 @@ class_name GuildScreens
 extends RefCounted
 
 const HOME_SCENE = preload("res://ui/home_screen.tscn")
+const TABLE_SCENE = preload("res://ui/table_screen.tscn")
 
 static func home(ui, parent: Control):
 	var screen = HOME_SCENE.instantiate()
 	parent.add_child(screen)
 	screen.bind(ui)
+
+static func table(ui, parent: Control) -> GuildTableScreen:
+	var screen = TABLE_SCENE.instantiate() as GuildTableScreen
+	parent.add_child(screen)
+	screen.bind(ui)
+	return screen
 
 static func room(ui, parent: Control):
 	var screen = load("res://ui/room_screen.tscn").instantiate()

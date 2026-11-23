@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dicue8xemjhuw"]
 
 [ext_resource type="Script" uid="uid://coboiwydb1j4p" path="res://scripts/dialog_frame.gd" id="1_dialog"]
+[ext_resource type="StyleBox" uid="uid://b8snwx1gelt5u" path="res://ui/styles/dialog_frame.tres" id="2_qdomh"]
 [ext_resource type="FontFile" uid="uid://ba15cmpajgml6" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="2_title"]
 [ext_resource type="FontFile" uid="uid://cii3oduf68wbd" path="res://fonts/SourceHanSansLite.ttf" id="3_body"]
-[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="4_frame"]
 [ext_resource type="StyleBox" path="res://ui/styles/paper_button_normal.tres" id="5_button"]
 [ext_resource type="StyleBox" path="res://ui/styles/paper_button_hover.tres" id="6_hover"]
 [ext_resource type="StyleBox" path="res://ui/styles/paper_button_pressed.tres" id="7_pressed"]
@@ -29,17 +29,17 @@ color = Color(1, 1, 1, 0)
 
 [node name="Frame" type="Panel" parent="." unique_id=1603661403]
 layout_mode = 0
-offset_left = 240.0
-offset_top = 40.0
-offset_right = 1470.0
-offset_bottom = 984.0
-theme_override_styles/panel = ExtResource("4_frame")
+offset_left = 320.0
+offset_top = 116.0
+offset_right = 1746.0
+offset_bottom = 1060.0
+theme_override_styles/panel = ExtResource("2_qdomh")
 
 [node name="Title" type="Label" parent="Frame" unique_id=1102805412]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_left = 32.0
+offset_left = 76.0
 offset_top = 28.0
 offset_right = -168.0
 offset_bottom = 74.0
@@ -54,9 +54,9 @@ layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -120.0
+offset_left = -162.0
 offset_top = 28.0
-offset_right = -32.0
+offset_right = -74.0
 offset_bottom = 77.0
 grow_horizontal = 0
 theme_override_colors/font_color = Color(0.2039, 0.1922, 0.2, 1)

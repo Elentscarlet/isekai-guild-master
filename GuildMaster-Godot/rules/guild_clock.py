@@ -17,6 +17,9 @@ def waiting(engine):
                 for p in s['players'] if p['draft_choice'] is None}
     if s['phase'] == 'research':
         return {str(p['id']): scope for p in s['players'] if not p['researched']}
+    if s['phase'] == 'face':
+        return {str(p['id']): scope+':face'
+                for p in s['players'] if not p.get('face_chosen') and not p.get('withdrawn')}
     return {str(s['players'][s['turn']]['id']): scope}
 
 
@@ -67,6 +70,10 @@ def automatic_action(engine, pid):
     s = engine.state
     pending = s.get('pending')
     if not pending:
+        if s['phase']=='face':
+            from guild_face_select import auto_action
+            engine.apply(pid, auto_action(engine, engine._player(pid)))
+            return
         if s['phase']=='draft':
             action = dict(type='draft_pick', draft_step=s['draft_step'], index=0)
         else:

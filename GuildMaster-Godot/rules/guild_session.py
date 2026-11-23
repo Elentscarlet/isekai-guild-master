@@ -9,10 +9,10 @@ import threading
 import time
 from collections import deque
 
-PHASE_LABELS = {'draft': '开局轮抽', 'research': '情报收集', 'action': '公会行动',
+PHASE_LABELS = {'face': '选择黑白面', 'draft': '开局轮抽', 'research': '情报收集', 'action': '公会行动',
                 'final': '最终行动', 'finished': '终局结算'}
 
-from guild_content import CARDS, CHARACTERS, HEROES, hero_selection, selectable_hero
+from guild_content import CHARACTERS, HEROES, selectable_hero
 from guild_engine import Engine
 from guild_lobby import deal_characters, offer_hero
 
@@ -101,7 +101,7 @@ class Session:
                      "spectators": 0, "allow_spectators": False, "max_players": 1,
                      "hero_offers": [],"options":options,
                      "players": [{"id": 0, "name": self.clean(name) or "公会长", "hero": 'bai_white',
-                                  "hero_chosen": False, "bot": False, "ready": True, "connected": True}]}
+                                  "hero_chosen": False, "hero_character": "", "bot": False, "ready": True, "connected": True}]}
         self.revision += 1
 
     @staticmethod
@@ -162,6 +162,10 @@ class Session:
         elif phase == 'research':
             for player in game['players']:
                 if not player.get('researched'):
+                    return player['id']
+        elif phase == 'face':
+            for player in game['players']:
+                if not player.get('face_chosen') and not player.get('withdrawn'):
                     return player['id']
         return game['players'][game.get('turn', 0)]['id']
 
@@ -282,6 +286,7 @@ class Session:
         if not isinstance(engine_data, dict) or not isinstance(data.get('rules'), dict):
             raise ValueError('存档格式不正确。')
         players = [{"id": spec.get('id'), "name": spec.get('name'), "hero": spec.get('hero'),
+                    "hero_character": spec.get('hero_character', ''), "face_chosen": bool(spec.get('face_chosen', True)),
                     "hero_chosen": True, "bot": False, "ready": True, "connected": True}
                    for spec in engine_data.get('players', [])]
         if not players:
@@ -320,7 +325,7 @@ class Session:
                 players.pop()
             while len(players) - 1 < count:
                 players.append({"id": len(players), "name": self.clean('客座%d' % len(players)) or ('客座%d' % len(players)),
-                                "hero": 'bai_white', "hero_chosen": False, "bot": False, "ready": True, "connected": True})
+                                "hero": 'bai_white', "hero_character": "", "hero_chosen": False, "bot": False, "ready": True, "connected": True})
             self.room['max_players'] = 1 + count
         elif kind=="set_options":
             if self.room.get('started'): raise ValueError('开局后不能修改规则。')
@@ -329,17 +334,14 @@ class Session:
             self.room['options']=normalize_options(dict(args['options'],solo=(seats==0)),1+seats)
         elif kind == "set_hero":
             if not self.room.get('drafting'): raise ValueError('请先开始对局。')
-            try:
-                selected = (hero_selection(args.get("character"), args.get("variant"))
-                            if "character" in args or "variant" in args else selectable_hero(args.get("hero")))
-            except ValueError as exc:
-                self.notify(str(exc))
-                return
+            character = args.get("character")
+            if character is None and "hero" in args:
+                character = HEROES[selectable_hero(args.get("hero"))]["character"]
             seat = self.room.get('selecting_seat', 0)
-            if HEROES[selected]['character'] not in self.room['hero_offers']:
+            if character not in self.room['hero_offers']:
                 raise ValueError('只能从本次抽到的候选角色中选择。')
-            players[seat]["hero"] = selected
-            players[seat].update(hero_chosen=True, ready=True)
+            players[seat]["hero"] = offer_hero([character])
+            players[seat].update(hero_character=character, hero_chosen=True, ready=True)
             next_seat = next((p['id'] for p in players if not p.get('hero_chosen')), None)
             if next_seat is None:
                 from guild_modes import normalize_options
@@ -348,8 +350,8 @@ class Session:
                 self.room.update(started=True,drafting=False)
                 self._view()
                 seats = len(players) - 1
-                self.notify("客座模式开始：%s 位客座玩家随你轮流操作。六轮内令文明与瘴气相邻；先选择起始手牌。" % seats if seats
-                            else "单人挑战开始。六轮内令文明与瘴气相邻；先选择起始手牌。")
+                self.notify("客座模式开始：%s 位客座玩家随你轮流操作。六轮内令文明与瘴气相邻；先进行开局轮抽。" % seats if seats
+                            else "单人挑战开始。六轮内令文明与瘴气相邻；先完成情报收集，再选择看板娘的黑白面。")
             else:
                 self.room['selecting_seat'] = next_seat
                 self.room['hero_offers'] = self.room['hero_offers_by_seat'][str(next_seat)]
@@ -515,7 +517,7 @@ class Session:
             self.reconnect()
 
     def can_free_action(self):
-        return bool(self.game and self.game['phase'] not in ('finished','draft') and self.role == 'player'
+        return bool(self.game and self.game['phase'] not in ('finished','draft','face') and self.role == 'player'
                     and (self.mode == 'local' or (self.client and self.client.connected and not self.connecting)))
 
     def me(self):

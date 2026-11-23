@@ -1,0 +1,191 @@
+[gd_scene format=3]
+
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="1_player_frame"]
+[ext_resource type="Script" path="res://scripts/table_face.gd" id="2_table_face"]
+[ext_resource type="FontFile" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="3_ZCOOLKuaiLe_Regular"]
+[ext_resource type="FontFile" path="res://fonts/SourceHanSansLite.ttf" id="4_SourceHanSansLite"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="5_banner_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="6_banner_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="7_banner_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="8_banner_disabled"]
+[node name="FacePhase" type="Panel"]
+layout_mode = 0
+offset_left = 362.0
+offset_top = 116.0
+offset_right = 1908.0
+offset_bottom = 1022.0
+theme_override_styles/panel = ExtResource("1_player_frame")
+script = ExtResource("2_table_face")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 28.0
+offset_right = 932.0
+offset_bottom = 76.0
+text = "选择看板娘的白面或黑面"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 36
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 87.0
+offset_right = 1502.0
+offset_bottom = 122.0
+text = "情报收集完成；点击卡面查看三级能力，或选择本局人物的黑面/白面。"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 22
+
+[node name="Counter" type="Label" parent="."]
+layout_mode = 0
+offset_left = 1200.0
+offset_top = 28.0
+offset_right = 1500.0
+offset_bottom = 68.0
+text = "已选择 0 / 2"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 22
+
+[node name="Spectator" type="Label" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 32.0
+offset_top = 150.0
+offset_right = 1502.0
+offset_bottom = 190.0
+text = "观战中，请等待公会长们选择黑白面。"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+
+[node name="Chosen" type="Control" parent="."]
+visible = false
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1546.0
+offset_bottom = 906.0
+
+[node name="ChosenTitle" type="Label" parent="Chosen"]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 150.0
+offset_right = 1502.0
+offset_bottom = 190.0
+text = "你的看板娘：紫苑 · 白面"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 28
+
+[node name="ChosenSlot" type="Control" parent="Chosen"]
+layout_mode = 0
+offset_left = 493.0
+offset_top = 200.0
+offset_right = 1053.0
+offset_bottom = 920.0
+
+[node name="WhiteOption" type="Control" parent="."]
+layout_mode = 0
+offset_left = 320.0
+offset_top = 150.0
+offset_right = 880.0
+offset_bottom = 870.0
+
+[node name="Name" type="Label" parent="WhiteOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 560.0
+offset_bottom = 40.0
+text = "紫苑 · 白面"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 28
+
+[node name="CardSlot" type="Control" parent="WhiteOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 50.0
+offset_right = 560.0
+offset_bottom = 450.0
+
+[node name="Resources" type="Label" parent="WhiteOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 460.0
+offset_right = 560.0
+offset_bottom = 490.0
+text = "金币 0 / 力量 0 / 秘药 0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Choose" type="Button" parent="WhiteOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 510.0
+offset_right = 560.0
+offset_bottom = 570.0
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("5_banner_primary")
+theme_override_styles/pressed = ExtResource("6_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("7_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+text = "选择白面"
+
+[node name="BlackOption" type="Control" parent="."]
+layout_mode = 0
+offset_left = 930.0
+offset_top = 150.0
+offset_right = 1490.0
+offset_bottom = 870.0
+
+[node name="Name" type="Label" parent="BlackOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 560.0
+offset_bottom = 40.0
+text = "紫苑 · 黑面"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 28
+
+[node name="CardSlot" type="Control" parent="BlackOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 50.0
+offset_right = 560.0
+offset_bottom = 450.0
+
+[node name="Resources" type="Label" parent="BlackOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 460.0
+offset_right = 560.0
+offset_bottom = 490.0
+text = "金币 0 / 力量 0 / 秘药 0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Choose" type="Button" parent="BlackOption"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 510.0
+offset_right = 560.0
+offset_bottom = 570.0
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("5_banner_primary")
+theme_override_styles/pressed = ExtResource("6_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("7_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+text = "选择黑面"

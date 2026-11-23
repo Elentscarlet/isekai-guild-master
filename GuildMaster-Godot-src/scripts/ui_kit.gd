@@ -34,6 +34,7 @@ func button(text: String, callback: Callable, enabled: bool = true, primary: boo
 	var node = Button.new()
 	node.text = GuildLang.t(text)
 	node.custom_minimum_size.y = 46
+	node.custom_minimum_size.x = 200
 	return wire_button(node, callback, enabled, primary)
 
 # 给场景里已经摆好的按钮接上点击音效、悬停动画与回调，语义与原 button() 一致。
@@ -45,9 +46,14 @@ func wire_button(node: Button, callback: Callable, enabled: bool = true, primary
 			node.add_theme_stylebox_override(state, GuildPaperSkin.banner(GuildPaperSkin.primary_state(state), 46))
 		for state in ["font_color", "font_hover_color", "font_pressed_color"]:
 			node.add_theme_color_override(state, Color("fffdf7"))
+	var already_wired = node.has_meta("guild_pressed")
+	node.set_meta("guild_pressed", callback)
+	if already_wired:
+		return node
 	node.pressed.connect( func():
 		ui.play_sound("click")
-		callback.call())
+		var action: Callable = node.get_meta("guild_pressed")
+		action.call())
 	node.mouse_entered.connect( func():
 		if not ui.prefs.motion or node.disabled: return
 		node.create_tween().tween_property(node, "modulate", Color(0.94, 0.91, 0.86), 0.12))
@@ -176,7 +182,7 @@ func restore_selection_scroll(scroller: ScrollContainer, state: Dictionary) -> v
 	scroller.get_v_scroll_bar().value_changed.connect( func(value): state.vertical = int(value))
 
 func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Callable = Callable(), magnification: float = 2.5) -> GuildCardArt:
-	var art: GuildCardArt = GuildTileArt.new() if ui.store.layouts.get(source, {}).get("kind") == "tile" else GuildCardArt.new()
+	var art: GuildCardArt = GuildTileArt.new() if ui.store.is_tile(source) else GuildCardArt.new()
 	art.interactive = true
 	art.motion = ui.prefs.motion
 	art.on_click = func():

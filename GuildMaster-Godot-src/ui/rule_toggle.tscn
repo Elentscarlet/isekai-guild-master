@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://d1ruletoggle"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_normal.tres" id="1_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_hover.tres" id="2_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_pressed.tres" id="3_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_disabled.tres" id="4_disabled"]
+
+[node name="RuleToggle" type="Button"]
+custom_minimum_size = Vector2(442, 46)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_normal")
+theme_override_styles/hover = ExtResource("2_hover")
+theme_override_styles/pressed = ExtResource("3_pressed")
+theme_override_styles/disabled = ExtResource("4_disabled")

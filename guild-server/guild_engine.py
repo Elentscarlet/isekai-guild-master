@@ -28,6 +28,7 @@ except ModuleNotFoundError as exc:
 
 CARDS = getattr(_content, "CARDS", {})
 HEROES = getattr(_content, "HEROES", {})
+CHARACTERS = getattr(_content, "CHARACTERS", {})
 TILES = getattr(_content, "TILES", {})
 ACHIEVEMENTS = getattr(_content, "ACHIEVEMENTS", {})
 POTIONS = getattr(_content, "POTIONS", {})
@@ -157,8 +158,8 @@ class CoreEngine:
         self.rules.update(deepcopy(RULES))
         from guild_modes import normalize_options
         self.rules["options"] = normalize_options(options,len(player_specs))
-        from guild_mode_variants import apply_mode_variants
-        apply_mode_variants(self.rules["options"])
+        from guild_mode_variants import cards_for_mode
+        self.cards = cards_for_mode(CARDS, self.rules["options"])
         self.state = {
             "version": 1, "phase": "research", "round": 1, "season": 3,
             "civ": 1, "miasma": 10 * len(player_specs), "turn": 0,
@@ -173,6 +174,7 @@ class CoreEngine:
             "rng": json.loads(json.dumps(random.Random(seed).getstate())),
         }
         seen = set()
+        face_pending = False
         for spec in player_specs:
             if not isinstance(spec, dict):
                 raise ValueError("Invalid player specification")
@@ -180,13 +182,34 @@ class CoreEngine:
             if type(pid) not in (int, str) or pid in seen or pid == "":
                 raise ValueError("Player IDs must be unique integers or nonempty strings")
             seen.add(pid)
-            hero_id = spec.get("hero", next(iter(HEROES)))
-            if self.rules['options'].get('solo'):
-                hero_id = HEROES.get(hero_id,{}).get('solo_replacement',hero_id)
-            if not isinstance(hero_id, str) or hero_id not in HEROES or not HEROES[hero_id].get('available', True):
-                raise ValueError("Unknown hero")
+            # 房间先选人物（不分黑白面）。引擎按两版中较低的开局资源起步，
+            # 情报收集结束后再选面并补足差额。
+            character = spec.get("hero_character")
+            face_here = character is not None
+            if face_here:
+                if not isinstance(character, str) or character not in CHARACTERS:
+                    raise ValueError("Unknown character")
+                candidates = [hero for hero in CHARACTERS[character]["variants"].values()
+                              if HEROES.get(hero, {}).get("available", True)]
+                if not candidates:
+                    raise ValueError("Unknown hero")
+                hero_id = spec.get("hero") or candidates[0]
+                if hero_id not in candidates:
+                    hero_id = candidates[0]
+                allocation = {key: min(self._hero_allocation(hero)[key] for hero in candidates)
+                              for key in RESOURCE_KEYS}
+                face_pending = True
+            else:
+                hero_id = spec.get("hero", next(iter(HEROES)))
+                if self.rules['options'].get('solo'):
+                    hero_id = HEROES.get(hero_id,{}).get('solo_replacement',hero_id)
+                if not isinstance(hero_id, str) or hero_id not in HEROES or not HEROES[hero_id].get('available', True):
+                    raise ValueError("Unknown hero")
+                character = HEROES[hero_id]["character"]
+                allocation = self._hero_allocation(hero_id)
             hero = HEROES[hero_id]
             p = {"id": pid, "name": str(spec.get("name", pid)), "hero": hero_id,
+                 "hero_character": character, "face_chosen": not face_here, "face_resources": allocation,
                  "bot": bool(spec.get("bot", False)), "connected": bool(spec.get("connected", True)), "affection": 0,
                  "available": self.rules["initial_available"], "hand": [],
                  "offered": [], "researched": False, "achievements": [],
@@ -194,12 +217,12 @@ class CoreEngine:
                  "used": [], "passed": False, "retreat": 0, "reputation": 0,
                  "treasures": [], "tags": [], "hero_level": 1,
                  "developed": []}
-            allocation = STARTING_RESOURCES(hero_id) if STARTING_RESOURCES else hero
             for key in RESOURCE_KEYS:
                 p[key] = _integer(allocation.get(key, 0), "hero " + key)
             self.state["players"].append(p)
+        self.state["face_pending"] = face_pending
         # One physical scan per deck entry; dedicated cards belong to heroes.
-        self.state["deck"] = [key for key, card in CARDS.items() if self._card_in_deck(card)]
+        self.state["deck"] = [key for key, card in self.cards.items() if self._card_in_deck(card)]
         self._shuffle(self.state["deck"])
         self.state["achievement_deck"] = [k for k,v in ACHIEVEMENTS.items() if not v.get("solo")]
         self._shuffle(self.state["achievement_deck"])
@@ -208,14 +231,29 @@ class CoreEngine:
         for p in self.state["players"]:
             self._draw_achievement(p, 2)
             p["offered"] = self._draw(8)
-            hero = HEROES[p["hero"]]
-            p["hand"].extend(self._draw(hero.get("draw", 0)))
-            self._draw_achievement(p, hero.get("draw_achievement", hero.get("initial_achievements", 0)))
-            self._gain_tags(p, hero.get("tags", []))
+            if p.get("face_chosen", True):
+                self._apply_hero_start(p)
         self._make_board()
         self._setup_variants()
         from guild_clock import sync
         sync(self)
+
+    def _hero_allocation(self, hero_id):
+        if STARTING_RESOURCES:
+            return STARTING_RESOURCES(hero_id)
+        return {key: _integer(HEROES[hero_id].get(key, 0), "hero " + key) for key in RESOURCE_KEYS}
+
+    def _apply_hero_start(self, p):
+        allocation = self._hero_allocation(p["hero"])
+        for key in RESOURCE_KEYS:
+            p[key] = _integer(allocation.get(key, 0), "hero " + key)
+        self._apply_hero_draws(p)
+
+    def _apply_hero_draws(self, p):
+        hero = HEROES[p["hero"]]
+        p["hand"].extend(self._draw(hero.get("draw", 0)))
+        self._draw_achievement(p, hero.get("draw_achievement", hero.get("initial_achievements", 0)))
+        self._gain_tags(p, hero.get("tags", []))
 
     def _shuffle(self, items):
         rng = random.Random()
@@ -271,7 +309,7 @@ class CoreEngine:
     def _tags(self, player):
         tags = Counter(player.get("tags", []))
         for card in player["played"]:
-            tags.update(CARDS[card].get("tags", []))
+            tags.update(self.cards[card].get("tags", []))
         for loot in player["tiles"]:
             tags.update(TILES[loot].get("tags", []))
         return tags
@@ -335,7 +373,7 @@ class CoreEngine:
             rewards = {"scrap": rewards}
         player["strength"] += sum(rewards.get(tag, 0) for tag in tags)
 
-    def _pay(self, player, costs):
+    def _pay(self, player, costs, preview=False):
         for key, amount in costs.items():
             if key not in RESOURCE_KEYS:
                 raise ValueError("Unsupported payment: " + key)
@@ -429,6 +467,7 @@ class CoreEngine:
         if action_dict['type'] == 'undo':
             return restore(self, player_id, action_dict)
         trial = self.__class__.__new__(self.__class__)
+        trial.cards = self.cards
         trial.state = deepcopy(self.state)
         trial.rules = deepcopy(self.rules)
         try:
@@ -507,12 +546,12 @@ class CoreEngine:
             p["used"].append("ability")
         elif kind == "card_action":
             card_id = _integer(action.get("card"), "card")
-            if card_id not in p["played"] or not CARDS[card_id].get("action"):
+            if card_id not in p["played"] or not self.cards[card_id].get("action"):
                 raise ValueError("Card has no available action")
             marker = "card:%s" % card_id
             if p["used"].count(marker) >= p["played"].count(card_id):
                 raise ValueError("Card action already used this round")
-            self._effects(p, CARDS[card_id]["action"], action)
+            self._effects(p, self.cards[card_id]["action"], action)
             p["used"].append(marker)
         elif kind == "achievement":
             self._achievement(p, action)
@@ -523,7 +562,7 @@ class CoreEngine:
         self.state["action_count"] += 1
         self.state["last_action"] = {"player": player_id, "type": kind, "outcome": outcome}
         if kind == "play":
-            message = "%s打出了《%s》。" % (p["name"], CARDS[action["card"]].get("name", action["card"]))
+            message = "%s打出了《%s》。" % (p["name"], self.cards[action["card"]].get("name", action["card"]))
         elif kind == "explore":
             result = {"explored": "探索成功", "retreat": "探索撤退", "hole": "发现深渊洞穴，获得额外行动"}[outcome]
             message = "%s在%s%s。" % (p["name"], action["tile"], result)
@@ -562,9 +601,9 @@ class CoreEngine:
 
     def _play(self, player, action, free=False):
         card_id = _integer(action.get("card"), "card")
-        if card_id not in player["hand"] or card_id not in CARDS:
+        if card_id not in player["hand"] or card_id not in self.cards:
             raise ValueError("Card is not in hand")
-        card = CARDS[card_id]
+        card = self.cards[card_id]
         strength = _integer(action.get("strength", 0), "strength")
         if strength and (free or not card.get("can_trans", False)):
             raise ValueError("This card cannot use strength for its gold price")
@@ -759,21 +798,15 @@ class CoreEngine:
                         self._achievement(player, claim, discount=upgrade.get("claim_achievement_discount", upgrade.get("achievement_discount", 0)))
 
     def _potion(self, player, action):
+        from guild_potions import use_error
+        error = use_error(self, player, action)
+        if error:
+            raise ValueError(error)
         option = action.get("option")
-        if not isinstance(option, str) or option not in POTIONS or option in self.state["potions_used"] or option in self.state["potions_disabled"]:
-            raise ValueError("Potion slot is unavailable")
         potion = POTIONS[option]
-        if option == "build" or potion.get("effect", {}).get("build"):
-            # 与完整版 _potion 一致：营地不存在、或全部营地都支付不起邻接据点化追加费用时，
-            # 直接拒绝且不扣秘药（2026-10-26 修复「秘药被扣却无效果」）。
-            camps = [c for c in self.state["board"] if c.get("owner") == player["id"] and not c.get("base")]
-            if not camps:
-                raise ValueError("没有可以据点化的营地，秘药未消耗。")
-            if action.get("target") is None and not any(self._affordable(player, {"gold": max(0, self.build_cost(player["id"], c["id"]) - self.rules["build_cost"])}) for c in camps):
-                raise ValueError("据点化追加费用全部无法支付，秘药未消耗。")
-        self._pay(player, {"pot": potion.get("cost", 0)})
         target = action.get("target")
         effect = potion.get("effect", {})
+        self._pay(player, {"pot": potion.get("cost", 0)})
         if option == "build" or effect.get("build"):
             self._build(player, target, free=True)
         elif option == "free_card" or effect.get("free_card"):
@@ -784,7 +817,7 @@ class CoreEngine:
         self._effects(player, effect, action)
         self.state["potions_used"].append(option)
 
-    def _achievement(self, player, action, discount=0):
+    def _achievement_payment(self, player, action, discount=0):
         aid = action.get("id")
         public = action.get("public", False)
         if type(public) is not bool or not isinstance(aid, str) or aid not in ACHIEVEMENTS:
@@ -793,6 +826,14 @@ class CoreEngine:
         if aid not in source:
             raise ValueError("Achievement is unavailable")
         card = ACHIEVEMENTS[aid]
+        if card.get("solo"):
+            if not self.rules["options"].get("solo") or not public:
+                raise ValueError("这项单人王权已经达成或未开放。")
+            if not self._requirements(player, card.get("requirements", {})):
+                raise ValueError("未满足单人王权条件。")
+            cost = max(0, card["price"] - discount)
+            strength = max(0, (cost - player["gold"] + 4) // 5) if card.get("can_trans") else 0
+            return (dict(gold=max(0, cost - 5 * strength), strength=strength),)
         if not self._requirements(player, card.get("requirement", {})) or not self._requirements(player, card.get("requirements", {})):
             raise ValueError("Achievement requirements are not met")
         strength = _integer(action.get("strength", 0), "strength")
@@ -801,8 +842,16 @@ class CoreEngine:
         maximum = (max(0,card.get('price',0)-discount)+4)//5
         if strength > maximum:
             raise ValueError('力量折抵超过费用上限，本次最多使用%s点力量。' % maximum)
-        self._pay(player, {"gold": max(0, card.get("price", 0) - discount - 5 * strength), "strength": strength})
-        self._pay(player, card.get("costs", {}))
+        return (dict(gold=max(0, card.get("price", 0) - discount - 5 * strength), strength=strength),
+                card.get("costs", {}))
+
+    def _achievement(self, player, action, discount=0):
+        for costs in self._achievement_payment(player, action, discount):
+            self._pay(player, costs)
+        aid = action["id"]
+        public = action.get("public", False)
+        source = self.state["public_achievements"] if public else player["achievements"]
+        card = ACHIEVEMENTS[aid]
         source.remove(aid)
         player["earned_achievements"].append(aid)
         player["reputation"] += int(public)
@@ -873,7 +922,7 @@ class CoreEngine:
         points = hero.get("points", 0) if p["hero_level"] >= 3 else 0
         return {"hero": points, "grid": grid,
                 "loot": sum(self._points(p, TILES[key]) for key in p["tiles"]),
-                "cards": sum(self._points(p, CARDS[key]) for key in p["played"]),
+                "cards": sum(self._points(p, self.cards[key]) for key in p["played"]),
                 "achievements": sum(self._points(p, ACHIEVEMENTS[key]) for key in p["earned_achievements"]),
                 "reputation": p["reputation"], "treasures": sum(self.rules["treasures"][key]["point"] for key in p["treasures"]), "retreat": -p["retreat"]}
 
@@ -935,7 +984,16 @@ class CoreEngine:
             for slot in view.get("quests", []):
                 if isinstance(slot, dict) and not slot.get("done"):
                     slot["ready"] = bool(self._quest_met(seat, int(slot.get("card", 0))))
-            view["hints"] = self._hints(seat)
+            can_show_actions = not seat.get("passed") and self.state["phase"] in ("action", "final")
+            if can_show_actions:
+                from guild_action_previews import achievement_previews
+                quotes = achievement_previews(self, seat)
+                view["hints"] = self._hints(seat, quotes)
+                if self.state["players"][self.state["turn"]]["id"] == player_id and not self.state.get("pending"):
+                    current = next(player for player in view["players"] if player["id"] == player_id)
+                    current["action_previews"] = {"achievements": quotes}
+            else:
+                view["hints"] = {}
         for cell in view["board"]:
             cell["point"] = min(3, 4 - max(abs(cell["q"]), abs(cell["r"]), abs(cell["q"] + cell["r"])))
             if cell["revealed"]:
@@ -948,27 +1006,13 @@ class CoreEngine:
                 cell["image"] = 17 if cell["q"] == cell["r"] == 0 else 2
         return view
 
-    def _hints(self, player):
+    def _hints(self, player, achievement_quotes):
         """Read-only reminder list: what this seat could still do right now."""
         hints = {}
-        if player.get("passed") or self.state.get("phase") not in ("action", "final"):
-            return hints
         claimable = []
-        for aid in list(self.state["public_achievements"]) + list(player["achievements"]):
-            card = ACHIEVEMENTS.get(aid)
-            if not card:
-                continue
-            if not self._requirements(player, card.get("requirement", {})) or not self._requirements(player, card.get("requirements", {})):
-                continue
-            price = max(0, card.get("price", 0))
-            spend_cap = (price + 4) // 5 if card.get("can_trans") else 0
-            for spend in range(spend_cap + 1):
-                costs = dict(card.get("costs", {}))
-                if spend:
-                    costs["strength"] = costs.get("strength", 0) + spend
-                if self._affordable(player, dict(costs, gold=max(0, price - 5 * spend))):
-                    claimable.append(aid)
-                    break
+        for offers in achievement_quotes.values():
+            claimable.extend(aid for aid, payments in offers.items()
+                             if any(not quote.get("error") for quote in payments))
         if claimable:
             hints["achievements"] = claimable
         slots = self.rules["development_slots"]
@@ -1016,17 +1060,10 @@ class CoreEngine:
         if acts:
             hints["expansions"] = acts
         potions = []
-        for key, potion in POTIONS.items():
-            if key in self.state["potions_disabled"] or key in self.state["potions_used"]:
-                continue
-            if key == "build" and not any(cell["owner"] == player["id"] and not cell["base"] for cell in self.state["board"]):
-                continue
-            if key == "free_card" and not any(self._card_filter(CARDS[card], {}) and self._requirements(player, CARDS[card].get("requirements", {}), True)
-                                              and self._can_nested_play(player, card, {}) for card in set(player["hand"])):
-                continue
-            if player["pot"] + (len(player["tiles"]) if player["hero"] == "horn_black" else 0) < potion.get("cost", 0):
-                continue
-            potions.append(key)
+        from guild_potions import use_error
+        for key in POTIONS:
+            if not use_error(self, player, {"type": "potion", "option": key}):
+                potions.append(key)
         if potions:
             hints["potions"] = potions
         return hints
@@ -1040,7 +1077,7 @@ class CoreEngine:
         """
         numeric = ("gold", "strength", "pot", "gold_pro", "str_pro", "pot_pro", "civ", "point", "draw", "affection")
         cards = {}
-        for key, card in CARDS.items():
+        for key, card in self.cards.items():
             entry = {"name": card.get("name", str(key)), "price": card.get("price", 0),
                      "kind": card.get("kind", "event"), "tags": list(card.get("tags", [])),
                      "image": card.get("image", key)}
@@ -1084,9 +1121,9 @@ class CoreEngine:
             obj.state = deepcopy(data["state"])
             obj.rules = deepcopy(DEFAULT_RULES)
             obj.rules.update(deepcopy(data.get("rules", {})))
-            from guild_mode_variants import apply_mode_variants
-            apply_mode_variants(obj.rules.get("options", {}))
-            if obj.state["phase"] not in ("draft", "research", "action", "final", "finished"):
+            from guild_mode_variants import cards_for_mode
+            obj.cards = cards_for_mode(CARDS, obj.rules.get("options", {}))
+            if obj.state["phase"] not in ("face", "draft", "research", "action", "final", "finished"):
                 raise ValueError("Invalid saved phase")
             if not 1 <= len(obj.state["players"]) <= 5:
                 raise ValueError("Invalid saved game size")
@@ -1113,6 +1150,9 @@ class CoreEngine:
         p = self._player(player_id)
         if self.state["phase"] == "finished":
             raise ValueError("The game is finished")
+        if self.state['phase'] == 'face':
+            from guild_face_select import auto_action
+            return auto_action(self, p)
         if self.state['phase'] == 'draft' and not self.state.get('pending'):
             if p['draft_choice'] is not None:
                 raise ValueError('请等待其他玩家完成轮抽。')
@@ -1124,9 +1164,9 @@ class CoreEngine:
             budget = max(0, p["gold"] - 20)
             wanted = []
             ranked = sorted(p["offered"], key=lambda c: (
-                CARDS[c].get("gold_pro", 0) * 4 + CARDS[c].get("civ", 0) * 5
-                + CARDS[c].get("pot_pro", 0) * 3 + CARDS[c].get("gold", 0)
-                - CARDS[c].get("price", 0) / 3), reverse=True)
+                self.cards[c].get("gold_pro", 0) * 4 + self.cards[c].get("civ", 0) * 5
+                + self.cards[c].get("pot_pro", 0) * 3 + self.cards[c].get("gold", 0)
+                - self.cards[c].get("price", 0) / 3), reverse=True)
             for card in ranked[:2]:
                 if budget >= self.rules["research_cost"] and len(p["hand"]) + len(wanted) < 8:
                     wanted.append(card)
@@ -1143,8 +1183,8 @@ class CoreEngine:
             action["choices"] = {"3": action["choice"]}
             if action["type"] in ("play", "potion"):
                 cid = action.get("card", action.get("target") if action.get("option") == "free_card" else None)
-                if type(cid) is int and cid in CARDS and CARDS[cid].get("affection") and p["affection"] < 5:
-                    action["slots"] = [key for key in self.rules["development_slots"] if key not in p["developed"]][:CARDS[cid]["affection"]]
+                if type(cid) is int and cid in self.cards and self.cards[cid].get("affection") and p["affection"] < 5:
+                    action["slots"] = [key for key in self.rules["development_slots"] if key not in p["developed"]][:self.cards[cid]["affection"]]
                     if action.get("option") == "free_card":
                         action["target"] = {"card": cid, "slots": action["slots"], "choice": action["choice"]}
             if p["affection"] == 4 and HEROES[p["hero"]].get("upgrade3", {}).get("claim_hidden_star"):
@@ -1157,7 +1197,7 @@ class CoreEngine:
         for aid in self.state["public_achievements"]:
             offer(45 if final else 14, {"type": "achievement", "id": aid, "public": True})
         for cid in set(p["hand"]):
-            card = CARDS[cid]
+            card = self.cards[cid]
             value = 3 + card.get("gold_pro", 0) * (1 if final else 6) + card.get("pot_pro", 0) * 5
             value += card.get("civ", 0) * 9 + card.get("point", 0) * (6 if final else 1)
             value += card.get("gold", 0) / 2 + card.get("draw", 0) - card.get("price", 0) / 5
@@ -1195,6 +1235,7 @@ class CoreEngine:
         # exploration outcomes: only conservatively affordable explores enter.
         for unused, order, action in sorted(candidates, key=lambda row: (-row[0], row[1])):
             trial = self.__class__.__new__(self.__class__)
+            trial.cards = self.cards
             trial.state, trial.rules = deepcopy(self.state), deepcopy(self.rules)
             try:
                 trial._apply(player_id, deepcopy(action))

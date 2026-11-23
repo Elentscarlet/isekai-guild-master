@@ -1,6 +1,8 @@
-"""Durable public-view replays and a read-only HTTP viewer (standard library)."""
+"""Durable replay recording and a read-only HTTP viewer."""
 import json
+import logging
 import os
+from queue import SimpleQueue
 import re
 import threading
 import uuid
@@ -32,28 +34,23 @@ class ReplayStore:
             os.fsync(f.fileno())
         os.replace(tmp, path)
 
-    def start(self, room, engine):
+    def start(self, ident, room, players, catalog, created):
         with self.lock:
-            ident = uuid.uuid4().hex
             folder = self.root / ident
             folder.mkdir()
-            meta = dict(id=ident, room=room, created=now(), updated=now(), status='进行中', count=0,
-                        players=[dict(id=p['id'], name=p['name']) for p in engine.state['players']],
-                        catalog=engine.replay_catalog())
+            meta = dict(id=ident, room=room, created=created, updated=created, status='进行中', count=0,
+                        players=players, catalog=catalog)
             self._write(folder / 'meta.json', meta)
-            self.append(ident, engine, '对局开始')
-            return ident
 
-    def append(self, ident, engine, label, player=None):
+    def append(self, ident, snapshot, label, player, recorded_at):
         with self.lock:
             folder = self.root / ident
             meta = json.loads((folder / 'meta.json').read_text(encoding='utf-8'))
-            snapshot = engine.view(None, reveal=True)
             # The durable archive keeps every seat's hand, board and developments;
             # live spectators still use Engine.view(None) and never see them.
             self._write(folder / ('%08d.json' % meta['count']),
-                        dict(index=meta['count'], time=now(), label=label, player=player, game=snapshot))
-            meta.update(count=meta['count']+1, updated=now())
+                        dict(index=meta['count'], time=recorded_at, label=label, player=player, game=snapshot))
+            meta.update(count=meta['count']+1, updated=recorded_at)
             if snapshot['phase']=='finished':
                 meta['status']='已结束'
             self._write(folder / 'meta.json', meta)
@@ -100,6 +97,12 @@ class ReplayStore:
                 if chosen!='all' and match_day(meta.get('created'))!=chosen:continue
                 ident=meta['id']
                 if not re.fullmatch('[a-f0-9]{32}',ident) or not meta.get('count'):continue
+                if meta.get('status') == '进行中':
+                    players = [dict(player, seat=seat) for seat, player in
+                               enumerate(meta.get('players', []), 1)]
+                    preview = dict(players=players, finished=False, winner_names=[])
+                    result.append(dict(meta, day=match_day(meta.get('created')), preview=preview))
+                    continue
                 try:
                     path=self.root/ident/('%08d.json'%(meta['count']-1))
                     stamp=(meta['count'],meta.get('status'),meta.get('updated'),path.stat().st_mtime_ns)
@@ -133,6 +136,98 @@ class ReplayStore:
             path = self.root / ident / ('meta.json' if step is None else '%08d.json' % step)
             return json.loads(path.read_text(encoding='utf-8'))
 
+    def public_read(self, ident, step=None):
+        with self.lock:
+            meta = self.read(ident)
+            if meta['status'] == '进行中':
+                if step is not None:
+                    raise FileNotFoundError()
+                return {**meta, 'catalog': None, 'count': 0}
+            if step is None:
+                return meta
+            if not 0 <= step < meta['count']:
+                raise FileNotFoundError()
+            return self.read(ident, step)
+
+
+class ReplayRecorder:
+    """Capture detached views on the game thread and serialize writes in order."""
+
+    def __init__(self, store):
+        self.store = store
+        self.jobs = SimpleQueue()
+        self.slots = threading.BoundedSemaphore(256)
+        self.suspended = set()
+        self.thread = threading.Thread(target=self._run, name='guild-replay', daemon=True)
+        self.thread.start()
+
+    def start(self, room, engine):
+        ident = uuid.uuid4().hex
+        players = [dict(id=p['id'], name=p['name']) for p in engine.state['players']]
+        catalog = engine.replay_catalog()
+        snapshot = engine.view(None, reveal=True)
+        if not self.slots.acquire(blocking=False):
+            logging.error('Replay %s skipped: writer queue full', ident)
+            return None
+        self.jobs.put(('start', ident, room, players, catalog, snapshot, now()))
+        return ident
+
+    def append(self, ident, engine, label, player=None):
+        if not ident:
+            return
+        finished = engine.state['phase'] == 'finished'
+        if ident in self.suspended:
+            if finished:
+                self.finish(ident)
+            return
+        snapshot = engine.view(None, reveal=True)
+        if self.slots.acquire(blocking=False):
+            self.jobs.put(('append', ident, snapshot, label, player, now()))
+        else:
+            logging.error('Replay %s interrupted: writer queue full', ident)
+            self.suspended.add(ident)
+            if finished:
+                self.finish(ident)
+
+    def finish(self, ident, status='已中断'):
+        if ident in self.suspended:
+            self.suspended.remove(ident)
+            status = '已中断'
+        if ident:
+            self.jobs.put(('finish', ident, status))
+
+    def close(self):
+        self.jobs.put(None)
+        self.thread.join()
+
+    def _run(self):
+        failed = set()
+        while True:
+            job = self.jobs.get()
+            if job is None:
+                return
+            kind, ident, *args = job
+            try:
+                if kind == 'finish':
+                    self.store.finish(ident, '已中断' if ident in failed else args[0])
+                    failed.discard(ident)
+                elif ident not in failed:
+                    if kind == 'start':
+                        room, players, catalog, snapshot, created = args
+                        self.store.start(ident, room, players, catalog, created)
+                        self.store.append(ident, snapshot, '对局开始', None, created)
+                    else:
+                        self.store.append(ident, *args)
+                elif kind == 'append' and args[0]['phase'] == 'finished':
+                    self.store.finish(ident)
+                    failed.discard(ident)
+            except (OSError, ValueError, TypeError, KeyError) as exc:
+                logging.error('Replay %s: %s failed: %s', ident, kind, exc)
+                failed.add(ident)
+            finally:
+                if kind != 'finish':
+                    self.slots.release()
+
 
 class ReplayWeb:
     def __init__(self, store, host='0.0.0.0', port=6767):
@@ -159,15 +254,15 @@ class ReplayWeb:
                         value=store.statistics(query.get('date',['all'])[0],players)
                     elif re.fullmatch('/api/replays/[a-f0-9]{32}(?:/steps/[0-9]{1,8})?',path):
                         parts=path.split('/')
-                        value=store.read(parts[3],int(parts[5]) if len(parts)==6 else None)
+                        value=store.public_read(parts[3],int(parts[5]) if len(parts)==6 else None)
                     elif re.fullmatch(r'/assets/portraits/[A-Za-z0-9_]{1,64}\.png',path):
                         self.reply((portraits/path.rsplit('/',1)[1]).read_bytes(),'image/png','public, max-age=86400')
                         return
                     elif re.fullmatch(r'/assets/cardthumbs/[0-9]{1,6}\.jpg',path):
-                        self.card_asset(path,cardthumbs)
+                        self.card_asset(path,cardthumbs,query.get('mode',[None])[0])
                         return
                     elif re.fullmatch(r'/assets/cards/[0-9]{1,6}\.jpg',path):
-                        self.card_asset(path,cards)
+                        self.card_asset(path,cards,query.get('mode',[None])[0])
                         return
                     elif re.fullmatch(r'/assets/piece/[0-9]{1,4}\.png',path):
                         name=path.rsplit('/',1)[1]
@@ -197,9 +292,9 @@ class ReplayWeb:
                 except OSError:
                     self.send_error(404)
 
-            def card_asset(self,path,folder):
+            def card_asset(self,path,folder,mode):
                 name=path.rsplit('/',1)[1]
-                source=card_layouts.source_for_image(int(name[:-4]))
+                source=card_layouts.source_for_image(int(name[:-4]),mode)
                 self.component_asset(source,folder/name,'image/jpeg')
 
             def component_asset(self,source,fallback,mime):

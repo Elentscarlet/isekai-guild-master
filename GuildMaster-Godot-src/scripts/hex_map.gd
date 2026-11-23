@@ -27,6 +27,7 @@ var blocked_star = Color("f2efe8")
 var animated_outlines = []
 var hit_polygons = {}
 var pulse_layer: Control
+var hover_layer: Control
 var cached_viewport: SubViewport
 var cached_painter: Control
 
@@ -40,13 +41,19 @@ class StaticLayer extends Control:
 	func _draw():
 		if is_instance_valid(map_owner): map_owner.draw_static(self)
 
+class HoverLayer extends Control:
+	var map_owner
+	func _draw():
+		if is_instance_valid(map_owner): map_owner.draw_hover(self)
+
 func _ready():
 	mouse_filter = MOUSE_FILTER_STOP
 	cached_viewport = SubViewport.new();cached_viewport.transparent_bg = true;cached_viewport.disable_3d = true;cached_viewport.handle_input_locally = false;add_child(cached_viewport)
 	cached_painter = StaticLayer.new();cached_painter.map_owner = self;cached_painter.mouse_filter = MOUSE_FILTER_IGNORE;cached_viewport.add_child(cached_painter)
 	pulse_layer = PulseLayer.new();pulse_layer.map_owner = self;pulse_layer.mouse_filter = MOUSE_FILTER_IGNORE;add_child(pulse_layer)
+	hover_layer = HoverLayer.new();hover_layer.map_owner = self;hover_layer.mouse_filter = MOUSE_FILTER_IGNORE;add_child(hover_layer)
 	resized.connect(queue_redraw)
-	mouse_exited.connect( func(): hovered = "";queue_redraw())
+	mouse_exited.connect( func(): hovered = "";queue_hover_redraw())
 
 func _process(delta):
 	if motion:
@@ -111,7 +118,6 @@ func draw_static(canvas: Control):
 			# 缝隙即呈现环色；背面贴图本身仍是不透明上层，不会被颜色遮罩。
 			var region = int(cell.get("region", 0))
 			if rings.has(region): fill = Color(rings[region].r, rings[region].g, rings[region].b, 0.5)
-		if cell.id == hovered: fill = Color(fill.r, fill.g, fill.b, 1.0).lightened(0.25)
 		if chosen_ids.has(cell.id): fill = Color(fill.r, fill.g, fill.b, 1.0).lightened(0.4)
 		fills.append([poly, fill])
 	# 第一层：先画完所有底色，后面的格子才不会盖住已绘制格子的板块图。
@@ -122,10 +128,11 @@ func draw_static(canvas: Control):
 	for cell in cells:
 		if not unrevealed.get(cell.id, false): continue
 		var p = points[cell.id]
-		var back = store.tile_texture(str(cell.get("back_source", "images/piece_png/2.png")))
+		var back_source = str(cell.get("back_source", "images/piece_png/2.png"))
+		var back = store.tile_texture(back_source)
 		if back:
-			canvas.draw_set_transform(p, - PI / 6, Vector2.ONE)
-			canvas.draw_texture_rect(back, Rect2( - Vector2.ONE * step * 0.43, Vector2.ONE * step * 0.86), false)
+			canvas.draw_set_transform(p, store.tile_angle(back_source), Vector2.ONE)
+			canvas.draw_texture_rect(back, Rect2( - Vector2.ONE * step * 0.54, Vector2.ONE * step * 1.08), false)
 			canvas.draw_set_transform(Vector2.ZERO)
 		else: canvas.draw_colored_polygon(hit_polygons[cell.id], Color("c9b795"))
 	# 第三层：边线（向内加粗）与格内内容。区域色环一律画在第一层底色上（含未翻面格），
@@ -137,9 +144,8 @@ func draw_static(canvas: Control):
 		var border = Color("302f31")
 		if cell.get("owner") != null: border = owner_colors[int(cell.owner) % 5]
 		if eligible: border = Color("874449").lerp(Color("bd7b78"), 0.6)
-		if cell.id == hovered: border = Color("9f4c50")
 		if chosen_ids.has(cell.id): border = Color("c9982e")
-		var width = 4.0 if eligible or cell.id == hovered else 3.0
+		var width = 4.0 if eligible else 3.0
 		var inset = polygon(p, maxf(8.0, step * 0.55 - width / 2.0));inset.append(inset[0])
 		canvas.draw_polyline(inset, border, width, true)
 		if eligible: animated_outlines.append({"id": cell.id, "points": inset})
@@ -159,8 +165,8 @@ func draw_static(canvas: Control):
 			var art_source = str(store.catalog.tiles.get(str(cell.get("loot", "")), {}).get("source", ""))
 			var tex = store.tile_texture(art_source) if not art_source.is_empty() else null
 			if tex:
-				canvas.draw_set_transform(p, - PI / 6, Vector2.ONE)
-				canvas.draw_texture_rect(tex, Rect2( - Vector2.ONE * step * 0.43, Vector2.ONE * step * 0.86), false)
+				canvas.draw_set_transform(p, store.tile_angle(art_source), Vector2.ONE)
+				canvas.draw_texture_rect(tex, Rect2( - Vector2.ONE * step * 0.54, Vector2.ONE * step * 1.08), false)
 				canvas.draw_set_transform(Vector2.ZERO)
 		elif cell.get("boss", false): canvas.draw_string(font, p + Vector2(-18, step * 0.27), GuildLang.t("魔王"), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("fffdf7"))
 		# 潜行之龙站在任何一格都要可见——引擎允许龙潜入未翻开板块（_dragon_toward 的邻居筛选
@@ -179,6 +185,20 @@ func draw_static(canvas: Control):
 			for i in range(score_region):
 				draw_icon(canvas, "dot_light" if dark_cell else "dot_dark", Vector2(dot_x0 + i * spacing, dot_row), 4.5)
 	if is_instance_valid(pulse_layer): pulse_layer.queue_redraw()
+	if is_instance_valid(hover_layer): hover_layer.queue_redraw()
+
+# 悬停高亮单独一层：缓存里的整张地图不再因为鼠标移动而重建。
+func queue_hover_redraw() -> void:
+	if is_instance_valid(hover_layer): hover_layer.queue_redraw()
+
+func draw_hover(canvas: Control) -> void:
+	if hovered.is_empty() or not points.has(hovered): return
+	var poly = hit_polygons.get(hovered)
+	if poly == null or poly.is_empty(): return
+	canvas.draw_colored_polygon(poly, Color(1.0, 0.97, 0.9, 0.12))
+	var outline = PackedVector2Array(poly)
+	outline.append(outline[0])
+	canvas.draw_polyline(outline, Color("c9982e") if chosen_ids.has(hovered) else Color("9f4c50"), 4.0, true)
 
 func draw_dragon(canvas: Control, p: Vector2, eggs: int):
 	var head = store.texture("images/ui/dragon head.png")
@@ -247,7 +267,7 @@ func _gui_input(event):
 		if previous != hovered:
 			for cell in game.get("board", []):
 				if cell.id == hovered: cell_hovered.emit(cell)
-			queue_redraw()
+			queue_hover_redraw()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		for cell in game.get("board", []):
 			if hit_polygons.has(cell.id) and Geometry2D.is_point_in_polygon(event.position, hit_polygons[cell.id]):

@@ -1,7 +1,7 @@
 """Rulebook modes and optional boards layered over the authoritative engine."""
 from collections import Counter
 from copy import deepcopy
-from guild_content import CARDS,HEROES,TILES,ACHIEVEMENTS,POTIONS
+from guild_content import HEROES,TILES,ACHIEVEMENTS,POTIONS
 from guild_modes import board_layout
 from guild_new_content import asset
 
@@ -44,32 +44,12 @@ class VariantRules(OptionalBoards):
     def _achievement(self,p,action,discount=0):
         card=ACHIEVEMENTS.get(action.get('id'),{})
         if not card.get('solo'):return super()._achievement(p,action,discount)
-        if not self.rules['options']['solo'] or action.get('id') not in self.state['public_achievements']:
-            raise ValueError('这项单人王权已经达成或未开放。')
-        if not self._requirements(p,card.get('requirements',{})):raise ValueError('未满足单人王权条件。')
-        cost=max(0,card['price']-discount)
-        strength=max(0,(cost-p['gold']+4)//5) if card.get('can_trans') else 0
-        self._pay(p,dict(gold=max(0,cost-5*strength),strength=strength))
+        for costs in self._achievement_payment(p,dict(action,public=True),discount):
+            self._pay(p,costs)
         self.state['public_achievements'].remove(action['id']);p['earned_achievements'].append(action['id'])
         self._effects(p,card['effect']);self._emit(p,'achievement')
         self._log('%s完成单人王权《%s》。'%(p['name'],card['name']),p)
 
-    def _develop(self,p,count,action,free=False):
-        spend=action.get('festival',{})
-        if not isinstance(spend,dict):raise ValueError('庆典抵扣参数不正确。')
-        if spend and not (self.rules['options']['forest'] or self.rules['options']['festival_preparation']):raise ValueError('本局没有庆典碎片。')
-        total=0
-        for key,n in spend.items():
-            if key not in action.get('slots',[]) or key not in ('gold','strength','pot') or type(n) is not int or n<0:
-                raise ValueError('只能为选中的金币、力量或秘药发展条件使用庆典。')
-            cap=dict(gold=4,strength=3,pot=2)[key]
-            if n>cap:raise ValueError('庆典抵扣超过费用。')
-            total+=n
-        if total>p['festival_tokens']:raise ValueError('庆典碎片不足。')
-        if free and total:raise ValueError('免费发展无需支付庆典。')
-        p['festival_tokens']-=total
-        for key,n in spend.items():p[key]+=n*(5 if key=='gold' else 1)
-        return super()._develop(p,count,action,free)
     def _card_in_deck(self,card):
         opt=self.rules['options']
         if card.get('special') or not card.get('available',True): return False
@@ -173,12 +153,18 @@ class VariantRules(OptionalBoards):
 
     def _apply(self,player_id,action):
         kind=action['type'];p=self._player(player_id)
+        if kind=='choose_face':
+            from guild_face_select import choose
+            choose(self,p,action)
+            return
         if kind=='draft_pick':
             from guild_draft import pick
             pick(self,p,action)
             return
         if self.state['phase']=='draft' and kind!='choice':
             raise ValueError('请先完成开局轮抽，再购买情报或进行其他行动。')
+        if self.state['phase']=='face' and kind!='choice':
+            raise ValueError('请先选择看板娘的白面或黑面。')
         if kind=='mulligan':
             if self.state['round']!=1 or self.state['phase']!='research' or p['researched'] or p['mulligan_done'] or self.state.get('pending'):
                 raise ValueError('只能在开局留牌前换牌一次。')
@@ -192,7 +178,10 @@ class VariantRules(OptionalBoards):
             p['gems']-=1;p['gold']+=3;self.state['gems_supply']+=1
             self._log('%s售卖宝石，金币+3。'%p['name'],p);return
         super()._apply(player_id,action)
-        if kind=='research' and self.state['phase']=='action' and self.state['round']==1 and self.rules['options']['prologue']:
+
+    def _begin_action_phase(self):
+        super()._begin_action_phase()
+        if self.state['round']==1 and self.rules['options']['prologue']:
             players=self.state['players'];start=self.state['start_player']
             for other in players[start:]+players[:start]:
                 if other['prologue_offered']: self._enqueue(other,[dict(op='prologue_pick')])
@@ -311,6 +300,8 @@ class VariantRules(OptionalBoards):
         view=super().view(player_id,reveal)
         from guild_draft import redact
         redact(view,player_id)
+        from guild_face_select import redact as redact_face
+        redact_face(view,player_id,reveal)
         view.pop('variable_supply',None)
         view.pop('quest_deck',None)
         for p in view['players']:

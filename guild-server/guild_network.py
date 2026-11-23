@@ -20,9 +20,11 @@ For the public lobby endpoint, the first message is type='hello' and includes
 client_version and protocol. The lobby rejects incompatible clients before
 showing the room directory.
 
-Commands: set_hero(hero), ready(ready=True), start(seed=None), chat(message),
+Commands: set_hero(character) in the room, choose_face(variant) after research,
+ready(ready=True), start(seed=None), chat(message),
 action(action={...}), return_lobby(), end_session().
-The command name is the 'type' field. Omitted heroes default to 'bai_white'.
+The command name is the 'type' field. Omitted characters default to 'bai';
+the white/black face is chosen after research via choose_face(variant).
 Every human must be ready before starting, including the host. Spectators may
 chat but cannot change the lobby or game. Commands always use the authenticated
 connection's identity. start, return_lobby and end_session are host-only.
@@ -527,11 +529,26 @@ class RoomServer:
             if self._engine is not None:
                 raise ValueError('Lobby settings cannot change after the game starts.')
             if kind == 'set_hero':
-                from guild_content import hero_selection, selectable_hero
-                hero = (hero_selection(message.get('character'), message.get('variant'))
-                        if 'character' in message or 'variant' in message
-                        else selectable_hero(message.get('hero')))
+                from guild_content import CHARACTERS, HEROES, selectable_hero
+                character = message.get('character')
+                hero = message.get('hero')
+                if hero is not None:
+                    hero = selectable_hero(hero)
+                    character = HEROES[hero]['character']
+                elif character is not None:
+                    if character not in CHARACTERS:
+                        raise ValueError('请选择有效的角色。')
+                    variant = message.get('variant')
+                    hero = CHARACTERS[character]['variants'].get(variant) if variant is not None else None
+                    if hero not in HEROES or not HEROES[hero].get('available', False):
+                        hero = next((key for key in CHARACTERS[character]['variants'].values()
+                                     if HEROES.get(key, {}).get('available', False)), '')
+                    if not hero:
+                        raise ValueError('这个角色没有可用的黑白版本。')
+                else:
+                    raise ValueError('请选择有效的角色。')
                 self._players[peer.player_id]['hero'] = hero
+                self._players[peer.player_id]['hero_character'] = character
                 self._players[peer.player_id]['ready'] = False
             elif kind == 'ready':
                 ready = message.get('ready', True)
@@ -548,6 +565,9 @@ class RoomServer:
                     raise ValueError('seed must be an integer or null.')
                 specs = [{key: player[key] for key in ('id', 'name', 'hero', 'bot')}
                          for player in self._players.values()]
+                for spec, player in zip(specs, self._players.values()):
+                    if player.get('hero_character'):
+                        spec['hero_character'] = player['hero_character']
                 self._engine = self._make_engine(specs, seed)
             else:
                 raise ValueError('Unknown command.')
@@ -576,9 +596,14 @@ class RoomServer:
             pid = state['players'][state['turn']]['id']
             waiting = [] if self._players[pid]['connected'] or any(p['id']==pid and p.get('withdrawn') for p in state['players']) else [pid]
             return bool(waiting), waiting
-        if state['phase'] in ('research','draft'):
-            pending = [p['id'] for p in state['players'] if
-                       (p.get('draft_choice') is None if state['phase']=='draft' else not p.get('researched', False))]
+        if state['phase'] in ('research','draft','face'):
+            if state['phase'] == 'face':
+                pending = [p['id'] for p in state['players']
+                           if not p.get('face_chosen') and not p.get('withdrawn')]
+            elif state['phase'] == 'draft':
+                pending = [p['id'] for p in state['players'] if p.get('draft_choice') is None]
+            else:
+                pending = [p['id'] for p in state['players'] if not p.get('researched', False)]
             waiting = [pid for pid in pending if not self._players[pid]['connected'] and not any(p['id']==pid and p.get('withdrawn') for p in state['players'])]
             return bool(waiting) and len(waiting) == len(pending), waiting
         return False, []

@@ -1,0 +1,228 @@
+[gd_scene format=3]
+
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="1_player_frame"]
+[ext_resource type="Script" path="res://scripts/table_selection.gd" id="2_table_selection"]
+[ext_resource type="FontFile" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="3_ZCOOLKuaiLe_Regular"]
+[ext_resource type="FontFile" path="res://fonts/SourceHanSansLite.ttf" id="4_SourceHanSansLite"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_normal.tres" id="5_banner_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_hover.tres" id="6_banner_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_pressed.tres" id="7_banner_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="8_banner_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="9_banner_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="10_banner_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="11_banner_primary_pressed"]
+[node name="SelectionPhase" type="Panel"]
+layout_mode = 0
+offset_left = 362.0
+offset_top = 116.0
+offset_right = 1908.0
+offset_bottom = 1022.0
+theme_override_styles/panel = ExtResource("1_player_frame")
+script = ExtResource("2_table_selection")
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 28.0
+offset_right = 1502.0
+offset_bottom = 76.0
+text = "初次情报收集"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 36
+
+[node name="Caption" type="Label" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 87.0
+offset_right = 1502.0
+offset_bottom = 122.0
+text = "选择要保留的事件卡；保留费用与打出费用分别计算。"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 22
+
+[node name="CardsScroll" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_left = 32.0
+offset_top = 143.0
+offset_right = 1146.0
+offset_bottom = 891.0
+horizontal_scroll_mode = 0
+
+[node name="CardsGrid" type="GridContainer" parent="CardsScroll"]
+layout_mode = 2
+columns = 4
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+
+[node name="SideScroll" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_left = 1182.0
+offset_top = 160.0
+offset_right = 1482.0
+offset_bottom = 864.0
+horizontal_scroll_mode = 0
+
+[node name="SideBox" type="VBoxContainer" parent="SideScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 18
+
+[node name="BtnProfile" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看我的资料"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="DraftTitle" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "选择要留下的牌"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 27
+
+[node name="DraftPack" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "当前牌包 0 张"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+
+[node name="DraftKept" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "已经留下 0 / 8 张"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+
+[node name="BtnConfirmDraft" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "确认留牌"
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_styles/normal = ExtResource("9_banner_primary")
+theme_override_styles/hover = ExtResource("10_banner_primary_hover")
+theme_override_styles/pressed = ExtResource("11_banner_primary_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnViewKept" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看已留牌"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnViewHandDraft" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看已有手牌"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="ResearchTitle" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "为公会做好准备"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 29
+
+[node name="ResearchGold" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "可用金币  0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 25
+
+[node name="ResearchSelected" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "已选 0 张"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 26
+
+[node name="ResearchTotal" type="Label" parent="SideScroll/SideBox"]
+layout_mode = 2
+text = "合计 0 金币"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 32
+
+[node name="BtnConfirmResearch" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "确认情报"
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_styles/normal = ExtResource("9_banner_primary")
+theme_override_styles/hover = ExtResource("10_banner_primary_hover")
+theme_override_styles/pressed = ExtResource("11_banner_primary_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnCancelAll" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "全部取消"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnViewHand" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看已有手牌（0张）"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnMulligan" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "更换所选牌（最多5张，仅一次）"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+
+[node name="BtnPrivateGoals" type="Button" parent="SideScroll/SideBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 46)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看私人目标"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_styles/normal = ExtResource("5_banner_normal")
+theme_override_styles/hover = ExtResource("6_banner_hover")
+theme_override_styles/pressed = ExtResource("7_banner_pressed")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")

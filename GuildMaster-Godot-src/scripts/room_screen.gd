@@ -19,9 +19,9 @@ func bind(owner) -> void:
 	for entry in room.get("players", []):
 		if draft and int(entry.get("id", -1)) == int(room.get("selecting_seat", 0)):
 			selecting_name = entry.get("name", "")
-	var caption_text = "全部准备后开始对局，再抽取候选角色"
+	var caption_text = "全部准备后开始对局；先选人物，再开始开局轮抽。"
 	if draft:
-		caption_text = "选择本局看板娘 · %s 正在选择" % selecting_name if selecting_name else "选择本局看板娘 / 候选仅自己可见"
+		caption_text = "选择本局人物 · %s 正在选择" % selecting_name if selecting_name else "选择本局人物（黑白面在情报收集后选择）/ 候选仅自己可见"
 	apply_language()
 	_set_text("Title", room.get("name", "公会房间"))
 	_set_text("Caption", caption_text)
@@ -90,11 +90,12 @@ func _bind_left(room: Dictionary, draft: bool, offers: Array, mine: Dictionary, 
 		rules_title.visible = false
 		if not offers.has(ui.browsing_character):
 			ui.browsing_character = offers[0] if not offers.is_empty() else ""
+			ui.candidate_variant = "white"
 		for i in range(offers.size()):
 			var key = offers[i]
 			var identity = ui.store.catalog.characters.get(key, {})
 			GuildTableWidgets.action(ui, left, identity.get("pool_name", identity.get("name", key)),
-				Rect2(26, 24 + i * 65, 220, 50), func(): ui.browsing_character = key;ui.rerender())
+				Rect2(26, 24 + i * 65, 220, 50), func(): ui.browsing_character = key;ui.candidate_variant = "white";ui.rerender())
 		_bind_candidates(room, left, mine)
 	else:
 		rules_title.visible = true
@@ -107,25 +108,62 @@ func _bind_left(room: Dictionary, draft: bool, offers: Array, mine: Dictionary, 
 
 func _bind_candidates(room: Dictionary, left: Panel, mine: Dictionary) -> void:
 	var identity = ui.store.catalog.characters.get(ui.browsing_character, {})
-	for i in range(2):
-		var variant = "white" if i == 0 else "black"
-		var key = identity.get("variants", {}).get(variant, "")
-		var hero = ui.store.catalog.heroes.get(key, {})
-		if hero.is_empty():
-			continue
-		var solo_replacement = str(hero.get("solo_replacement", "")) if room.get("options", {}).get("solo", false) else ""
-		if not solo_replacement.is_empty():
-			hero = ui.store.catalog.heroes.get(solo_replacement, hero)
-		var x = 272 + i * 426
-		GuildTableWidgets.caption(ui, left, hero.get("name", key), Rect2(x, 24, 390, 40), 26, ui.GOLD)
-		if not solo_replacement.is_empty():
-			GuildTableWidgets.caption(ui, left, "单人：艾露背面替换为皮耶利亚背面", Rect2(x, 351, 390, 22), 15, ui.GOLD)
-		GuildTableWidgets.at(left, ui.card(hero.source[0], Vector2(390, 278)), Rect2(x, 79, 390, 278))
-		GuildTableWidgets.caption(ui, left, "金币 %s / 力量 %s / 秘药 %s" % [int(hero.get("gold", 0)), int(hero.get("strength", 0)), int(hero.get("pot", 0))], Rect2(x, 372, 390, 30), 20)
-		var chosen = mine.get("hero_chosen", false) and mine.get("hero") == key
-		var label = "已选择" if chosen else "选择白版" if i == 0 else "选择黑版"
-		GuildTableWidgets.action(ui, left, label, Rect2(x, 417, 390, 65), func(): ui.session.send({"type": "set_hero", "character": ui.browsing_character, "variant": variant}), hero.get("available", false), "Choose_" + variant, true)
-		GuildTableWidgets.action(ui, left, "三级能力", Rect2(x, 497, 390, 50), func(): ui.dialogs.hero_detail({"hero": key}))
+	var variants = identity.get("variants", {})
+	var preview_variant = str(ui.candidate_variant)
+	if not _variant_available(variants, preview_variant):
+		for variant in ["white", "black"]:
+			if _variant_available(variants, variant):
+				preview_variant = variant
+				break
+	ui.candidate_variant = preview_variant
+	var hero_key = str(variants.get(preview_variant, ""))
+	var hero = ui.store.catalog.heroes.get(hero_key, {})
+	if hero.is_empty():
+		return
+	var solo_replacement = str(hero.get("solo_replacement", "")) if room.get("options", {}).get("solo", false) else ""
+	if not solo_replacement.is_empty():
+		hero = ui.store.catalog.heroes.get(solo_replacement, hero)
+	var x = 420
+	GuildTableWidgets.caption(ui, left, identity.get("pool_name", hero.get("name", ui.browsing_character)), Rect2(x, 24, 450, 40), 26, ui.GOLD)
+	var portrait = ui.store.portrait(hero_key)
+	if portrait == null:
+		# 没有独立肖像的角色仍回退到卡面，避免选人页出现空白。
+		GuildTableWidgets.at(left, ui.card(hero.source[0], Vector2(350, 500)), Rect2(x, 70, 350, 500))
+	else:
+		var frame_style = StyleBoxFlat.new()
+		frame_style.bg_color = Color("070f14")
+		frame_style.border_color = Color("c39a4d")
+		frame_style.set_border_width_all(2)
+		frame_style.border_width_bottom = 4
+		frame_style.set_corner_radius_all(9)
+		frame_style.shadow_color = Color(0, 0, 0, 0.38)
+		frame_style.shadow_size = 5
+		frame_style.shadow_offset = Vector2(2, 2)
+		var frame = Panel.new()
+		frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		frame.add_theme_stylebox_override("panel", frame_style)
+		GuildTableWidgets.at(left, frame, Rect2(x, 70, 350, 500), "CandidatePortraitFrame")
+		var art = GuildPortrait.new()
+		GuildTableWidgets.at(frame, art, Rect2(4, 4, 342, 492), "CandidatePortrait")
+		art.texture = portrait
+		# 选人页展示完整立绘（contain），对局内座位才用裁切半身像（cover）。
+		art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		art.on_click = func(): ui.dialogs.hero_detail({"hero": hero_key})
+	var chosen = mine.get("hero_chosen", false) and mine.get("hero_character", "") == ui.browsing_character
+	GuildTableWidgets.action(ui, left, "已选择" if chosen else "选择此角色", Rect2(x+400, 500, 300, 65), func(): ui.session.send({"type": "set_hero", "character": ui.browsing_character}), hero.get("available", false), "ChooseCharacter", true)
+	GuildTableWidgets.action(ui, left, "查看三级能力（%s）" % ("白版" if preview_variant == "white" else "黑版"), Rect2(x + 400, 400, 300, 65), func(): ui.dialogs.hero_detail({"hero": hero_key}, 2))
+	var other_variant = "black" if preview_variant == "white" else "white"
+	var can_switch = _variant_available(variants, other_variant)
+	var switch_text = "切换能力预览：%s" % ("黑版" if other_variant == "black" else "白版") if can_switch else "仅有一个可用版本"
+	var switch_preview = func():
+		ui.candidate_variant = other_variant
+		ui.rerender()
+	var switch_button = GuildTableWidgets.action(ui, left, switch_text, Rect2(x + 400, 300, 300, 65), switch_preview, can_switch, "SwitchAbilityVariant")
+	switch_button.tooltip_text = "只切换能力预览，不决定本局的黑白面。"
+
+func _variant_available(variants: Dictionary, variant: String) -> bool:
+	var key = str(variants.get(variant, ""))
+	return not key.is_empty() and ui.store.catalog.heroes.get(key, {}).get("available", false)
 
 func _bind_right(room: Dictionary, draft: bool, mine: Dictionary, host: bool) -> void:
 	var right = get_node_or_null("RightPanel") as Panel

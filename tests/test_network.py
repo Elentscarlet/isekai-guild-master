@@ -513,6 +513,25 @@ class ProtocolTests(SocketCase):
 
 @unittest.skipUnless(importlib.util.find_spec('guild_engine'), 'guild_engine.py has not landed yet')
 class RealEngineIntegrationTests(SocketCase):
+    def test_character_selection_then_face_after_research(self):
+        server = self.room(max_players=1)
+        host = self.joined(server, 'Host', host_token=server.host_token)
+        host.send({'type': 'set_hero', 'character': 'bai'})
+        snapshot = self.snapshot(host, lambda message: message['room']['players'][0].get('hero_character') == 'bai')
+        self.assertFalse(snapshot['room']['players'][0]['ready'])
+        self.ready(host)
+        host.send({'type': 'start', 'seed': 7})
+        game = self.snapshot(host, lambda message: message['room']['started'])['game']
+        self.assertEqual(game['phase'], 'research')
+        self.assertFalse(game['players'][0]['face_chosen'])
+        host.send({'type': 'action', 'action': {'type': 'research', 'cards': []}})
+        game = self.snapshot(host, lambda message: message['game']['phase'] == 'face')['game']
+        self.assertEqual(game['players'][0]['hero_character'], 'bai')
+        host.send({'type': 'action', 'action': {'type': 'choose_face', 'variant': 'white'}})
+        game = self.snapshot(host, lambda message: message['game']['phase'] == 'action')['game']
+        self.assertTrue(game['players'][0]['face_chosen'])
+        self.assertEqual(game['players'][0]['hero'], 'bai_white')
+
     def two_players(self):
         server, host, guest = super().two_players()
         self.research_snapshots = {}

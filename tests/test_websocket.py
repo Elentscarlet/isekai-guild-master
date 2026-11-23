@@ -4,10 +4,12 @@ from pathlib import Path
 import socket
 import struct
 import sys
+import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'guild-server'), str(ROOT / 'tools')]
+from guild_content import CHARACTERS, HEROES
 from guild_lobby import LobbyServer
 from guild_site import SiteWeb
 from check_public_connection import SocketProbe, masked_frame
@@ -25,6 +27,42 @@ class WebSocketIntegration(unittest.TestCase):
         client = SocketProbe('127.0.0.1', self.site.port)
         self.addCleanup(client.close)
         return client
+
+    def wait_snapshot(self, client, predicate=lambda snapshot: True):
+        deadline = time.monotonic() + 12
+        while time.monotonic() < deadline:
+            snapshot = client.wait('snapshot')
+            if predicate(snapshot):
+                return snapshot
+        raise TimeoutError('No matching snapshot')
+
+    def test_character_then_research_then_face(self):
+        client = self.client()
+        client.send(dict(type='hello', name='FaceOrder', client_version='4.1.0', protocol=3))
+        client.wait('server_welcome')
+        client.wait('directory')
+        client.send(dict(type='create_room', room_name='FaceOrder', max_players=1))
+        client.wait('welcome')
+        self.wait_snapshot(client, lambda snapshot: snapshot.get('room'))
+        client.send(dict(type='ready', ready=True))
+        self.wait_snapshot(client, lambda snapshot: snapshot['room']['players'][0]['ready'])
+        client.send(dict(type='start', seed=7))
+        room = self.wait_snapshot(client, lambda snapshot: snapshot['room'].get('drafting'))['room']
+        character = room['hero_offers'][0]
+        client.send(dict(type='set_hero', character=character))
+        game = self.wait_snapshot(client, lambda snapshot: (snapshot.get('game') or {}).get('phase') == 'research')['game']
+        self.assertEqual(game['players'][0]['hero_character'], character)
+        self.assertFalse(game['players'][0]['face_chosen'])
+        client.send(dict(type='action', action=dict(type='research', cards=[])))
+        game = self.wait_snapshot(client, lambda snapshot: (snapshot.get('game') or {}).get('phase') == 'face')['game']
+        self.assertTrue(game['players'][0]['hero_character'])
+        variants = CHARACTERS[character]['variants']
+        variant = next(name for name in ('white', 'black')
+                       if HEROES.get(variants.get(name), {}).get('available'))
+        client.send(dict(type='action', action=dict(type='choose_face', variant=variant)))
+        game = self.wait_snapshot(client, lambda snapshot: (snapshot.get('game') or {}).get('phase') == 'action')['game']
+        self.assertTrue(game['players'][0]['face_chosen'])
+        self.assertEqual(game['players'][0]['hero'], variants[variant])
 
     def test_real_welcome_directory_create_and_leave(self):
         client = self.client()

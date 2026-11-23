@@ -161,7 +161,10 @@ func connect_server(host: String, number: int, name_text: String):
 
 func start_local(name_text: String):
 	close();nickname = name_text;local_mode = true
-	var root = ProjectSettings.globalize_path("res://") if OS.has_feature("editor") else OS.get_executable_path().get_base_dir()
+	# 编辑器与源码运行时规则在 res://；导出包则与 exe 同目录。
+	var root = ProjectSettings.globalize_path("res://")
+	if not FileAccess.file_exists(root.path_join("runtime/pythonw.exe")):
+		root = OS.get_executable_path().get_base_dir()
 	var python = root.path_join("runtime/pythonw.exe")
 	if not FileAccess.file_exists(python):
 		notice.emit("缺少离线运行库，请使用完整客户端包。");return
@@ -271,7 +274,7 @@ func can_choose() -> bool:
 	return pending is Dictionary and int(pending.player) == player_id and active and synchronized and room_connected and not room.get("paused", false)
 
 func can_free_action() -> bool:
-	return not game.is_empty() and game.get("phase", "") not in ["finished", "draft"] and role == "player" and active and synchronized and room_connected
+	return not game.is_empty() and game.get("phase", "") not in ["finished", "draft", "face"] and role == "player" and active and synchronized and room_connected
 
 func reconnect():
 	if local_mode: return

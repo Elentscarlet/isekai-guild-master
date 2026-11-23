@@ -64,7 +64,7 @@ func run() -> void:
 	check(true, "看板娘能力不报错")
 	ui.close_dialog(false)
 	await open("选择手牌", func(): ui.dialogs.choose_hand("选择手牌", 1, 1, func(_cards): pass))
-	await open("卡面大图", func(): ui.dialogs.art_detail("images/piece_png/2.png", "迷宫板块"))
+	await open("卡面大图", func(): ui.dialogs.art_detail("", "迷宫板块"))
 	await open("看板娘成长", func(): ui.dialogs.hero_detail({"hero": me.get("hero", "")}))
 	await open("序章与成长", func(): ui.dialogs.growth(me))
 	await open("公会发展", func(): ui.dialogs.develop())

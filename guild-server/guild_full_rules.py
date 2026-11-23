@@ -2,11 +2,14 @@
 from collections import Counter
 from copy import deepcopy
 
-from guild_content import CARDS, HEROES, TILES, POTIONS, ACHIEVEMENTS
+from guild_content import HEROES, TILES, POTIONS, ACHIEVEMENTS
+from guild_potions import potion_state, use_error
 from guild_resolution import ResolutionRules, RESOURCES
 
 
 class FullRules(ResolutionRules):
+    DEVELOPMENT_FESTIVAL_CAPS = {'gold': 4, 'strength': 3, 'pot': 2}
+
     def _feedback(self, kind, message, p):
         serial = self.state.get('feedback', {}).get('id', 0) + 1
         self.state['feedback'] = dict(id=serial, kind=kind, message=message, player=p['id'])
@@ -22,7 +25,7 @@ class FullRules(ResolutionRules):
             if step.get('op') == 'play_payment' and step.get('card') == card and p['hand'].count(card) == 1:
                 raise ValueError('这张卡已进入出牌结算，不能同时售卖；可以卖其他手牌。')
             p['hand'].remove(card)
-            if not CARDS[card].get('special'):self.state['discard'].append(card)
+            if not self.cards[card].get('special'):self.state['discard'].append(card)
             p['gold'] += 1
             message = '%s售卖一张事件卡，获得1金币（不消耗行动）。' % p['name']
             self._log(message, p)
@@ -43,21 +46,40 @@ class FullRules(ResolutionRules):
         super().__init__(*args, **kwargs)
         self._resolution_init()
         for p in self.state['players']:
-            hero = HEROES[p['hero']]
-            # Initial unlocks use normal affection rewards after the effect
-            # queue is ready. Their bonus cards never enter the setup draft.
-            if hero.get('initial_development'):
-                self._develop(p,1,dict(slots=[hero['initial_development']]),free=True)
-            if hero.get('initial_special'):
-                cards = [c for c,d in CARDS.items() if d['name']==hero['initial_special'] and d.get('special')]
-                if not cards:
-                    raise ValueError('缺少角色专属事件卡。')
-                p['hand'].append(cards[0])
-            self._enqueue(p,hero.get('initial_steps',[]),dict(player=p['id'],hero=p['hero']))
+            if p.get('face_chosen', True):
+                self._apply_hero_initials(p)
         self._drain_effects()
+
+    def _apply_hero_initials(self, p):
+        """角色专属的开局解锁与开场效果；选面之后才执行。"""
+        hero = HEROES[p['hero']]
+        # Initial unlocks use normal affection rewards after the effect
+        # queue is ready. Their bonus cards never enter the setup draft.
+        if hero.get('initial_development'):
+            self._develop(p,1,dict(slots=[hero['initial_development']]),free=True)
+        if hero.get('initial_special'):
+            cards = [c for c,d in self.cards.items() if d['name']==hero['initial_special'] and d.get('special')]
+            if not cards:
+                raise ValueError('缺少角色专属事件卡。')
+            p['hand'].append(cards[0])
+        self._enqueue(p,hero.get('initial_steps',[]),dict(player=p['id'],hero=p['hero']))
+
+    def _begin_action_phase(self):
+        self.state.update(phase='action',turn=self.state['start_player'])
+        if not self.rules['options'].get('solo'):
+            order = [(self.state['start_player']+i)%len(self.state['players']) for i in range(len(self.state['players']))]
+            pre = [i for i in order if self._has_passive(self.state['players'][i],'season_pre_action')
+                   and not self.state['players'][i].get('withdrawn')
+                   and self.state['players'][i].get('timeout_round') != self.state['round']]
+            if pre:
+                self.state['season_pre_actions'] = pre
+                self.state['turn'] = pre[0]
 
     def research_price(self, player_id, count):
         p = self._player(player_id)
+        if not p.get('face_chosen', True):
+            # 黑白面未定时不享受任一面的情报折扣。
+            return max(0, count) * self.rules['research_cost']
         passive = HEROES[p['hero']].get('passive',{})
         if self.state['round']==1 and passive.get('initial_research_free'):
             return 0
@@ -102,7 +124,7 @@ class FullRules(ResolutionRules):
                 raise ValueError('现在不能进行情报收集。')
             cards = action.get('cards',[])
             self._check_cards(cards,p['offered'])
-            passive = HEROES[p['hero']].get('passive',{})
+            passive = HEROES[p['hero']].get('passive',{}) if p.get('face_chosen', True) else {}
             if self.state['round']==1 and len(cards)>passive.get('initial_research_limit',12 if self.rules['options'].get('solo_difficulty')=='super' else 8):
                 raise ValueError('超过该角色开局可保留的情报数量。')
             self._pay(p,{'gold':self.research_price(player_id,len(cards))})
@@ -111,15 +133,12 @@ class FullRules(ResolutionRules):
             p.update(offered=[],researched=True)
             self._log('%s保留%s张情报卡。' % (p['name'],len(cards)),p)
             if all(x['researched'] for x in self.state['players']):
-                self.state.update(phase='action',turn=self.state['start_player'])
-                if not self.rules['options'].get('solo'):
-                    order = [(self.state['start_player']+i)%len(self.state['players']) for i in range(len(self.state['players']))]
-                    pre = [i for i in order if self._has_passive(self.state['players'][i],'season_pre_action')
-                           and not self.state['players'][i].get('withdrawn')
-                           and self.state['players'][i].get('timeout_round') != self.state['round']]
-                    if pre:
-                        self.state['season_pre_actions'] = pre
-                        self.state['turn'] = pre[0]
+                if any(not p.get('face_chosen', True) and not p.get('withdrawn')
+                       for p in self.state['players']):
+                    self.state.update(phase='face', face_pending=True)
+                    self._log('情报收集完成：请选择看板娘的白面或黑面。')
+                else:
+                    self._begin_action_phase()
             return
         phase = self.state['phase']
         index = self.state['turn']
@@ -256,9 +275,9 @@ class FullRules(ResolutionRules):
 
     def _play(self,p,action,free=False):
         card_id = action.get('card')
-        if type(card_id) is not int or card_id not in CARDS or card_id not in p['hand']:
+        if type(card_id) is not int or card_id not in self.cards or card_id not in p['hand']:
             raise ValueError('手中没有这张事件卡。')
-        card = CARDS[card_id]
+        card = self.cards[card_id]
         if not card.get('available',False):
             raise ValueError(card.get('unavailable_reason') or '该事件卡暂未开放。')
         req={} if action.get('_ignore_requirements') else {'tags':card.get('requirements',{}).get('tags',{})} if action.get('_ignore_non_tag_requirements') else card.get('requirements',{})
@@ -304,23 +323,54 @@ class FullRules(ResolutionRules):
             if cond.get('civ_min',1)<=original_civ<=cond.get('civ_max',original_civ) and self._requirements(p,cond.get('requirements',{})):
                 self._effects(p,cond.get('effect',{}),dict(action,_source=source,_context=context))
 
-    def _develop(self,p,count,action,free=False):
+    def _development_payment(self,p,count,action,free=False):
+        spend = action.get('festival', {})
+        if not isinstance(spend, dict):
+            raise ValueError('庆典抵扣参数不正确。')
+        options = self.rules['options']
+        if spend and not (options['forest'] or options['festival_preparation']):
+            raise ValueError('本局没有庆典碎片。')
+        selected = action.get('slots', [])
+        for key, amount in spend.items():
+            if key not in selected or key not in self.DEVELOPMENT_FESTIVAL_CAPS or type(amount) is not int or amount < 0:
+                raise ValueError('只能为选中的金币、力量或秘药发展条件使用庆典。')
+            if amount > self.DEVELOPMENT_FESTIVAL_CAPS[key]:
+                raise ValueError('庆典抵扣超过费用。')
+        total = sum(spend.values())
+        if total > p['festival_tokens']:
+            raise ValueError('庆典碎片不足。')
+        if free and total:
+            raise ValueError('免费发展无需支付庆典。')
         if type(count) is not int or count<1 or p['affection']+count>5:
             raise ValueError('发展次数超出可解锁的好感度。')
-        selected = action.get('slots',[])
         slots = self.rules['development_slots']
         if not isinstance(selected,list) or len(selected)!=count or any(type(s) is not str for s in selected) or len(set(selected))!=count or any(s not in slots or s in p['developed'] for s in selected):
             raise ValueError('请选择尚未解锁且不重复的发展条件。')
         costs = Counter()
         if not free:
+            budget = dict(p)
+            if spend:
+                self._credit_festival(budget, spend)
             for slot in selected:
-                if not self._requirements(p,slots[slot].get('requirements',{})):
+                if not self._requirements(budget,slots[slot].get('requirements',{})):
                     raise ValueError('尚未满足发展条件。')
                 costs.update(slots[slot].get('costs',{}))
+        return spend, costs
+
+    @staticmethod
+    def _credit_festival(p, spend):
+        p['festival_tokens'] -= sum(spend.values())
+        for key, amount in spend.items():
+            p[key] += amount * (5 if key == 'gold' else 1)
+
+    def _develop(self,p,count,action,free=False):
+        spend, costs = self._development_payment(p,count,action,free)
+        if spend:
+            self._credit_festival(p, spend)
         self._pay(p,costs)
         p['hand'].extend(self._draw(count))
         hero = HEROES[p['hero']]
-        for slot in selected:
+        for slot in action['slots']:
             p['developed'].append(slot)
             p['affection'] += 1
             p['available'] += 1
@@ -339,21 +389,11 @@ class FullRules(ResolutionRules):
                 self._emit(p,'upgrade',dict(level=level))
 
     def _potion(self,p,action):
+        error = use_error(self,p,action)
+        if error:
+            raise ValueError(error)
         option = action.get('option')
-        if option not in POTIONS or (not action.get('_ignore_slot') and option in self.state['potions_used']+self.state['potions_disabled']):
-            raise ValueError('该秘药格目前不可用。')
         potion = POTIONS[option]
-        if option=='build':
-            # 2026-10-26 修复：只看「有营地」放行不够——若所有营地都支付不起邻接追加费用，
-            # 接下来的据点选择将没有任何可选目标（选择界面会过滤付不起的格子），秘药会被扣掉却毫无效果。
-            # 这里把「付得起追加费用」一并纳入前置判断，不满足直接拒绝：秘药不消耗、弹窗提示后玩家继续选择其他行动。
-            camps=[cell for cell in self.state['board'] if cell['owner']==p['id'] and not cell['base']]
-            if not camps:
-                raise ValueError('没有可以据点化的营地，秘药未消耗。')
-            if not any(self._affordable(p,{'gold':max(0,self.build_cost(p['id'],cell['id'])-self.rules['build_cost'])}) for cell in camps):
-                raise ValueError('据点化追加费用全部无法支付，秘药未消耗。')
-        if option=='free_card' and not any(self._card_filter(CARDS[c],{}) and self._requirements(p,CARDS[c].get('requirements',{}),True) and self._can_nested_play(p,c,{}) for c in set(p['hand'])):
-            raise ValueError('没有可以免费打出的事件卡，秘药未消耗。')
         self._pay(p,{'pot':potion['cost']})
         if not action.get('_preserve_slot') and option not in self.state['potions_used']:
             self.state['potions_used'].append(option)
@@ -595,8 +635,29 @@ class FullRules(ResolutionRules):
         for p in view['players']:
             definition = HEROES[p['hero']]
             p['character'],p['variant'] = definition['character'],definition['variant']
-            p['research_free'] = definition.get('passive',{}).get('research_free',0)
-            p['research_initial_free'] = definition.get('passive',{}).get('initial_research_free',False)
-            p['research_initial_limit'] = definition.get('passive',{}).get('initial_research_limit',12 if self.rules['options'].get('solo_difficulty')=='super' else 8)
+            if p.get('face_chosen', True):
+                p['research_free'] = definition.get('passive',{}).get('research_free',0)
+                p['research_initial_free'] = definition.get('passive',{}).get('initial_research_free',False)
+                p['research_initial_limit'] = definition.get('passive',{}).get('initial_research_limit',12 if self.rules['options'].get('solo_difficulty')=='super' else 8)
+            else:
+                # 黑白面未定：不享受任一面的情报折扣/上限。
+                p['research_free'] = 0
+                p['research_initial_free'] = False
+                p['research_initial_limit'] = 12 if self.rules['options'].get('solo_difficulty')=='super' else 8
             p['strength_as_gold'] = self._has_passive(self._player(p['id']),'strength_as_gold')
+        if player_id is not None:
+            for p in view['players']:
+                if p['id'] == player_id:
+                    actual = self._player(p['id'])
+                    p['potion_states'] = {key: potion_state(self, actual, key) for key in POTIONS}
+                    if 'action_previews' in p:
+                        from guild_action_previews import development_preview
+                        development = development_preview(self, actual)
+                        p['action_previews']['development'] = development
+                        view['hints']['develop'] = [
+                            key for key in self.rules['development_slots']
+                            if any(key in quotes and not quotes[key].get('error')
+                                   for quotes in (development['standard'], development['festival']))
+                        ]
+                    break
         return self._resolution_view(view,player_id,reveal)

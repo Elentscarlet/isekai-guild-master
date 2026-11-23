@@ -53,12 +53,14 @@ def excluded_faces():
     return sorted(paths)
 
 
-def source_for_image(number):
+def source_for_image(number, mode=None):
     import guild_content as c
+    from guild_mode_variants import printed_variant
     for card in c.ACHIEVEMENTS.values():
         if card.get('image')==number:
             return card['source']
-    return c.CARDS.get(number,{}).get('source')
+    card = c.CARDS.get(number, {})
+    return printed_variant(card, mode).get('source', card.get('source'))
 
 
 def layout_for_image(number):

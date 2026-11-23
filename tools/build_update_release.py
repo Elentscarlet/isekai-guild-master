@@ -49,15 +49,13 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--skip-export',action='store_true');parser.add_argument('--server-only',action='store_true');args=parser.parse_args()
     from validate_voice_assets import validate
     validate()
+    subprocess.run([sys.executable,str(ROOT/'tools/prepare_update.py')],check=True)
     export_receipt=ROOT/'qa/export-voice-build.json'
     if args.skip_export or args.server_only:
         if not export_receipt.exists():raise SystemExit('Export a client with complete bilingual voices before reusing it.')
         saved=json.loads(export_receipt.read_text('utf8'))
         if saved['source_fingerprint']!=export_fingerprint() or saved['pck_sha256']!=hashlib.sha256((PACK/'GuildMaster.pck').read_bytes()).hexdigest():
             raise SystemExit('The exported client is stale; run a full build with bilingual voice export.')
-    subprocess.run([sys.executable,str(ROOT/'tools/prepare_update.py')],check=True)
-    # Keep source-tree F5 testing identical to the exported local engine.
-    for path in (PACK/'rules').glob('*.py'):shutil.copy2(path,SRC/'rules'/path.name)
     editor=Path(os.environ.get('GODOT_BIN',ROOT.parent/'.qa-runtime/godot-sdk/editor/Godot_v4.7.2-stable_win64_console.exe'))
     template=ROOT.parent/'.qa-runtime/godot-sdk/templates/windows_release_x86_64.exe'
     if not args.skip_export and not args.server_only:
@@ -80,7 +78,7 @@ def main():
     for name in ['DLC玩法总览.png','更新日志_4.1.png']:shutil.copy2(ROOT/'docs'/name,PACK/'docs'/name)
     for folder in (PACK,SERVER):
         (folder/'docs').mkdir(exist_ok=True)
-        for name in ['CHARACTER_VOICES.json','VOICE_VALIDATION.json','SUPPLIED_VOICE_OVERRIDES.json','PORTRAIT_STATUS.json','AI_PORTRAITS.json']:
+        for name in ['CHARACTER_VOICES.json','VOICE_VALIDATION.json','SUPPLIED_VOICE_OVERRIDES.json','PORTRAIT_STATUS.json']:
             shutil.copy2(ROOT/'docs'/name,folder/'docs'/name)
     shutil.copy2(ROOT/'README.md',PACK/'README.md')
     # Public replay thumbnails and website documentation use the new prints.

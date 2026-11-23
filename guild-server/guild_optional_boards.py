@@ -1,7 +1,7 @@
 """Optional boards: quests, prologues, scouts, forest, dragon, festival."""
 from collections import deque
 from copy import deepcopy
-from guild_content import CARDS,TILES,POTIONS,HEROES
+from guild_content import TILES,POTIONS,HEROES
 from guild_new_content import QUESTS,PROLOGUES
 
 class OptionalBoards:

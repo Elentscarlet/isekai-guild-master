@@ -12,9 +12,8 @@ multiplayer prints; pack/9B_1..4 carry the solo prints.
   E-007 大賢者        multi: 支付1秘藥，獲得等同「廢品」標籤數的戰力（無上限）
                       solo : 同效果（至多5）
 
-The base definitions describe the multiplayer print. apply_mode_variants()
-is called from Engine setup with the normalized options, so gameplay always
-reads the active print. Tables below are static: never mutate at runtime.
+The base definitions describe the multiplayer print. Each engine selects
+the appropriate definitions when it starts or restores a game.
 """
 
 from copy import deepcopy
@@ -72,14 +71,16 @@ _MODE_CARD_VARIANTS = {
 }
 
 
-def apply_mode_variants(options):
-    """Fold the mode's printed effects into CARDS (idempotent per setup)."""
-    from guild_content import CARDS
+def cards_for_mode(cards, options):
+    """Build a match's card catalog without modifying the source catalog."""
+    catalog = deepcopy(cards)
     mode = 'solo' if (options or {}).get('solo') else 'multi'
-    for card in CARDS.values():
-        if card.get('archived_print'):
-            continue
-        variants = _MODE_CARD_VARIANTS.get(card.get('printed_code'))
-        if variants:
-            for key, value in variants[mode].items():
-                card[key] = deepcopy(value)
+    for card in catalog.values():
+        card.update(deepcopy(printed_variant(card, mode)))
+    return catalog
+
+
+def printed_variant(card, mode):
+    if card.get('archived_print'):
+        return {}
+    return _MODE_CARD_VARIANTS.get(card.get('printed_code'), {}).get(mode, {})

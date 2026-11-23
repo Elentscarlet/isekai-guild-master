@@ -34,8 +34,12 @@ func wire_button(path: String, callback: Callable, enabled: bool = true, primary
 		return null
 	node.visible = true
 	var rect = Rect2(node.position, node.size)
+	# decorate() 会为代码按钮清空 custom_minimum_size；场景按钮需要保留
+	# .tscn 里配置的最小尺寸，否则放在 HBox/VBox 里会被文字宽度重新排版。
+	var scene_min_size = node.custom_minimum_size
 	ui.wire_button(node, callback, enabled, primary)
 	GuildTableWidgets.decorate(ui, node, rect, primary)
+	node.custom_minimum_size = scene_min_size
 	node.position = rect.position
 	node.size = rect.size
 	return node

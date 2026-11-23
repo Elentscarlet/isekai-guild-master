@@ -33,6 +33,9 @@ def available(engine, player_id):
 def record(engine, before, player_id, action):
     engine._undo_serial = getattr(engine, '_undo_serial', 0) + 1
     engine._undo_checkpoint = None
+    # 选看板娘黑白面会改变初始资源与专属牌，不允许撤回后反复重选。
+    if action.get('type') in ('choose_face', 'choose_hero'):
+        return
     if engine.state['phase'] != 'finished' and not information_changed(before, engine.state):
         engine._undo_checkpoint = dict(id=engine._undo_serial, player=player_id,
                                        state=before, action=action['type'])

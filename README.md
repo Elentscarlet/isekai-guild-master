@@ -8,8 +8,9 @@
 
 ## 本次修改
 
+- 开局顺序：房间准备页先选人物（不区分黑白版）→ 开局轮抽 → 情报收集 → 选择该人物的白面或黑面 → 公会行动。选面前按白/黑两版中较低的开局资源起步，情报收集后再补足所选面的差额；选面时才发放该面的专属抽牌、标签、私有牌堆与开场效果。
 - 4.1.1：普通联机未收到服务器确认时自动重试备用通道；默认地址和端口仍为 `guanpeng666.cn:6677`。配音新安装默认关闭，旧配置一次性迁移为关闭，之后手动开启会保存。
-- 为之前裁切卡面的希芙、芙莉达、贝露、霍伦、玛尔塔制作10张独立立绘，覆盖11个规则版本，并保留黑白版本不同外观；其余角色沿用现有立绘。
+- 立绘统一改用 `art/characters/` 的人物插画：源图 2160×3840，打包为 1080×1920 WebP，弃用 `art/portraits/`；同一人物的各版本共用同一张角色立绘。逐角色来源见 `docs/PORTRAIT_STATUS.json`。
 
 - 提取截图中的34张卡面，接入希芙、芙莉达、贝露、霍伦、玛尔塔的11套能力版本和专属事件“懒散生活”；不同能力保留为不同选项，原版角色仍可选择。
 - 蓓尔白版按**印刷费用个位数0或5**触发，覆盖10、15、20等费用，不使用折扣后的实付金币。
@@ -39,7 +40,7 @@ python3 server.py --host 0.0.0.0 --port 6677 --web-port 6767 --site-port 6680
 
 构建：`python tools/build_update_release.py`，输出在 `dist/`。可通过 `GODOT_BIN` 指定Godot控制台程序；导出模板在Godot中安装或填写 `export_presets.cfg`。GitHub源码不包含exe与Python标准库zip，首次构建需从完整客户端包复制 `runtime/`，或使用官方Python 3.13嵌入式运行库。
 
-验证：`python -m unittest discover -s tests -v`（服务器与素材）。客户端可跑 `GuildMaster-Godot-src/tools/dialog_qa.gd`（逐个打开全部弹窗）、`tools/update_qa.gd`（新卡面、配音开关、默认语言与2/5人布局），以及 `tools/regression/run.ps1` + `compare.py` 做改动前后的截图逐像素对比。上游规则回归脚本保留在 `GuildMaster-Godot/tools/`。
+验证：`python -m unittest discover -s tests -v`（服务器与素材）。客户端可跑 `GuildMaster-Godot-src/tools/dialog_qa.gd`（逐个打开全部弹窗）、`tools/table_qa.gd`（桌面各阶段）、`tools/offline_qa.gd`（真实离线开局到公会行动）、`tools/update_qa.gd`（新卡面、配音开关、默认语言与2/5人布局），以及 `tools/regression/run.ps1` + `compare.py` 做改动前后的截图逐像素对比。上游规则回归脚本保留在 `GuildMaster-Godot/tools/`。
 
 ## 来源与许可
 

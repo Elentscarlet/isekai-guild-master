@@ -2,88 +2,101 @@ class_name GuildTableDashboard
 extends RefCounted
 
 # 「总览」桌面布局（设置 → 桌面布局 → 总览）。
-# 经典布局见 table_classic.gd；两者共用 table_widgets.gd 的控件与纸张皮肤。
+# 固定面板与按钮都在 ui/table_layout_dashboard.tscn 里摆好；
+# 这里只填数值、显隐和动态列表。经典布局见 table_classic.gd。
+# 选角、情报收集、选面与结算使用同一套阶段场景（table_screen.gd 负责挂入）。
 
-static func draw(ui, parent: Control):
+static func fill(ui, screen, layout: Control) -> void:
 	var game = ui.session.game
 	var me = ui.session.me()
 	var phase = str(game.get("phase", ""))
-
-	# 选角与结算沿用完整的私有流程，不另做一套。
-	if phase in ["draft", "research"] or phase == "finished":
-		GuildTableClassic.header(ui, parent, game, {})
-		GuildTableClassic.players(ui, parent, game, me)
-		if phase == "finished":
-			ui.dialogs.results_inline(parent)
-		else:
-			GuildTableClassic.selection_phase(ui, parent, game, me, phase)
-		return
-
 	var focus = me if not me.is_empty() else game.players[int(game.get("turn", 0))]
 	var can = ui.session.can_act()
-	var T = GuildTableWidgets
-	ui.player_clocks = []
+	# 布局根节点只用于摆位，不接收鼠标，否则阶段切换后会挡住输入。
+	layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in layout.get_children():
+		if child is Control:
+			child.visible = true
+	var sidebar = layout.get_node("Sidebar") as Panel
+	(sidebar.get_node("PhaseLabel") as Label).text = GuildLang.t(ui.PHASES.get(phase, phase))
+	(sidebar.get_node("PlayersTitle") as Label).text = GuildLang.t("玩家状态")
 
-	var left = T.surface(ui, parent, Rect2(12, 12, 286, 775), "DashboardSidebar")
-	T.caption(ui, left, ui.PHASES.get(phase, phase), Rect2(14, 10, 258, 34), 25, ui.GOLD)
-	T.caption(ui, left, "玩家状态", Rect2(14, 52, 258, 25), 18, ui.MUTED)
-	for i in range(game.players.size()):
-		var p = game.players[i]
-		var row = T.surface(ui, left, Rect2(10, 84 + i * 75, 266, 69), "DashboardPlayer" + str(i))
-		var portrait = GuildPortrait.new()
-		portrait.texture = ui.store.portrait_bust(p.hero, int(p.get("affection", 0)))
-		portrait.on_click = func(): ui.dialogs.player_detail(p)
-		T.at(row, portrait, Rect2(5, 4, 44, 60))
-		T.caption(ui, row, "P%s  %s" % [int(p.id) + 1, p.name], Rect2(55, 4, 202, 24), 18, ui.GOLD if int(game.turn) == i else ui.INK)
-		T.caption(ui, row, "金币 %s  力量 %s  秘药 %s" % [int(p.gold), int(p.strength), int(p.pot)], Rect2(55, 29, 204, 20), 14)
-		var state = T.player_status(ui, p, int(game.turn) == i)
-		T.caption(ui, row, state, Rect2(55, 49, 204, 18), 13, ui.MUTED)
+	var players = game.get("players", [])
+	for i in range(5):
+		var row = sidebar.get_node("PlayerRow%d" % i) as Panel
+		row.visible = i < players.size()
+		if not row.visible:
+			continue
+		var player = players[i]
+		var portrait = row.get_node("Portrait") as GuildPortrait
+		portrait.texture = ui.store.portrait_bust(player.hero, int(player.get("affection", 0)))
+		portrait.on_click = func(): ui.dialogs.player_detail(player)
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		var name_label = row.get_node("Name") as Label
+		name_label.text = GuildLang.t("P%s  %s" % [int(player.id) + 1, player.name])
+		name_label.add_theme_color_override("font_color", ui.GOLD if int(game.turn) == i else ui.INK)
+		(row.get_node("Info") as Label).text = GuildLang.t("金币 %s  力量 %s  秘药 %s" % [int(player.gold), int(player.strength), int(player.pot)])
+		(row.get_node("State") as Label).text = GuildLang.t(GuildTableWidgets.player_status(ui, player, int(game.turn) == i))
 
-	var y = 84 + game.players.size() * 75 + 8
-	for entry in [["手牌 / 情报", func(): ui.dialogs.hand(), true], ["特殊行动", func(): ui.dialogs.abilities(), can], ["扩充行动", func(): ui.dialogs.expansions(), not me.is_empty()], ["本季闭店", func(): ui.dialogs.confirm_pass(), can], ["偏好设置", func(): ui.dialogs.settings(), true], ["返回 / 离开", func(): ui.dialogs.leave(), true]]:
-		T.action(ui, left, entry[0], Rect2(12, y, 262, 40), entry[1], entry[2])
-		y += 45
+	var y = 84 + players.size() * 75 + 8
+	for i in range(6):
+		var node = sidebar.get_node("BtnAction%d" % i) as Button
+		node.position.y = y + i * 45
+	var entries = [
+		["手牌 / 情报", func(): ui.dialogs.hand(), true],
+		["特殊行动", func(): ui.dialogs.abilities(), can],
+		["扩充行动", func(): ui.dialogs.expansions(), not me.is_empty()],
+		["本季闭店", func(): ui.dialogs.confirm_pass(), can],
+		["偏好设置", func(): ui.dialogs.settings(), true],
+		["返回 / 离开", func(): ui.dialogs.leave(), true],
+	]
+	for i in range(entries.size()):
+		GuildTableWidgets.scene_button(ui, sidebar.get_node("BtnAction%d" % i) as Button, entries[i][1], entries[i][2])
 
 	# 顶部三个公共区域。
-	var zones = [["秘药行动", Rect2(310, 12, 535, 80)], ["公共成就", Rect2(855, 12, 500, 80)], ["剩余宝箱", Rect2(1365, 12, 418, 80)]]
-	for zone in zones:
-		var panel = T.surface(ui, parent, zone[1])
-		T.caption(ui, panel, zone[0], Rect2(12, 6, 300, 25), 19, ui.GOLD)
-		if zone[0] == "秘药行动":
-			for i in range(6):
-				var key = ["gold", "strength", "knowledge", "build", "free_card", "power"][i]
-				T.action(ui, panel, str(i + 1), Rect2(12 + i * 66, 36, 58, 34), func(): ui.dialogs.potions(), can and not game.get("potions_used", []).has(key) and not game.get("potions_disabled", []).has(key))
-		elif zone[0] == "公共成就":
-			T.action(ui, panel, "%s 张 · 查看成就" % game.get("public_achievements", []).size(), Rect2(12, 35, 470, 37), func(): ui.dialogs.achievements())
-		else:
-			T.action(ui, panel, "%s 个 · 查看宝物" % game.get("treasure_pool", []).size(), Rect2(12, 35, 388, 37), func(): ui.dialogs.treasures())
+	var potion_zone = layout.get_node("PotionZone") as Panel
+	(potion_zone.get_node("Title") as Label).text = GuildLang.t("秘药行动")
+	for i in range(6):
+		var key = ["gold", "strength", "knowledge", "build", "free_card", "power"][i]
+		var ready = GuildTableWidgets.potion_state(ui, key) == "可用"
+		GuildTableWidgets.scene_button(ui, potion_zone.get_node("PotionButton%d" % i) as Button, func(): ui.dialogs.potions(), ready)
+	var achievement_zone = layout.get_node("AchievementZone") as Panel
+	(achievement_zone.get_node("Title") as Label).text = GuildLang.t("公共成就")
+	var achievement_button = achievement_zone.get_node("BtnAchievements") as Button
+	achievement_button.text = GuildLang.t("%s 张 · 查看成就" % game.get("public_achievements", []).size())
+	GuildTableWidgets.scene_button(ui, achievement_button, func(): ui.dialogs.achievements())
+	var treasure_zone = layout.get_node("TreasureZone") as Panel
+	(treasure_zone.get_node("Title") as Label).text = GuildLang.t("剩余宝箱")
+	var treasure_button = treasure_zone.get_node("BtnTreasures") as Button
+	treasure_button.text = GuildLang.t("%s 个 · 查看宝物" % game.get("treasure_pool", []).size())
+	GuildTableWidgets.scene_button(ui, treasure_button, func(): ui.dialogs.treasures())
 
-	var map_panel = T.main_surface(ui, parent, Rect2(310, 102, 1473, 685), "DashboardMap")
-	var map = GuildHexMap.new()
+	var map_panel = layout.get_node("DashboardMap") as Panel
+	var map = map_panel.get_node("DashboardHexMap") as GuildHexMap
 	map.store = ui.store
 	map.motion = ui.prefs.motion
 	map.renpy_geometry = true
-	T.at(map_panel, map, Rect2(130, 12, 1020, 510), "DashboardHexMap")
 	map.set_game(game, ui.session.player_id)
 	map.chosen_ids = [ui.selected_tile]
-	var selection = Control.new()
-	T.at(map_panel, selection, Rect2(660, 516, 490, 163), "DashboardSelection")
-	var existing = game.board.filter(func(cell): return cell.id == ui.selected_tile)
-	T.draw_selection(ui, selection, existing[0] if not existing.is_empty() else {})
-	map.cell_clicked.connect(func(cell):
-		ui.selected_tile = cell.id
-		map.chosen_ids = [cell.id]
-		map.queue_redraw()
-		T.draw_selection(ui, selection, cell))
-	T.action(ui, map_panel, "撤回上一步", Rect2(20, 534, 200, 46), func(): ui.undo(), game.get("undo", {}).get("available", false))
-	T.action(ui, map_panel, "售牌 / 王权", Rect2(230, 534, 200, 46), func(): ui.dialogs.market(), ui.session.can_free_action())
-	T.action(ui, map_panel, "发展公会", Rect2(20, 592, 200, 46), func(): ui.dialogs.develop(), can)
-	T.action(ui, map_panel, "我的板块", Rect2(230, 592, 200, 46), func(): ui.dialogs.tiles(me), not me.is_empty())
+	var selection = map_panel.get_node("DashboardSelection") as Control
+	var existing = game.board.filter( func(cell): return cell.id == ui.selected_tile)
+	GuildTableWidgets.draw_selection(ui, selection, existing[0] if not existing.is_empty() else {})
+	if not map.has_meta("guild_selection_click"):
+		map.set_meta("guild_selection_click", true)
+		map.cell_clicked.connect(func(cell):
+			ui.selected_tile = cell.id
+			map.chosen_ids = [cell.id]
+			map.queue_redraw()
+			GuildTableWidgets.draw_selection(ui, selection, cell))
+	GuildTableWidgets.scene_button(ui, map_panel.get_node("BtnUndo") as Button, func(): ui.undo(), game.get("undo", {}).get("available", false))
+	GuildTableWidgets.scene_button(ui, map_panel.get_node("BtnMarket") as Button, func(): ui.dialogs.market(), ui.session.can_free_action())
+	GuildTableWidgets.scene_button(ui, map_panel.get_node("BtnDevelop") as Button, func(): ui.dialogs.develop(), can)
+	GuildTableWidgets.scene_button(ui, map_panel.get_node("BtnMyTiles") as Button, func(): ui.dialogs.tiles(me), not me.is_empty())
 
 	# 右侧文明 / 瘴气纵向轨道。
-	var track = T.surface(ui, parent, Rect2(1795, 12, 113, 775), "DashboardTrack")
-	T.caption(ui, track, "瘴气 %s" % int(game.miasma), Rect2(8, 8, 98, 30), 17, ui.GOLD)
-	var bar = ProgressBar.new()
+	var track = layout.get_node("Track") as Panel
+	(track.get_node("Miasma") as Label).text = GuildLang.t("瘴气 %s" % int(game.miasma))
+	var bar = track.get_node("CivBar") as ProgressBar
 	bar.fill_mode = ProgressBar.FILL_BOTTOM_TO_TOP
 	bar.min_value = 0
 	bar.max_value = maxf(1, float(game.miasma))
@@ -91,44 +104,51 @@ static func draw(ui, parent: Control):
 	bar.show_percentage = false
 	bar.add_theme_stylebox_override("background", ui.box(Color("d6c7b5"), ui.MUTED, 6, 0))
 	bar.add_theme_stylebox_override("fill", ui.box(ui.GOLD, ui.GOLD, 6, 0))
-	T.at(track, bar, Rect2(34, 48, 42, 533), "DashboardCivilization")
-	T.caption(ui, track, "文明 %s" % int(game.civ), Rect2(8, 592, 98, 30), 17, ui.GOLD)
-	T.caption(ui, track, "第 %s 轮" % int(game.round), Rect2(8, 640, 98, 30), 19)
-	T.caption(ui, track, ["春", "夏", "秋", "冬"][clampi(int(game.season), 0, 3)], Rect2(8, 683, 98, 30), 21, ui.GOLD)
+	(track.get_node("Civ") as Label).text = GuildLang.t("文明 %s" % int(game.civ))
+	(track.get_node("Round") as Label).text = GuildLang.t("第 %s 轮" % int(game.round))
+	(track.get_node("Season") as Label).text = GuildLang.t(["春", "夏", "秋", "冬"][clampi(int(game.season), 0, 3)])
 
 	# 底部个人信息与资源条。
-	var personal = T.surface(ui, parent, Rect2(12, 800, 286, 243), "DashboardPersonal")
-	var portrait = GuildPortrait.new()
-	portrait.texture = ui.store.portrait(focus.hero, int(focus.get("affection", 0)))
+	var personal = layout.get_node("Personal") as Panel
+	var portrait = personal.get_node("Portrait") as GuildPortrait
+	portrait.texture = ui.store.portrait_bust(focus.hero, int(focus.get("affection", 0)))
 	portrait.on_click = func(): ui.dialogs.hero_detail(focus)
-	T.at(personal, portrait, Rect2(8, 8, 100, 184))
-	T.caption(ui, personal, ui.store.catalog.heroes.get(focus.hero, {}).get("name", ""), Rect2(116, 12, 160, 30), 23)
-	T.caption(ui, personal, "好感 %s / 5\n声望 %s" % [int(focus.get("affection", 0)), int(focus.get("score", 0))], Rect2(116, 60, 160, 70), 19)
-	T.action(ui, personal, "公会详情", Rect2(116, 145, 155, 45), func(): ui.dialogs.player_detail(focus))
+	portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	(personal.get_node("HeroName") as Label).text = GuildLang.t(str(ui.store.catalog.heroes.get(focus.hero, {}).get("name", "")))
+	(personal.get_node("Info") as Label).text = GuildLang.t("好感 %s / 5\n声望 %s" % [int(focus.get("affection", 0)), int(focus.get("score", 0))])
+	GuildTableWidgets.scene_button(ui, personal.get_node("BtnDetail") as Button, func(): ui.dialogs.player_detail(focus))
+
 	for i in range(3):
 		var resource = ["gold", "strength", "pot"][i]
 		var production = ["gold_pro", "str_pro", "pot_pro"][i]
-		var panel = T.surface(ui, parent, Rect2(310 + i * 148, 800, 138, 243), "DashboardResource" + str(i))
-		T.at(panel, ui.symbol(resource, 38), Rect2(48, 24, 42, 42))
-		T.caption(ui, panel, str(int(focus.get(resource, 0))), Rect2(18, 78, 108, 58), 43, ui.GOLD)
-		T.caption(ui, panel, "产能 %s" % int(focus.get(production, 0)), Rect2(18, 160, 108, 30), 20)
+		var panel = layout.get_node("Resource%d" % i) as Panel
+		(panel.get_node("Icon") as TextureRect).texture = load("res://ui/symbols/" + resource + ".png")
+		(panel.get_node("Value") as Label).text = str(int(focus.get(resource, 0)))
+		(panel.get_node("Production") as Label).text = GuildLang.t("产能 %s" % int(focus.get(production, 0)))
 
-	var hand = T.surface(ui, parent, Rect2(754, 800, 190, 243), "DashboardHand")
-	T.caption(ui, hand, str(me.get("hand", []).size()), Rect2(55, 28, 120, 70), 54, ui.GOLD)
-	T.action(ui, hand, "浏览全部手牌", Rect2(12, 118, 166, 49), func(): ui.dialogs.hand(), not me.is_empty())
-	T.caption(ui, hand, "事件牌库 %s" % int(game.get("deck_count", 0)), Rect2(14, 188, 162, 25), 16, ui.MUTED)
+	var hand_panel = layout.get_node("HandPanel") as Panel
+	(hand_panel.get_node("Count") as Label).text = str(me.get("hand", []).size())
+	GuildTableWidgets.scene_button(ui, hand_panel.get_node("BtnBrowse") as Button, func(): ui.dialogs.hand(), not me.is_empty())
+	(hand_panel.get_node("Deck") as Label).text = GuildLang.t("事件牌库 %s" % int(game.get("deck_count", 0)))
 
 	var stats = [["迷宫板块", focus.get("tiles", []).size()], ["好感 / 等级", "%s / %s" % [int(focus.get("affection", 0)), int(focus.get("hero_level", 1))]], ["当前声望", focus.get("score", 0)], ["可派冒险者", focus.get("available", 0)], ["已出事件", focus.get("played", []).size()], ["贡献标记", focus.get("contribution", 0)]]
 	for i in range(stats.size()):
-		var panel = T.surface(ui, parent, Rect2(955 + (i % 3) * 177, 800 + (i / 3) * 126, 167, 117))
-		T.caption(ui, panel, str(stats[i][0]), Rect2(10, 8, 147, 25), 17, ui.MUTED)
-		T.caption(ui, panel, str(stats[i][1]), Rect2(12, 43, 143, 50), 34, ui.GOLD)
+		var panel = layout.get_node("Stat%d" % i) as Panel
+		(panel.get_node("Caption") as Label).text = GuildLang.t(str(stats[i][0]))
+		(panel.get_node("Value") as Label).text = str(stats[i][1])
 
-	var logs = T.surface(ui, parent, Rect2(1486, 800, 422, 243), "DashboardLog")
-	T.action(ui, logs, "已出牌", Rect2(12, 8, 184, 38), func(): ui.dialogs.player_detail(focus))
-	T.action(ui, logs, "对局日志", Rect2(208, 8, 202, 38), func(): ui.dialogs.game_log())
-	var items = VBoxContainer.new()
-	var entries = game.get("log", [])
-	for i in range(entries.size() - 1, maxi(-1, entries.size() - 4), -1):
-		items.add_child(ui.dialogs.wrapped(entries[i].get("message", ""), 16, ui.MUTED))
-	T.at(logs, ui.scroll(items), Rect2(12, 58, 398, 169))
+	var log_panel = layout.get_node("LogPanel") as Panel
+	GuildTableWidgets.scene_button(ui, log_panel.get_node("BtnPlayed") as Button, func(): ui.dialogs.player_detail(focus))
+	GuildTableWidgets.scene_button(ui, log_panel.get_node("BtnLog") as Button, func(): ui.dialogs.game_log())
+	var logs = log_panel.get_node("LogScroll/LogList") as VBoxContainer
+	var log_entries = game.get("log", [])
+	var recent = log_entries.slice(maxi(0, log_entries.size() - 3))
+	if GuildTableWidgets.region_changed(logs, "log", [recent, GuildLang.traditional]):
+		clear(logs)
+		for i in range(recent.size() - 1, -1, -1):
+			logs.add_child(ui.dialogs.wrapped(recent[i].get("message", ""), 16, ui.MUTED))
+
+static func clear(container: Node) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()

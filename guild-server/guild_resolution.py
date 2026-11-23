@@ -7,7 +7,7 @@ contains server-generated options. Hidden choices are stripped from views.
 from collections import Counter
 from copy import deepcopy
 
-from guild_content import CARDS, HEROES, TILES, POTIONS, ACHIEVEMENTS
+from guild_content import HEROES, TILES, POTIONS, ACHIEVEMENTS
 
 RESOURCES = ('gold', 'strength', 'pot', 'gold_pro', 'str_pro', 'pot_pro', 'wisdom', 'flash')
 LABELS = {'gold': '金币', 'strength': '力量', 'pot': '秘药', 'gold_pro': '金币产能',
@@ -45,11 +45,11 @@ class ResolutionRules:
         for p in self.state['players']:
             for i, meta in enumerate(self._card_states(p)):
                 if meta['uid'] == source['uid']:
-                    return p, i, CARDS[p['played'][i]], meta
+                    return p, i, self.cards[p['played'][i]], meta
         return None
 
     def _active_cards(self, p):
-        return [(i, CARDS[c], meta) for i, (c, meta) in
+        return [(i, self.cards[c], meta) for i, (c, meta) in
                 enumerate(zip(p['played'], self._card_states(p))) if not meta['face_down']]
 
     def _passives(self, p):
@@ -129,7 +129,7 @@ class ResolutionRules:
         return all(self._stat(p, k) >= req[k] for k in
                    ('holes', 'untagged', 'earned_achievements', 'wisdom', 'flash') if k in req)
 
-    def _pay(self, p, costs):
+    def _pay(self, p, costs, preview=False):
         budget = {k: p.get(k, 0) for k in RESOURCES}
         for key, amount in costs.items():
             if key not in RESOURCES or type(amount) is not int or amount < 0:
@@ -284,9 +284,8 @@ class ResolutionRules:
             self._run_step(self._player(task['player']), task)
             self.state['effects'].extend(remaining)
 
-    @staticmethod
-    def _card_option(card_id, value=None):
-        card = CARDS[card_id]
+    def _card_option(self, card_id, value=None):
+        card = self.cards[card_id]
         # `card` 让客户端用目录内的扫描卡面渲染（image_path 指向的 TTS 图未必随包附带）。
         return dict(value=card_id if value is None else value, card=card_id, label=card['name'], image=card['image_path'])
 
@@ -423,16 +422,16 @@ class ResolutionRules:
             self._prompt(task, '是否支付'+label+'？', [dict(value=True,label='支付并执行'),dict(value=False,label='不支付')])
         elif op == 'reveal_draw':
             cards = self._draw(step.get('count', 1))
-            self._log('%s公开牌库顶卡：%s。' % (p['name'], '、'.join(CARDS[c]['name'] for c in cards)),p)
+            self._log('%s公开牌库顶卡：%s。' % (p['name'], '、'.join(self.cards[c]['name'] for c in cards)),p)
             if 'keep_filter' in step:
-                kept = [c for c in cards if self._card_filter(CARDS[c], step['keep_filter'])]
+                kept = [c for c in cards if self._card_filter(self.cards[c], step['keep_filter'])]
                 p['hand'].extend(kept)
                 remaining = Counter(cards)-Counter(kept)
                 self.state['discard'].extend(remaining.elements())
             else:
                 p['hand'].extend(cards)
             for card_id in cards:
-                tags = CARDS[card_id].get('tags', [])
+                tags = self.cards[card_id].get('tags', [])
                 if step.get('tag_potions'):
                     self._effects(p, {'pot':len(tags)} if tags else {'strength':1}, action)
                 if step.get('tag_affection'):
@@ -478,13 +477,13 @@ class ResolutionRules:
             if count:
                 self._prompt(task,'选择免费解锁的好感度条件',options,count,count)
         elif op == 'play':
-            options = [self._card_option(c) for c in dict.fromkeys(p['hand']) if self._card_filter(CARDS[c],step.get('filter',{}))
-                       and (self._requirements(p,{'tags':CARDS[c].get('requirements',{}).get('tags',{})},True) if step.get('ignore_non_tag_requirements') else self._requirements(p,CARDS[c].get('requirements',{}),True)) and self._can_nested_play(p,c,step)]
+            options = [self._card_option(c) for c in dict.fromkeys(p['hand']) if self._card_filter(self.cards[c],step.get('filter',{}))
+                       and (self._requirements(p,{'tags':self.cards[c].get('requirements',{}).get('tags',{})},True) if step.get('ignore_non_tag_requirements') else self._requirements(p,self.cards[c].get('requirements',{}),True)) and self._can_nested_play(p,c,step)]
             self._prompt(task,'选择要打出的事件卡',options,optional=step.get('optional',False))
         elif op in ('play_payment', 'explore_payment'):
             if op == 'explore_payment' and not self._prepare_explore(p,task):
                 return
-            card = CARDS.get(step.get('card'),{})
+            card = self.cards.get(step.get('card'),{})
             consume = 0 if step.get('ignore_extra') or op=='explore_payment' else card.get('consume_piece',0)
             if p['hero']=='horn_black':consume=max(0,consume-p['pot']) if p.get('prefer_pot') else min(consume,len(p['tiles']))
             maximum = len(p['tiles']) if op=='explore_payment' and self._has_passive(p,'tiles_as_strength') else consume
@@ -508,8 +507,9 @@ class ResolutionRules:
             options = [self._board_option(c) for c in self.state['board'] if self.can_explore(p['id'],c['id'],allow_hole=step.get('hole_claim',False))]
             self._prompt(task,'选择探索目标',options,optional=step.get('optional',False))
         elif op == 'potion':
+            from guild_potions import available
             options = [dict(value=k,label='%s · %s秘药' % (v['name'],v['cost'])) for k,v in POTIONS.items()
-                       if self._affordable(p,{'pot':v['cost']}) and (step.get('ignore_slot') or k not in self.state['potions_used']+self.state['potions_disabled'])]
+                       if available(self,p,k,bool(step.get('ignore_slot',False)))]
             self._prompt(task,'选择秘药行动',options)
         elif op == 'achievement':
             options = []
@@ -553,7 +553,7 @@ class ResolutionRules:
         return step.get('discount',0)+sum(self._stat(p,s) for s in step.get('discount_stats',[]))
 
     def _can_nested_play(self,p,c,step):
-        card = CARDS[c]
+        card = self.cards[c]
         if not card.get('available',False):
             return False
         consume = 0 if step.get('ignore_extra') else card.get('consume_piece',0)
@@ -627,7 +627,7 @@ class ResolutionRules:
                     self._card_states(p)[-1]['face_down'] = True
                 self._effects(p,step.get('effect',{}),action)
             else:
-                self.state['discard'].extend(c for c in cards if not CARDS[c].get('special'))
+                self.state['discard'].extend(c for c in cards if not self.cards[c].get('special'))
                 if op == 'discard_draw':
                     p['hand'].extend(self._draw(len(cards)+step.get('bonus',0)))
                 elif step.get('resource'):
@@ -774,7 +774,7 @@ class ResolutionRules:
                 if pending['mode']=='payment':
                     p = self._player(player_id)
                     step = pending['task']['step']
-                    card = CARDS.get(step.get('card'),{})
+                    card = self.cards.get(step.get('card'),{})
                     view['pending']['payment'] = dict(
                         strength_max=p['strength'] if step['op']=='explore_payment' else
                             min(max(0,p['strength']-card.get('costs',{}).get('strength',0)),

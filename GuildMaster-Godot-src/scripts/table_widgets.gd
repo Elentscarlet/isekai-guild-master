@@ -38,9 +38,33 @@ static func action(ui, parent: Control, text: String, rect: Rect2, callback: Cal
 	at(parent, node, rect, id)
 	return node
 
+# 场景里已经摆好的按钮：接回调并套用与 action() 相同的字号与纸张样式。
+static func scene_button(ui, node: Button, callback: Callable, enabled: bool = true, primary: bool = false) -> Button:
+	var rect = Rect2(node.position, node.size)
+	ui.wire_button(node, callback, enabled, primary)
+	decorate(ui, node, rect, primary)
+	node.position = rect.position
+	node.size = rect.size
+	return node
+
+# 场景里的文字默认用项目字体预览；运行时改回主题字体，切繁简时才会换成繁体字型。
+static func reset_scene_fonts(root: Node) -> void:
+	for node in root.find_children("*", "Label", true, false):
+		if node.get_theme_font_size("font_size") >= 27:
+			node.add_theme_font_override("font", GuildPaperSkin.title_font())
+		else:
+			node.remove_theme_font_override("font")
+	for node in root.find_children("*", "RichTextLabel", true, false):
+		node.remove_theme_font_override("normal_font")
+	for node in root.find_children("*", "Button", true, false):
+		node.remove_theme_font_override("font")
+
 # 场景里已经摆好的按钮：按它的矩形套上同样的字号与纸张样式，口径与原 action() 一致。
-static func decorate(ui, node: Button, rect: Rect2, primary: bool = false) -> void:
+static func decorate(ui, node: Button, rect: Rect2, primary: bool = false, keep_min : bool = false) -> void:
+	var saved_min = node.custom_minimum_size
 	node.custom_minimum_size = Vector2.ZERO
+	if keep_min:
+		node.custom_minimum_size = saved_min
 	node.add_theme_font_override("font", ui.theme.default_font)
 	var wide = rect.size.x >= 150.0 and rect.size.y >= 44.0
 	var base = 18 if rect.size.x <= 120 or rect.size.y < 40 else 24 if rect.size.y == 50 else 21
@@ -110,11 +134,22 @@ static func player_connected(ui, player: Dictionary) -> bool:
 	if int(player.id) == ui.session.player_id and not ui.session.local_mode: connected = connected and ui.session.active and ui.session.synchronized and ui.session.room_connected
 	return connected
 
+static func region_changed(node: Node, name: String, values: Array) -> bool:
+	var key = "guild_region_" + name
+	if node.has_meta(key) and node.get_meta(key) == values:
+		return false
+	node.set_meta(key, values.duplicate(true))
+	return true
+
 static func status_masks(ui, panel: Control, player: Dictionary, status: Label) -> void:
 	var disconnected = not player_connected(ui, player)
 	for entry in [["ClosedMask", player.get("passed", false), Color(0.72, 0.7, 0.66, 0.42), 2], ["DisconnectedMask", disconnected, Color(0.19, 0.2, 0.22, 0.45), 3]]:
+		var mask = panel.get_node_or_null(entry[0]) as ColorRect
+		if mask != null:
+			mask.visible = entry[1]
+			continue
 		if not entry[1]: continue
-		var mask = ColorRect.new()
+		mask = ColorRect.new()
 		mask.name = entry[0]
 		mask.color = entry[2]
 		mask.z_index = entry[3]
@@ -126,6 +161,11 @@ static func status_masks(ui, panel: Control, player: Dictionary, status: Label) 
 		status.add_theme_color_override("font_color", Color("fffdf7"))
 		status.add_theme_color_override("font_outline_color", Color("343133"))
 		status.add_theme_constant_override("outline_size", 2)
+	else:
+		status.z_index = 0
+		status.remove_theme_color_override("font_color")
+		status.remove_theme_color_override("font_outline_color")
+		status.remove_theme_constant_override("outline_size")
 
 static func player_status(ui, player: Dictionary, current: bool) -> String:
 	if not player_connected(ui, player):
@@ -136,24 +176,20 @@ static func player_status(ui, player: Dictionary, current: bool) -> String:
 	return "行动中" if current else "等待行动"
 
 static func potion_state(ui, key: String) -> String:
-	var game = ui.session.game
-	var me = ui.session.me()
-	if game.get("potions_disabled", []).has(key): return "未开放"
-	if game.get("potions_used", []).has(key): return "本轮已用"
-	if me.is_empty(): return "观战"
-	if key == "build" and not game.get("board", []).any( func(cell): return cell.get("owner") != null and int(cell.owner) == int(me.get("id", -1)) and not cell.get("base", false)): return "无可据点化营地"
-	if key == "free_card" and me.get("hand", []).is_empty(): return "手牌为空"
-	if int(me.get("pot", 0)) + (me.get("tiles", []).size() if me.get("hero") == "horn_black" else 0) < int(ui.store.catalog.potions[key].get("cost", 0)): return "数量不足"
-	if me.get("passed", false): return "本季闭店"
-	if not ui.session.can_act(): return "等待行动"
-	return "可用"
+	return GuildRulesLogic.potion_state(ui.session.me(), ui.session.game, ui.store.catalog, key, ui.session.can_act())
 
+# 场景 ui/potion_button.tscn 摆好按钮与两行内容，这里只填费用、图标、状态与回调。
 static func potion_button(ui, key: String) -> Button:
+	var node: Button = load("res://ui/potion_button.tscn").instantiate()
+	fill_potion(ui, node, key)
+	return node
+
+static func fill_potion(ui, node: Button, key: String) -> Button:
 	var potion = ui.store.catalog.potions[key]
 	var state = potion_state(ui, key)
-	var node = ui.button("", func(): ui.session.action("potion", {"option": key}), state == "可用")
 	node.name = "Potion_" + key
-	node.custom_minimum_size = Vector2(99, 48)
+	node.text = ""
+	node.tooltip_text = GuildLang.t(potion.get("name", key) + " · " + str(int(potion.cost)) + "秘药 · " + state + "\n" + potion.get("description", ""))
 	for entry in [["normal", Color("f5eee0"), Color("1c1a1e")], ["hover", Color("fdf7ea"), Color("1c1a1e")], ["pressed", Color("eae1ce"), Color("1c1a1e")], ["disabled", Color("e7e1d7"), Color("8c877e")]]:
 		var style = StyleBoxFlat.new()
 		style.bg_color = entry[1]
@@ -163,46 +199,45 @@ static func potion_button(ui, key: String) -> Button:
 		style.content_margin_top = 3
 		style.content_margin_bottom = 3
 		node.add_theme_stylebox_override(entry[0], style)
-	node.tooltip_text = GuildLang.t(potion.get("name", key) + " · " + str(int(potion.cost)) + "秘药 · " + state + "\n" + potion.get("description", ""))
-	var column = VBoxContainer.new()
-	node.add_child(column)
-	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	column.offset_left = 4
-	column.offset_right = -4
-	column.offset_top = 3
-	column.offset_bottom = -3
-	column.add_theme_constant_override("separation", 1)
-	var line = HBoxContainer.new()
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_theme_constant_override("separation", 1)
-	line.alignment = BoxContainer.ALIGNMENT_CENTER
-	column.add_child(line)
-	if key.begins_with("alchemy_"): line.add_child(ui.label({"alchemy_gem": "宝石", "alchemy_card": "召唤", "alchemy_scout": "侦察", "alchemy_build": "筑城", "alchemy_draw": "情报"}.get(key, "炼金"), 12))
-	line.add_child(ui.label(str(int(potion.cost)), 16))
-	line.add_child(ui.symbol("pot", 18))
-	line.add_child(ui.label("=", 16))
-	line.add_child(ui.symbol({"gold": "gold", "strength": "strength", "knowledge": "event", "build": "territory", "free_card": "event", "power": "strength"}.get(key, "pot"), 18))
-	line.add_child(ui.label("×" + str({"gold": 8, "strength": 2, "knowledge": 2, "build": 1, "free_card": 1, "power": 5}.get(key, 1)), 16))
-	if key == "knowledge": line.add_child(ui.symbol("civ_plus1", 16))
-	var status = ui.label(state, 14, Color("4c6553") if state == "可用" else ui.MUTED)
-	status.name = "PotionStatus"
-	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_child(status)
+	var column = node.get_node("Column")
+	var line = column.get_node("Line")
+	var alchemy = line.get_node("Alchemy") as Label
+	alchemy.visible = key.begins_with("alchemy_")
+	alchemy.text = GuildLang.t({"alchemy_gem": "宝石", "alchemy_card": "召唤", "alchemy_scout": "侦察", "alchemy_build": "筑城", "alchemy_draw": "情报"}.get(key, "炼金"))
+	(line.get_node("Cost") as Label).text = str(int(potion.cost))
+	(line.get_node("Equals") as Label).text = "="
+	(line.get_node("PotIcon") as TextureRect).texture = load("res://ui/symbols/pot.png")
+	(line.get_node("RewardIcon") as TextureRect).texture = load("res://ui/symbols/" + {"gold": "gold", "strength": "strength", "knowledge": "event", "build": "territory", "free_card": "event", "power": "strength"}.get(key, "pot") + ".png")
+	(line.get_node("Amount") as Label).text = "×" + str({"gold": 8, "strength": 2, "knowledge": 2, "build": 1, "free_card": 1, "power": 5}.get(key, 1))
+	var civ = line.get_node_or_null("CivIcon")
+	if key == "knowledge" and civ == null:
+		civ = ui.picture(load("res://ui/symbols/civ_plus1.png"), 16)
+		civ.name = "CivIcon"
+		line.add_child(civ)
+	elif key != "knowledge" and civ != null:
+		civ.queue_free()
+	var status = column.get_node("Status") as Label
+	status.text = GuildLang.t(state)
+	status.add_theme_color_override("font_color", Color("4c6553") if state == "可用" else ui.MUTED)
+	ui.wire_button(node, func(): ui.session.action("potion", {"option": key}), state == "可用")
+	var mask = node.get_node_or_null("PotionMask")
 	if state == "未开放" or state == "本轮已用":
-		var mask = ColorRect.new()
-		mask.name = "PotionMask"
+		if mask == null:
+			mask = ColorRect.new()
+			mask.name = "PotionMask"
+			mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			mask.z_index = 6
+			node.add_child(mask)
+			mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		mask.color = Color(0.72, 0.7, 0.66, 0.5) if state == "未开放" else Color(0.529, 0.267, 0.286, 0.62)
-		mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		mask.z_index = 6
-		node.add_child(mask)
-		mask.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	elif mask != null:
+		mask.queue_free()
 	return node
 
 # 地图右侧「已选板块」详情面板（经典桌面与总览桌面共用）。
 static func draw_selection(ui, parent: Control, cell: Dictionary) -> void:
+	if not region_changed(parent, "selected_tile", [cell, GuildLang.traditional, ui.session.can_act(), ui.session.player_id]):
+		return
 	for child in parent.get_children(): parent.remove_child(child);child.queue_free()
 	var data = ui.store.catalog.tiles.get(cell.get("loot", ""), {}) if cell.get("revealed", false) else {}
 	var source = data.get("source", cell.get("back_source", "images/piece_png/17.png"))

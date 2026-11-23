@@ -1,47 +1,823 @@
-[gd_scene format=3 uid="uid://b1c5yjeffkrk5"]
+[gd_scene format=3]
 
-[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="1_player"]
-[ext_resource type="StyleBox" path="res://ui/styles/main_frame.tres" id="2_main"]
+[ext_resource type="Script" path="res://scripts/table_screen.gd" id="1_table_screen"]
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="2_player_frame"]
+[ext_resource type="FontFile" path="res://fonts/SourceHanSansLite.ttf" id="3_SourceHanSansLite"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_normal.tres" id="4_paper_button_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_pressed.tres" id="5_paper_button_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_hover.tres" id="6_paper_button_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_disabled.tres" id="7_paper_button_disabled"]
+[ext_resource type="Script" path="res://scripts/portrait.gd" id="8_portrait"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_normal.tres" id="9_banner_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_pressed.tres" id="10_banner_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_hover.tres" id="11_banner_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="12_banner_disabled"]
 
-[node name="TableScreen" type="Control" unique_id=1255339773]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.780392, 0.72549, 0.694118, 1)
+border_color = Color(0.419608, 0.392157, 0.376471, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+bg_color = Color(0.392157, 0.52549, 0.427451, 1)
+border_color = Color(0.392157, 0.52549, 0.427451, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="TableScreen" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+script = ExtResource("1_table_screen")
 
-[node name="Header" type="Panel" parent="." unique_id=507324582]
+[node name="Header" type="Panel" parent="."]
 layout_mode = 0
 offset_left = 12.0
 offset_top = 22.0
 offset_right = 1908.0
 offset_bottom = 94.0
-theme_override_styles/panel = ExtResource("1_player")
+theme_override_styles/panel = ExtResource("2_player_frame")
 
-[node name="MapPanel" type="Panel" parent="." unique_id=560234685]
-visible = false
+[node name="Brand" type="Label" parent="Header"]
 layout_mode = 0
-offset_left = 362.0
+offset_left = 24.0
+offset_top = 10.0
+offset_right = 194.0
+offset_bottom = 42.0
+text = "异世界公会长"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 26
+
+[node name="Subtitle" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 43.0
+offset_right = 194.0
+offset_bottom = 63.0
+text = "我的公会"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="SeasonLabel" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 213.0
+offset_top = 10.0
+offset_right = 453.0
+offset_bottom = 32.0
+text = "第 1 季 · 春"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeasonForecast" type="RichTextLabel" parent="Header"]
+layout_mode = 0
+offset_left = 213.0
+offset_top = 34.0
+offset_right = 389.0
+offset_bottom = 65.0
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+selection_enabled = false
+mouse_filter = 0
+mouse_default_cursor_shape = 2
+text = "[u]季节生产预告: 夏[/u]"
+theme_override_fonts/normal_font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/normal_font_size = 18
+theme_override_colors/default_color = Color(0.529412, 0.266667, 0.286275, 1)
+
+[node name="PhaseLabel" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 393.0
+offset_top = 23.0
+offset_right = 553.0
+offset_bottom = 58.0
+text = "公会行动"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 23
+
+[node name="CivilizationValue" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 532.0
+offset_top = 16.0
+offset_right = 626.0
+offset_bottom = 40.0
+text = "文明 1"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="CivilizationProgress" type="ProgressBar" parent="Header"]
+layout_mode = 0
+offset_left = 632.0
+offset_top = 18.0
+offset_right = 798.0
+offset_bottom = 38.0
+show_percentage = false
+min_value = 0.0
+max_value = 19.0
+value = 1.0
+theme_override_styles/background = SubResource("StyleBoxFlat_1")
+theme_override_styles/fill = SubResource("StyleBoxFlat_2")
+
+[node name="CivilizationRemaining" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 632.0
+offset_top = 44.0
+offset_right = 798.0
+offset_bottom = 62.0
+text = "还差 18 文明"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 13
+
+[node name="MiasmaValue" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 812.0
+offset_top = 16.0
+offset_right = 922.0
+offset_bottom = 40.0
+text = "瘴气 20"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="BtnMatchLog" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 936.0
+offset_top = 10.0
+offset_right = 1032.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "公会记录"
+
+[node name="BtnUndo" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 1048.0
+offset_top = 10.0
+offset_right = 1162.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "撤回上一步"
+
+[node name="BtnAchievements" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 1178.0
+offset_top = 10.0
+offset_right = 1238.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "王权"
+
+[node name="BtnMarket" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 1254.0
+offset_top = 10.0
+offset_right = 1314.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "售牌"
+
+[node name="BtnTreasures" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 1330.0
+offset_top = 10.0
+offset_right = 1390.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "宝箱"
+
+[node name="BtnLeave" type="Button" parent="Header"]
+layout_mode = 0
+offset_left = 1406.0
+offset_top = 10.0
+offset_right = 1466.0
+offset_bottom = 59.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("4_paper_button_normal")
+theme_override_styles/pressed = ExtResource("5_paper_button_pressed")
+theme_override_styles/hover = ExtResource("6_paper_button_hover")
+theme_override_styles/disabled = ExtResource("7_paper_button_disabled")
+text = "离开"
+
+[node name="FlagRewards" type="Control" parent="Header"]
+layout_mode = 0
+offset_left = 1502.0
+offset_top = 5.0
+offset_right = 1876.0
+offset_bottom = 65.0
+
+[node name="StartPlayer" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 73.0
+offset_right = 464.0
+offset_bottom = 95.0
+text = "◆ 本季起始玩家：P1 旅行者"
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Footer" type="Label" parent="Header"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 1031.0
+offset_right = 1896.0
+offset_bottom = 1053.0
+text = "ISEKAI GUILD MASTER  /  公会日志与规则可随时查阅"
+theme_override_colors/font_color = Color(0.972549, 0.937255, 0.894118, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="PlayerSeats" type="ScrollContainer" parent="."]
+layout_mode = 0
+offset_left = 12.0
 offset_top = 116.0
-offset_right = 1352.0
-offset_bottom = 810.0
-theme_override_styles/panel = ExtResource("2_main")
-
-[node name="CommandsPanel" type="Panel" parent="." unique_id=1742181369]
-visible = false
-layout_mode = 0
-offset_left = 1374.0
-offset_top = 116.0
-offset_right = 1908.0
-offset_bottom = 810.0
-theme_override_styles/panel = ExtResource("2_main")
-
-[node name="HandStrip" type="Panel" parent="." unique_id=1688739760]
-visible = false
-layout_mode = 0
-offset_left = 362.0
-offset_top = 832.0
-offset_right = 1908.0
+offset_right = 356.0
 offset_bottom = 1022.0
-theme_override_styles/panel = ExtResource("1_player")
+horizontal_scroll_mode = 0
+
+[node name="SeatList" type="VBoxContainer" parent="PlayerSeats"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+[node name="Seat0" type="Control" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(308, 164)
+
+[node name="Card" type="Panel" parent="PlayerSeats/SeatList/Seat0"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 308.0
+offset_bottom = 164.0
+theme_override_styles/panel = ExtResource("2_player_frame")
+
+[node name="Token" type="TextureRect" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 37.0
+offset_bottom = 33.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 8.0
+offset_right = 295.0
+offset_bottom = 36.0
+text = "P1 公会名"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Portrait" type="TextureRect" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 94.0
+offset_bottom = 147.0
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("8_portrait")
+
+[node name="Resources" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 37.0
+offset_right = 292.0
+offset_bottom = 63.0
+theme_override_constants/separation = 9
+
+[node name="Income" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 292.0
+offset_bottom = 89.0
+theme_override_constants/separation = 9
+
+[node name="Score" type="Label" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 89.0
+offset_right = 292.0
+offset_bottom = 111.0
+text = "声望 0 / 撤退 -0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeatStatus" type="Label" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 115.0
+offset_right = 292.0
+offset_bottom = 136.0
+text = ""
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Counters" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat0/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 137.0
+offset_right = 292.0
+offset_bottom = 159.0
+theme_override_constants/separation = 8
+
+[node name="Seat1" type="Control" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(308, 164)
+
+[node name="Card" type="Panel" parent="PlayerSeats/SeatList/Seat1"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 308.0
+offset_bottom = 164.0
+theme_override_styles/panel = ExtResource("2_player_frame")
+
+[node name="Token" type="TextureRect" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 37.0
+offset_bottom = 33.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 8.0
+offset_right = 295.0
+offset_bottom = 36.0
+text = "P1 公会名"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Portrait" type="TextureRect" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 94.0
+offset_bottom = 147.0
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("8_portrait")
+
+[node name="Resources" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 37.0
+offset_right = 292.0
+offset_bottom = 63.0
+theme_override_constants/separation = 9
+
+[node name="Income" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 292.0
+offset_bottom = 89.0
+theme_override_constants/separation = 9
+
+[node name="Score" type="Label" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 89.0
+offset_right = 292.0
+offset_bottom = 111.0
+text = "声望 0 / 撤退 -0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeatStatus" type="Label" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 115.0
+offset_right = 292.0
+offset_bottom = 136.0
+text = ""
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Counters" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat1/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 137.0
+offset_right = 292.0
+offset_bottom = 159.0
+theme_override_constants/separation = 8
+
+[node name="Seat2" type="Control" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(308, 164)
+
+[node name="Card" type="Panel" parent="PlayerSeats/SeatList/Seat2"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 308.0
+offset_bottom = 164.0
+theme_override_styles/panel = ExtResource("2_player_frame")
+
+[node name="Token" type="TextureRect" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 37.0
+offset_bottom = 33.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 8.0
+offset_right = 295.0
+offset_bottom = 36.0
+text = "P1 公会名"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Portrait" type="TextureRect" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 94.0
+offset_bottom = 147.0
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("8_portrait")
+
+[node name="Resources" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 37.0
+offset_right = 292.0
+offset_bottom = 63.0
+theme_override_constants/separation = 9
+
+[node name="Income" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 292.0
+offset_bottom = 89.0
+theme_override_constants/separation = 9
+
+[node name="Score" type="Label" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 89.0
+offset_right = 292.0
+offset_bottom = 111.0
+text = "声望 0 / 撤退 -0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeatStatus" type="Label" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 115.0
+offset_right = 292.0
+offset_bottom = 136.0
+text = ""
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Counters" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat2/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 137.0
+offset_right = 292.0
+offset_bottom = 159.0
+theme_override_constants/separation = 8
+
+[node name="Seat3" type="Control" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(308, 164)
+
+[node name="Card" type="Panel" parent="PlayerSeats/SeatList/Seat3"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 308.0
+offset_bottom = 164.0
+theme_override_styles/panel = ExtResource("2_player_frame")
+
+[node name="Token" type="TextureRect" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 37.0
+offset_bottom = 33.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 8.0
+offset_right = 295.0
+offset_bottom = 36.0
+text = "P1 公会名"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Portrait" type="TextureRect" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 94.0
+offset_bottom = 147.0
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("8_portrait")
+
+[node name="Resources" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 37.0
+offset_right = 292.0
+offset_bottom = 63.0
+theme_override_constants/separation = 9
+
+[node name="Income" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 292.0
+offset_bottom = 89.0
+theme_override_constants/separation = 9
+
+[node name="Score" type="Label" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 89.0
+offset_right = 292.0
+offset_bottom = 111.0
+text = "声望 0 / 撤退 -0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeatStatus" type="Label" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 115.0
+offset_right = 292.0
+offset_bottom = 136.0
+text = ""
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Counters" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat3/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 137.0
+offset_right = 292.0
+offset_bottom = 159.0
+theme_override_constants/separation = 8
+
+[node name="Seat4" type="Control" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(308, 164)
+
+[node name="Card" type="Panel" parent="PlayerSeats/SeatList/Seat4"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 308.0
+offset_bottom = 164.0
+theme_override_styles/panel = ExtResource("2_player_frame")
+
+[node name="Token" type="TextureRect" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 37.0
+offset_bottom = 33.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Name" type="Label" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 45.0
+offset_top = 8.0
+offset_right = 295.0
+offset_bottom = 36.0
+text = "P1 公会名"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+
+[node name="Portrait" type="TextureRect" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 94.0
+offset_bottom = 147.0
+expand_mode = 1
+stretch_mode = 6
+script = ExtResource("8_portrait")
+
+[node name="Resources" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 37.0
+offset_right = 292.0
+offset_bottom = 63.0
+theme_override_constants/separation = 9
+
+[node name="Income" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 66.0
+offset_right = 292.0
+offset_bottom = 89.0
+theme_override_constants/separation = 9
+
+[node name="Score" type="Label" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 89.0
+offset_right = 292.0
+offset_bottom = 111.0
+text = "声望 0 / 撤退 -0"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="SeatStatus" type="Label" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 115.0
+offset_right = 292.0
+offset_bottom = 136.0
+text = ""
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="Counters" type="HBoxContainer" parent="PlayerSeats/SeatList/Seat4/Card"]
+layout_mode = 0
+offset_left = 102.0
+offset_top = 137.0
+offset_right = 292.0
+offset_bottom = 159.0
+theme_override_constants/separation = 8
+
+[node name="ExtraPrivateTiles" type="Button" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 46)
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("9_banner_normal")
+theme_override_styles/pressed = ExtResource("10_banner_pressed")
+theme_override_styles/hover = ExtResource("11_banner_hover")
+theme_override_styles/disabled = ExtResource("12_banner_disabled")
+text = "查看私密迷宫笔记"
+visible = false
+
+[node name="ExtraPayment" type="Button" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 46)
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("9_banner_normal")
+theme_override_styles/pressed = ExtResource("10_banner_pressed")
+theme_override_styles/hover = ExtResource("11_banner_hover")
+theme_override_styles/disabled = ExtResource("12_banner_disabled")
+text = "设置金币费用折抵"
+visible = false
+
+[node name="ExtraSave" type="Button" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 46)
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("9_banner_normal")
+theme_override_styles/pressed = ExtResource("10_banner_pressed")
+theme_override_styles/hover = ExtResource("11_banner_hover")
+theme_override_styles/disabled = ExtResource("12_banner_disabled")
+text = "存档"
+visible = false
+
+[node name="ExtraNames" type="Button" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 46)
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("9_banner_normal")
+theme_override_styles/pressed = ExtResource("10_banner_pressed")
+theme_override_styles/hover = ExtResource("11_banner_hover")
+theme_override_styles/disabled = ExtResource("12_banner_disabled")
+text = "玩家昵称"
+visible = false
+
+[node name="ExtraChat" type="Button" parent="PlayerSeats/SeatList"]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 46)
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("9_banner_normal")
+theme_override_styles/pressed = ExtResource("10_banner_pressed")
+theme_override_styles/hover = ExtResource("11_banner_hover")
+theme_override_styles/disabled = ExtResource("12_banner_disabled")
+text = "房间聊天"
+
+[node name="LayoutSlot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+
+[node name="PhaseSlot" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0

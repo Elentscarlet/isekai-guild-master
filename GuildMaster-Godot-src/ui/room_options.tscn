@@ -1,0 +1,407 @@
+[gd_scene format=3 uid="uid://m3s68ttwpmue"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_normal.tres" id="1_plaque_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_hover.tres" id="2_plaque_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_pressed.tres" id="3_plaque_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_disabled.tres" id="4_plaque_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="5_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="6_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="7_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="8_primary_disabled"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_map"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_difficulty"]
+
+[node name="RoomOptions" type="ScrollContainer" unique_id=609125017]
+offset_right = 894.0
+offset_bottom = 430.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Body" type="VBoxContainer" parent="." unique_id=1922801214]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Top" type="HBoxContainer" parent="Body" unique_id=742667798]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="MapLabel" type="Label" parent="Body/Top" unique_id=1567068046]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 24
+text = "迷宫"
+
+[node name="MapType" type="HBoxContainer" parent="Body/Top" unique_id=1253098260]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Normal" type="Button" parent="Body/Top/MapType" unique_id=114629640]
+custom_minimum_size = Vector2(160, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_map")
+text = "一般迷宫"
+metadata/value = "normal"
+
+[node name="Deep" type="Button" parent="Body/Top/MapType" unique_id=982194454]
+custom_minimum_size = Vector2(160, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_map")
+text = "大深度迷宫"
+metadata/value = "deep"
+
+[node name="Training" type="Button" parent="Body/Top/MapType" unique_id=1247132965]
+custom_minimum_size = Vector2(160, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_map")
+text = "训练迷宫"
+metadata/value = "training"
+
+[node name="Spacer" type="Control" parent="Body/Top" unique_id=373615057]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CandidateLabel" type="Label" parent="Body/Top" unique_id=445203731]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 24
+text = "候选"
+
+[node name="HeroDraw" type="OptionButton" parent="Body/Top" unique_id=1406296440]
+custom_minimum_size = Vector2(150, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="PoolHint" type="Label" parent="Body" unique_id=2047643839]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4196, 0.3922, 0.3765, 1)
+theme_override_font_sizes/font_size = 17
+autowrap_mode = 3
+
+[node name="LockHint" type="Label" parent="Body" unique_id=262235905]
+layout_mode = 2
+theme_override_font_sizes/font_size = 19
+text = "每个开关会改变本局规则；开局后锁定。角色开始对局后才抽取。"
+autowrap_mode = 3
+
+[node name="Options" type="GridContainer" parent="Body" unique_id=1375926638]
+layout_mode = 2
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 8
+columns = 3
+
+[node name="Seconds" type="HBoxContainer" parent="Body" unique_id=763980550]
+layout_mode = 2
+theme_override_constants/separation = 26
+
+[node name="BaseSeconds" type="HBoxContainer" parent="Body/Seconds" unique_id=392528341]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Body/Seconds/BaseSeconds" unique_id=1065426667]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 22
+text = "基础秒数"
+
+[node name="Minus" type="Button" parent="Body/Seconds/BaseSeconds" unique_id=829666429]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "−"
+
+[node name="Value" type="Label" parent="Body/Seconds/BaseSeconds" unique_id=666793931]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "30"
+horizontal_alignment = 1
+
+[node name="Plus" type="Button" parent="Body/Seconds/BaseSeconds" unique_id=566705412]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "＋"
+
+[node name="ReserveSeconds" type="HBoxContainer" parent="Body/Seconds" unique_id=46047626]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Body/Seconds/ReserveSeconds" unique_id=383850873]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 22
+text = "备用秒数"
+
+[node name="Minus" type="Button" parent="Body/Seconds/ReserveSeconds" unique_id=1741569154]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "−"
+
+[node name="Value" type="Label" parent="Body/Seconds/ReserveSeconds" unique_id=913128224]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "120"
+horizontal_alignment = 1
+
+[node name="Plus" type="Button" parent="Body/Seconds/ReserveSeconds" unique_id=1903687808]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "＋"
+
+[node name="DisconnectSeconds" type="HBoxContainer" parent="Body/Seconds" unique_id=234782396]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="Body/Seconds/DisconnectSeconds" unique_id=1704678693]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 22
+text = "断线宽限"
+
+[node name="Minus" type="Button" parent="Body/Seconds/DisconnectSeconds" unique_id=817781695]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "−"
+
+[node name="Value" type="Label" parent="Body/Seconds/DisconnectSeconds" unique_id=1100096695]
+custom_minimum_size = Vector2(62, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 23
+text = "30"
+horizontal_alignment = 1
+
+[node name="Plus" type="Button" parent="Body/Seconds/DisconnectSeconds" unique_id=1594965462]
+custom_minimum_size = Vector2(46, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "＋"
+
+[node name="SecondsHint" type="Label" parent="Body" unique_id=581175002]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4196, 0.3922, 0.3765, 1)
+theme_override_font_sizes/font_size = 17
+text = "备用整局共用；超时自动选择并闭店。"
+
+[node name="Difficulty" type="HBoxContainer" parent="Body" unique_id=666114568]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Body/Difficulty" unique_id=422490680]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 24
+text = "挑战难度"
+
+[node name="Options" type="HBoxContainer" parent="Body/Difficulty" unique_id=440711316]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Beginner" type="Button" parent="Body/Difficulty/Options" unique_id=1934825719]
+custom_minimum_size = Vector2(120, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_difficulty")
+text = "初级"
+metadata/value = "beginner"
+
+[node name="Advanced" type="Button" parent="Body/Difficulty/Options" unique_id=57759679]
+custom_minimum_size = Vector2(120, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_difficulty")
+text = "上级"
+metadata/value = "advanced"
+
+[node name="Expert" type="Button" parent="Body/Difficulty/Options" unique_id=1295039901]
+custom_minimum_size = Vector2(120, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_difficulty")
+text = "特级"
+metadata/value = "expert"
+
+[node name="Super" type="Button" parent="Body/Difficulty/Options" unique_id=1325428208]
+custom_minimum_size = Vector2(120, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+button_group = SubResource("ButtonGroup_difficulty")
+text = "超级"
+metadata/value = "super"
+
+[node name="Start" type="HBoxContainer" parent="Body" unique_id=1183313776]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Label" type="Label" parent="Body/Start" unique_id=353722927]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_font_sizes/font_size = 24
+text = "先手"
+
+[node name="StartPlayer" type="OptionButton" parent="Body/Start" unique_id=1219058260]
+custom_minimum_size = Vector2(230, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+
+[node name="Initial" type="HBoxContainer" parent="Body" unique_id=601047380]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="InitialCiv" type="HBoxContainer" parent="Body/Initial" unique_id=167231072]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Toggle" type="Button" parent="Body/Initial/InitialCiv" unique_id=2060722803]
+custom_minimum_size = Vector2(268, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+text = "○ 初始文明（自定义）"
+
+[node name="Amount" type="SpinBox" parent="Body/Initial/InitialCiv" unique_id=481506857]
+custom_minimum_size = Vector2(150, 46)
+layout_mode = 2
+min_value = 1.0
+max_value = 1000.0
+value = 1.0
+
+[node name="InitialMiasma" type="HBoxContainer" parent="Body/Initial" unique_id=1760228506]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Toggle" type="Button" parent="Body/Initial/InitialMiasma" unique_id=1465563140]
+custom_minimum_size = Vector2(268, 46)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+toggle_mode = true
+text = "○ 初始瘴气（自定义）"
+
+[node name="Amount" type="SpinBox" parent="Body/Initial/InitialMiasma" unique_id=202648893]
+custom_minimum_size = Vector2(150, 46)
+layout_mode = 2
+max_value = 1000.0
+value = 10.0
+
+[node name="InitialHint" type="Label" parent="Body" unique_id=1694284613]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4196, 0.3922, 0.3765, 1)
+theme_override_font_sizes/font_size = 17
+text = "初始文明/初始瘴气不勾选时，遵循人数、扩充及单人难度的标准初始值。"
+autowrap_mode = 3
+
+[node name="Bottom" type="HBoxContainer" parent="Body" unique_id=646651117]
+layout_mode = 2
+offset_transform_enabled = true
+offset_transform_position = Vector2(20, 0)
+theme_override_constants/separation = 16
+
+[node name="Apply" type="Button" parent="Body/Bottom" unique_id=1962086099]
+custom_minimum_size = Vector2(180, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_hover_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("5_primary")
+theme_override_styles/pressed = ExtResource("7_primary_pressed")
+theme_override_styles/hover = ExtResource("6_primary_hover")
+theme_override_styles/disabled = ExtResource("8_primary_disabled")
+text = "应用规则"
+
+[node name="Back" type="Button" parent="Body/Bottom" unique_id=1287048512]
+custom_minimum_size = Vector2(120, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "返回"

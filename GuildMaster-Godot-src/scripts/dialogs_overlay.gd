@@ -19,21 +19,19 @@ func overlay(title: String, dimensions: Vector2, key: String = "", close_button:
 func content(frame: Control, rect: Rect2) -> VBoxContainer:
 	var body = VBoxContainer.new();body.add_theme_constant_override("separation", 18);GuildTableWidgets.at(frame, ui.scroll(body), rect);return body
 
-# 确认弹窗底部的「再想一下 / 确认」：两个按钮平分内容宽度。
-# ui.button() 只设最小高度，横幅皮肤的左右内容边距又是 0，直接放进 HBox 会只剩文字宽。
-func confirm_row(parent: Control, on_confirm: Callable, enabled: bool = true, on_cancel: Callable = Callable(), confirm_text: String = "确认") -> HBoxContainer:
-	var row = HBoxContainer.new()
-	row.add_theme_constant_override("separation", 18)
-	parent.add_child(row)
-	var cancel = ui.button("再想一下", func():
+# 公告类确认弹窗：内容与按钮全部来自 ui/confirm_dialog.tscn。
+func confirm_dialog(title: String, message: String, dimensions: Vector2, on_confirm: Callable, enabled: bool = true, on_cancel: Callable = Callable(), confirm_text: String = "确认"):
+	var frame = overlay(title, dimensions, "confirm", false)
+	var screen = load("res://ui/confirm_dialog.tscn").instantiate()
+	GuildTableWidgets.at(frame, screen, Rect2(48, 100, 740, dimensions.y - 500))
+	(screen.get_node("Message") as Label).text = GuildLang.t(message)
+	var cancel = screen.get_node("Actions/Cancel") as Button
+	var confirm = screen.get_node("Actions/Confirm") as Button
+	confirm.text = GuildLang.t(confirm_text)
+	ui.wire_button(cancel, func():
 		if on_cancel.is_valid(): on_cancel.call()
 		else: ui.close_dialog())
-	var confirm = ui.button(confirm_text, on_confirm, enabled, true)
-	for node in [cancel, confirm]:
-		node.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(cancel)
-	row.add_child(confirm)
-	return row
+	ui.wire_button(confirm, on_confirm, enabled)
 
 func adjust(parent: Control, title: String, maximum: int, value: int, callback: Callable) -> HBoxContainer:
 	var row = HBoxContainer.new();row.add_theme_constant_override("separation", 12);parent.add_child(row)
@@ -95,22 +93,54 @@ func develop():
 
 func _develop():
 	var me = ui.session.me(); var frame = overlay("发展公会 / 加深羁绊", Vector2(1120, 820), "develop")
+	var preview: Dictionary = me.get("action_previews", {}).get("development", {})
 	var body = content(frame, Rect2(32, 96, 1056, 600))
 	body.add_child(wrapped("五个条件可按任意顺序完成，每个条件只能解锁一次。", 22))
 	body.add_child(wrapped("每解锁一个条件：好感 +1、招募一名冒险者，并免费抽取一张事件卡。", 22))
 	if int(me.get("festival_tokens", 0)) > 0: body.add_child(ui.button(("● " if develop_state.festival else "") + "优先使用庆典 / 每枚抵5金币、1力量或1秘药", func(): develop_state.festival = not develop_state.festival;develop_state.slots = [];_develop()))
-	for option in GuildRulesLogic.develop_options(me, ui.session.game, develop_state.festival):
+	var options = GuildRulesLogic.develop_options(me, ui.session.game, develop_state.festival) if preview.is_empty() else GuildRulesLogic.DEVELOPMENT_OPTIONS
+	for option in options:
 		var used = me.get("developed", []).has(option[0]); var selected = develop_state.slots.has(option[0])
-		var node = ui.button(("已解锁" if used else "已选择" if selected else "可解锁" if option[3] else "未满足") + "     " + option[1] + "     " + option[2], func():
+		var candidate: Array = develop_state.slots.duplicate()
+		candidate.append(option[0])
+		var quote = _development_quote(preview, candidate)
+		var available: bool = option[3] if preview.is_empty() else not quote.is_empty() and not quote.has("error")
+		var node = ui.button(("已解锁" if used else "已选择" if selected else "可解锁" if available else "未满足") + "     " + option[1] + "     " + option[2], func():
 			if develop_state.slots.has(option[0]): develop_state.slots.erase(option[0])
 			else: develop_state.slots.append(option[0])
-			_develop(), not used and option[3] and ui.session.can_act())
+			_develop(), not used and (selected or available) and ui.session.can_act())
+		if not used and not selected and not available:
+			node.tooltip_text = GuildLang.t(quote.get("error", "当前资源或好感度不足以解锁这组条件。"))
 		node.name = "Develop_" + option[0];node.custom_minimum_size = Vector2(1032, 70);body.add_child(node)
 	body.add_child(wrapped("好感达到 2 / 5 时，看板娘立即升至 2 / 3 级。升级效果不会额外消耗行动。", 20))
+	var selected_quote = _development_quote(preview, develop_state.slots)
+	var can_submit = not develop_state.slots.is_empty() and ui.session.can_act()
+	if not preview.is_empty():
+		can_submit = can_submit and not selected_quote.is_empty() and not selected_quote.has("error")
+	if can_submit and selected_quote.has("costs"):
+		var costs = []
+		for key in selected_quote.costs:
+			costs.append("%s %s" % [int(selected_quote.costs[key]), {"gold": "金币", "strength": "战力", "pot": "秘药", "tiles": "板块"}[key]])
+		var tokens = 0
+		for amount in selected_quote.festival.values():
+			tokens += int(amount)
+		if tokens > 0:
+			costs.append("%s 庆典碎片" % tokens)
+		var payment = "本次无需支付资源" if costs.is_empty() else "本次支付 " + "、".join(PackedStringArray(costs))
+		GuildTableWidgets.caption(ui, frame, payment, Rect2(304, 720, 780, 50), 20, ui.MUTED)
 	GuildTableWidgets.action(ui, frame, "解锁 %s 个条件" % develop_state.slots.size(), Rect2(32, 720, 250, 50), func():
 		var args = {"slots": develop_state.slots.duplicate(), "count": develop_state.slots.size()}
-		if develop_state.festival: args.festival = GuildRulesLogic.festival_payment(me, develop_state.slots)
-		submit("develop", args), not develop_state.slots.is_empty() and ui.session.can_act(), "ConfirmDevelop", true)
+		if develop_state.festival:
+			args.festival = GuildRulesLogic.festival_payment(me, develop_state.slots) if preview.is_empty() else selected_quote.festival
+		submit("develop", args), can_submit, "ConfirmDevelop", true)
+
+func _development_quote(preview: Dictionary, slots: Array) -> Dictionary:
+	if preview.is_empty():
+		return {}
+	var keys: Array = slots.filter(func(key): return preview.paid.has(key)) if develop_state.festival else preview.paid.filter(func(key): return slots.has(key))
+	keys.append_array(preview.other.filter(func(key): return slots.has(key)))
+	var mode = "festival" if develop_state.festival else "standard"
+	return preview[mode].get(",".join(PackedStringArray(keys)), {})
 
 func potions():
 	potion_tab = "alchemy" if ui.session.game.get("options", {}).get("alchemy", false) else "basic";_potions()
@@ -196,7 +226,6 @@ var initial_rows = {}
 # 房间、联机与客座
 # ----------------------------------------------------------------
 func room_options():
-	# 对局规则：版式照原客户端；按钮统一 plaque_normal（通常）/plaque_pressed（选中深色）。
 	rule_draft = ui.session.room.get("options", ui.store.catalog.defaults).duplicate(true)
 	var local = ui.session.local_mode
 	var players = int(ui.session.room.get("max_players", 1)); var banned = ui.session.room.get("banned_characters", [])
@@ -205,74 +234,87 @@ func room_options():
 		if solo and bool(rule_draft.get(key, false)): rule_draft[key] = false
 	if players > 3 and bool(rule_draft.get("forbidden", false)): rule_draft.forbidden = false
 	rule_rows = {};toggle_cards = {};initial_on = {};initial_rows = {}
-	var frame = overlay("对局规则", Vector2(1420, 1020), "rules", false); var body = content(frame, Rect2(32, 104, 1356, 892))
-	body.add_theme_constant_override("separation", 8)
-	var top = HBoxContainer.new();top.add_theme_constant_override("separation", 14);body.add_child(top)
-	top.add_child(ui.label("迷宫", 24, ui.GOLD))
-	top.add_child(_segment("map_type", [["normal", "一般迷宫"], ["deep", "大深度迷宫"], ["training", "训练迷宫"]]))
-	var spacer = Control.new();spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL;top.add_child(spacer)
-	top.add_child(ui.label("候选", 24, ui.GOLD))
-	var draw = OptionButton.new();draw.name = "RoomHeroDraw";draw.custom_minimum_size = Vector2(150, 46)
+	var frame = overlay("对局规则", Vector2(1420, 1020), "rules", false)
+	var screen = load("res://ui/room_options.tscn").instantiate()
+	GuildTableWidgets.at(frame, screen, Rect2(32, 104, 1356, 892))
+	var body = screen.get_node("Body")
+	var top = body.get_node("Top")
+	_bind_rule_segment(top.get_node("MapType"), "map_type")
+	var draw = top.get_node("HeroDraw") as OptionButton
 	for count in range(1, 6): draw.add_item(GuildLang.t("%s 张" % count), count)
 	draw.select(clampi(int(rule_draft.get("hero_draw", 2)), 1, 5) - 1)
 	var limit = GuildRoomSetup.candidate_limit(ui.store.catalog, players, banned)
 	for index in range(5): draw.set_item_disabled(index, index >= limit)
-	top.add_child(draw)
-	body.add_child(wrapped("可用角色 %s 名 · 每位最多 %s 张候选" % [GuildRoomSetup.character_pool(ui.store.catalog, banned).size(), limit], 17))
-	body.add_child(wrapped("每个开关会改变本局规则；开局后锁定。角色开始对局后才抽取。", 19))
-	var grid = GridContainer.new();grid.columns = 3;grid.add_theme_constant_override("h_separation", 14);grid.add_theme_constant_override("v_separation", 8);body.add_child(grid)
+	(body.get_node("PoolHint") as Label).text = "可用角色 %s 名 · 每位最多 %s 张候选" % [GuildRoomSetup.character_pool(ui.store.catalog, banned).size(), limit]
+	var grid = body.get_node("Options") as GridContainer
 	for key in ui.store.catalog.option_labels:
 		var forbidden_locked = key == "forbidden" and players > 3
 		var locked_option = forbidden_locked or (solo and ["festival_preparation", "monster_quests", "scouts"].has(key))
-		var card = ui.button(("● " if bool(rule_draft.get(key, false)) else "○ ") + ui.store.catalog.option_labels[key], func(): _flip_toggle(key), not locked_option)
-		card.name = "RuleToggle_" + key;card.custom_minimum_size = Vector2(442, 46)
-		_style_plaque(card, bool(rule_draft.get(key, false)))
+		var card = load("res://ui/rule_toggle.tscn").instantiate() as Button
+		card.text = GuildLang.t(("● " if bool(rule_draft.get(key, false)) else "○ ") + ui.store.catalog.option_labels[key])
+		card.name = "RuleToggle_" + key
+		ui.wire_button(card, func(): _flip_toggle(key), not locked_option)
 		if locked_option:
-			card.disabled = true;rule_draft[key] = false
-			if forbidden_locked: card.tooltip_text = GuildLang.t("禁止区域仅支持 1–3 人。")
-			else: card.tooltip_text = GuildLang.t("单人规则不使用侦查队、魔兽讨伐与庆典准备。")
+			rule_draft[key] = false
+			card.tooltip_text = GuildLang.t("禁止区域仅支持 1–3 人。" if forbidden_locked else "单人规则不使用侦查队、魔兽讨伐与庆典准备。")
+		_style_plaque(card, bool(rule_draft.get(key, false)))
 		toggle_cards[key] = card;grid.add_child(card)
-	var seconds = HBoxContainer.new();seconds.add_theme_constant_override("separation", 26);body.add_child(seconds)
-	_stepper(seconds, "基础秒数", 1, 3600, "base_seconds")
-	_stepper(seconds, "备用秒数", 0, 7200, "reserve_seconds")
-	_stepper(seconds, "断线宽限", 1, 3600, "disconnect_seconds")
-	body.add_child(wrapped("备用整局共用；超时自动选择并闭店。", 17))
-	if local:
-		var difficulty_row = HBoxContainer.new();difficulty_row.add_theme_constant_override("separation", 14);body.add_child(difficulty_row)
-		difficulty_row.add_child(ui.label("挑战难度", 24, ui.GOLD))
-		difficulty_row.add_child(_segment("solo_difficulty", [["beginner", "初级"], ["advanced", "上级"], ["expert", "特级"], ["super", "超级"]]))
-	var start_row = HBoxContainer.new();start_row.add_theme_constant_override("separation", 14);body.add_child(start_row)
-	start_row.add_child(ui.label("先手", 24, ui.GOLD))
-	var first = OptionButton.new();first.name = "StartPlayerPick";first.custom_minimum_size = Vector2(230, 46)
+	_bind_rule_stepper(body.get_node("Seconds/BaseSeconds"), "base_seconds", 1, 3600)
+	_bind_rule_stepper(body.get_node("Seconds/ReserveSeconds"), "reserve_seconds", 0, 7200)
+	_bind_rule_stepper(body.get_node("Seconds/DisconnectSeconds"), "disconnect_seconds", 1, 3600)
+	var difficulty = body.get_node("Difficulty") as HBoxContainer
+	difficulty.visible = local
+	if local: _bind_rule_segment(difficulty.get_node("Options"), "solo_difficulty")
+	var first = body.get_node("Start/StartPlayer") as OptionButton
 	first.add_item(GuildLang.t("随机先手"), 0)
 	for i in range(players): first.add_item(GuildLang.t("席位 %s 先手" % (i + 1)), i + 1)
 	var start_value = rule_draft.get("start_player", "auto")
 	first.select(0 if str(start_value) == "auto" else clampi(int(start_value) + 1, 1, first.item_count - 1))
-	start_row.add_child(first)
-	var initial = HBoxContainer.new();initial.add_theme_constant_override("separation", 30);body.add_child(initial)
-	rule_rows.civ = _initial_row(initial, "initial_civ", "初始文明", rule_draft.get("initial_civ"), 1)
-	rule_rows.miasma = _initial_row(initial, "initial_miasma", "初始瘴气", rule_draft.get("initial_miasma"), 10 * players)
-	body.add_child(wrapped("初始文明/初始瘴气不勾选时，遵循人数、扩充及单人难度的标准初始值。", 17))
-	var bottom = HBoxContainer.new();bottom.add_theme_constant_override("separation", 16);body.add_child(bottom)
-	var apply = ui.button("应用规则", func(): _submit_rules());_style_plaque(apply, false, true);bottom.add_child(apply)
-	var back = ui.button("返回", func(): ui.close_dialog());_style_plaque(back, false);bottom.add_child(back)
+	_bind_initial(body.get_node("Initial/InitialCiv"), "initial_civ", "初始文明", 1, 1)
+	_bind_initial(body.get_node("Initial/InitialMiasma"), "initial_miasma", "初始瘴气", 10 * players, 0)
 	rule_rows.hero_draw = draw;rule_rows.start_player = first
+	ui.wire_button(body.get_node("Bottom/Apply") as Button, func(): _submit_rules())
+	ui.wire_button(body.get_node("Bottom/Back") as Button, func(): ui.close_dialog())
 
-func _segment(key: String, options: Array) -> HBoxContainer:
-	var group = HBoxContainer.new();group.add_theme_constant_override("separation", 8)
-	toggle_cards["segment_" + key] = group
-	for option in options:
-		var node = ui.button(option[1], func(): rule_draft[key] = option[0];_restyle_segment(group, options, key))
-		_style_plaque(node, str(rule_draft.get(key, null)) == str(option[0]))
-		group.add_child(node)
-	return group
+func _bind_rule_segment(group: Control, key: String):
+	for child in group.get_children():
+		var node = child as Button
+		if node == null: continue
+		var value = str(node.get_meta("value", ""))
+		node.button_pressed = str(rule_draft.get(key, "")) == value
+		ui.wire_button(node, func(): pass)
+		_style_plaque(node, node.button_pressed)
+		node.toggled.connect(func(on):
+			if not on: return
+			rule_draft[key] = value
+			for other in group.get_children():
+				if other is Button: _style_plaque(other, other.button_pressed))
 
-func _restyle_segment(group: Control, options: Array, key: String):
-	for index in range(group.get_child_count()):
-		var node = group.get_child(index) as Button
-		if node == null or index >= options.size(): continue
-		_style_plaque(node, str(rule_draft.get(key, null)) == str(options[index][0]))
+func _bind_rule_stepper(group: Control, key: String, minimum: int, maximum: int):
+	var value_node = group.get_node("Value") as Label
+	var write = func(amount):
+		amount = clampi(amount, minimum, maximum)
+		rule_draft[key] = amount;value_node.text = str(amount)
+	value_node.text = str(int(rule_draft.get(key, minimum)))
+	ui.wire_button(group.get_node("Minus") as Button, func(): write.call(int(rule_draft.get(key, minimum)) - 1))
+	ui.wire_button(group.get_node("Plus") as Button, func(): write.call(int(rule_draft.get(key, minimum)) + 1))
 
+func _bind_initial(group: Control, key: String, label: String, fallback: int, minimum: int):
+	var toggle = group.get_node("Toggle") as Button
+	var amount = group.get_node("Amount") as SpinBox
+	var active = rule_draft.get(key) != null
+	initial_on[key] = active;toggle.button_pressed = active
+	toggle.text = GuildLang.t(("● " if active else "○ ") + label + "（自定义）")
+	amount.min_value = minimum;amount.max_value = 1000;amount.step = 1
+	amount.value = fallback if not active else int(rule_draft.get(key, fallback));amount.editable = active
+	ui.wire_button(toggle, func(): pass)
+	_style_plaque(toggle, active)
+	toggle.toggled.connect(func(on):
+		initial_on[key] = on
+		toggle.text = GuildLang.t(("● " if on else "○ ") + label + "（自定义）")
+		amount.editable = on
+		_style_plaque(toggle, on))
+	initial_rows[key] = amount
 func _style_plaque(node: Button, selected: bool, primary: bool = false):
 	# 四种状态都明确指定 plaque 样式，不回退主题默认；选中＝pressed 深色，酒红染色＝primary。
 	for state in ["normal", "hover", "pressed"]:
@@ -293,47 +335,16 @@ func _restyle_toggle(node: Button, key: String):
 	node.text = GuildLang.t(("● " if on else "○ ") + str(ui.store.catalog.option_labels[key]))
 	_style_plaque(node, on)
 
-func _initial_row(parent: Control, key: String, title: String, value, fallback: int) -> Dictionary:
-	var card_key = "on_" + key; var label = title + "（自定义）"
-	var card = ui.button(("● " if value != null else "○ ") + label, func(): _flip_initial(card_key, label))
-	card.custom_minimum_size = Vector2(268, 46);_style_plaque(card, value != null)
-	var amount = SpinBox.new();amount.min_value = 0;amount.max_value = 1000;amount.step = 1
-	amount.value = fallback if value == null else int(value);amount.editable = value != null;amount.custom_minimum_size = Vector2(150, 46)
-	var row = HBoxContainer.new();row.add_theme_constant_override("separation", 10);parent.add_child(row)
-	row.add_child(card);row.add_child(amount)
-	toggle_cards[card_key] = card;initial_on[card_key] = value != null;initial_rows[card_key] = amount
-	return {"card": card, "amount": amount}
-
-func _flip_initial(card_key: String, label: String):
-	initial_on[card_key] = not bool(initial_on.get(card_key, false))
-	var card = toggle_cards[card_key]
-	card.text = GuildLang.t(("● " if bool(initial_on[card_key]) else "○ ") + label)
-	_style_plaque(card, bool(initial_on[card_key]))
-	initial_rows[card_key].editable = bool(initial_on[card_key])
-
-func _stepper(parent: Control, title: String, minimum: int, maximum: int, key: String):
-	var row = HBoxContainer.new();row.add_theme_constant_override("separation", 10);parent.add_child(row)
-	row.add_child(ui.label(title, 22, ui.GOLD))
-	var value_node = ui.label(str(int(rule_draft.get(key, 0))), 23)
-	value_node.custom_minimum_size.x = 62;value_node.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var write = func(amount):
-		amount = clampi(amount, minimum, maximum)
-		rule_draft[key] = amount;value_node.text = str(amount)
-	row.add_child(ui.step_button("−", func(): write.call(int(rule_draft.get(key, 0)) - 1)))
-	row.add_child(value_node)
-	row.add_child(ui.step_button("＋", func(): write.call(int(rule_draft.get(key, 0)) + 1)))
-
 func _submit_rules():
 	var values = rule_draft.duplicate(true)
 	values.map_type = str(values.get("map_type", "normal"));values.hero_draw = rule_rows.hero_draw.get_selected_id()
 	values.solo_difficulty = str(values.get("solo_difficulty", "beginner"))
 	var start = values.get("start_player", "auto")
 	values.start_player = "auto" if str(start) == "auto" else int(start)
-	values.initial_civ = int(rule_rows.civ.amount.value) if bool(initial_on.get("on_initial_civ", false)) else null
-	values.initial_miasma = int(rule_rows.miasma.amount.value) if bool(initial_on.get("on_initial_miasma", false)) else null
+	values.initial_civ = int(initial_rows["initial_civ"].value) if bool(initial_on.get("initial_civ", false)) else null
+	values.initial_miasma = int(initial_rows["initial_miasma"].value) if bool(initial_on.get("initial_miasma", false)) else null
 	values.base_seconds = int(rule_draft.get("base_seconds", 30));values.reserve_seconds = int(rule_draft.get("reserve_seconds", 120));values.disconnect_seconds = int(rule_draft.get("disconnect_seconds", 30))
 	ui.session.send({"type": "set_options", "options": values});ui.close_dialog()
-
 func abilities():
 	var me = ui.session.me(); var hero = ui.store.catalog.heroes.get(me.get("hero", ""), {}); var ability = hero.get("ability", {})
 	var frame = overlay("特殊行动", Vector2(1160, 850), "abilities"); var body = content(frame, Rect2(32, 102, 1096, 702))
@@ -357,11 +368,17 @@ func market():
 		seen.append(number); var data = ui.store.card(number); var row = HBoxContainer.new();row.add_theme_constant_override("separation", 24);body.add_child(ui.panel(row, 18))
 		row.add_child(ui.card(ui.store.card_face(data), Vector2(72, 100)))
 		var title = wrapped(data.get("name", "") + " ×" + str(me.hand.count(number)), 25);title.custom_minimum_size = Vector2(750, 100);row.add_child(title)
-		row.add_child(ui.button("卖一张 / +1金", func(): ui.session.action("sell_event", {"card": int(number)}), ui.session.can_free_action(), true))
+		var sell = ui.button("卖一张 / +1金", func(): ui.session.action("sell_event", {"card": int(number)}), ui.session.can_free_action(), true)
+		sell.custom_minimum_size.x = 240
+		row.add_child(sell)
+		sell.custom_minimum_size.y = 15
 	for key in me.get("achievements", []):
 		var data = ui.store.catalog.achievements.get(key, {}); var row = HBoxContainer.new();row.add_theme_constant_override("separation", 24);body.add_child(ui.panel(row, 18))
 		row.add_child(ui.card(data.get("source", ""), Vector2(72, 100))); var title = wrapped("王权 / " + data.get("name", key), 25);title.custom_minimum_size = Vector2(750, 100);row.add_child(title)
-		row.add_child(ui.button("卖一张 / +%s金" % int(ui.session.game.get("rules", {}).get("discard_achievement_gold", 5)), func(): ui.session.action("discard_achievement", {"id": key}), ui.session.can_free_action(), true))
+		var sell = ui.button("卖一张 / +%s金" % int(ui.session.game.get("rules", {}).get("discard_achievement_gold", 5)), func(): ui.session.action("discard_achievement", {"id": key}), ui.session.can_free_action(), true)
+		sell.custom_minimum_size.x = 240
+		sell.custom_minimum_size.y = 15
+		row.add_child(sell)
 	if body.get_child_count() == 0: body.add_child(wrapped("没有可售卖的手牌或私人王权卡。", 28))
 
 func tiles(player: Dictionary):
@@ -488,35 +505,12 @@ func quests():
 	body.add_child(wrapped("点击卡面可放大查看委托条件；每格奖励印在提示文字中。", 19, ui.MUTED))
 
 func results_inline(parent: Control):
-	var frame = GuildTableWidgets.player_surface(ui, parent, Rect2(362, 116, 1546, 906), "Results")
-	var game = ui.session.game; var solo = game.get("solo_result") != null and not str(game.get("solo_result", "")).is_empty()
-	var title = "单人挑战成功" if game.get("solo_result") == "win" else "单人挑战结束 / 未达成" if solo else "这一段冒险，值得铭记。"
-	GuildTableWidgets.caption(ui, frame, title, Rect2(40, 34, 1462, 65), 45).name = "ResultsTitle"
-	if solo: GuildTableWidgets.caption(ui, frame, "%s · 文明 %s / 瘴气 %s" % [game.get("solo_rank", ""), int(game.civ), int(game.miasma)], Rect2(40, 108, 1462, 44), 29, ui.GOLD).name = "SoloResultDetails"
-	GuildTableWidgets.caption(ui, frame, "第 %s 季  /  %s 位公会长的最终成绩" % [int(game.round), game.players.size()], Rect2(40, 166 if solo else 108, 1462, 35), 23, ui.MUTED)
-	var list = VBoxContainer.new();list.add_theme_constant_override("separation", 22)
-	GuildTableWidgets.at(frame, ui.scroll(list), Rect2(40, 226 if solo else 166, 1462, 510 if solo else 570))
-	for score in game.get("scores", []):
-		var row = HBoxContainer.new();row.add_theme_constant_override("separation", 28);row.alignment = BoxContainer.ALIGNMENT_BEGIN
-		var card = ui.panel(row, 20);card.custom_minimum_size = Vector2(1462, 128);list.add_child(card)
-		var rank = ui.label("%02d" % int(score.rank), 45, ui.GOLD);rank.custom_minimum_size.x = 60;row.add_child(rank)
-		var identity = VBoxContainer.new();identity.custom_minimum_size.x = 220;row.add_child(identity)
-		var name = ui.label(str(score.get("name", "")).left(12), 30);name.clip_text = true;identity.add_child(name)
-		identity.add_child(ui.label(game.get("solo_rank", "") if solo else "本次优胜" if int(score.rank) == 1 else "冒险伙伴", 18, ui.MUTED))
-		for category in [["hero", "看板娘"], ["grid", "疆域"], ["loot", "板块"], ["cards", "事件"], ["achievements", "成就"], ["reputation", "额外"], ["treasures", "宝物"], ["retreat", "撤退"]]:
-			var column = VBoxContainer.new();column.custom_minimum_size.x = 78;row.add_child(column)
-			column.add_child(ui.label(category[1], 17, ui.MUTED));column.add_child(ui.label(str(int(score.get("breakdown", {}).get(category[0], 0))), 28))
-		var total = VBoxContainer.new();row.add_child(total);total.add_child(ui.label(str(int(score.get("score", score.get("total", 0)))), 47, ui.GOLD));total.add_child(ui.label("总声望", 16, ui.MUTED))
-	var note = "第六轮结束时文明与瘴气相邻即挑战成功；全程可离线游玩。" if solo else "扩展资源声望已计入总分。点击公会可查看持有的宝石、庆典与贡献。"
-	GuildTableWidgets.caption(ui, frame, note, Rect2(40, 765, 1462, 35), 20, ui.MUTED).name = "ResultsNote"
-	var buttons = HBoxContainer.new();buttons.add_theme_constant_override("separation", 18);GuildTableWidgets.at(frame, buttons, Rect2(40, 826, 1462, 54))
-	buttons.add_child(ui.button("查看公会记录", game_log))
-	if not ui.session.local_mode and int(ui.session.room.get("host_id", -1)) == ui.session.player_id: buttons.add_child(ui.button("返回房间", func(): ui.session.send({"type": "return_lobby"});ui.close_dialog()))
-	buttons.add_child(ui.button("返回主菜单", func(): ui.session.close();ui.close_dialog(), true, true))
+	var node = load("res://ui/table_results.tscn").instantiate()
+	parent.add_child(node)
+	node.bind(ui)
 
 func confirm_pass():
-	var frame = overlay("稍作确认", Vector2(840, 330), "confirm", false); var body = content(frame, Rect2(48, 100, 744, 180));body.add_child(wrapped("闭店后本季不能继续行动。", 27))
-	confirm_row(body, func(): submit("pass"), ui.session.can_act())
+	confirm_dialog("稍作确认", "闭店后本季不能继续行动。", Vector2(840, 400), func(): submit("pass"), ui.session.can_act())
 
 func connect_setup():
 	var frame = overlay("连接服务器，找一桌伙伴", Vector2(1030, 800), "connect"); var body = content(frame, Rect2(42, 100, 946, 580))
@@ -688,14 +682,12 @@ func about():
 	var body = menu("关于作品", "about");body.add_child(wrapped("异世界公会长 4.1.0 · Godot 客户端\n沿用当前 Ren’Py 的操作流程。", 27))
 
 func confirm_quit():
-	var frame = overlay("稍作确认", Vector2(840, 400), "confirm", false); var body = content(frame, Rect2(48, 100, 744, 240));body.add_child(wrapped("要离开公会吗？当前单人挑战将结束；联机将断开连接。", 27))
-	confirm_row(body, func(): ui.session.close();ui.get_tree().quit())
+	confirm_dialog("稍作确认", "要离开公会吗？当前单人挑战将结束；联机将断开连接。", Vector2(840, 400), func(): ui.session.close();ui.get_tree().quit())
 
 func confirm_kick(player: Dictionary):
-	var frame = overlay("稍作确认", Vector2(840, 400), "confirm"); var body = content(frame, Rect2(48, 100, 744, 240));body.add_child(wrapped("将%s移出房间？" % player.name, 27))
-	confirm_row(body, func(): ui.session.send({"type": "kick", "target_id": int(player.id)});ui.close_dialog())
+	confirm_dialog("稍作确认", "将%s移出房间？" % player.name, Vector2(840, 400), func(): ui.session.send({"type": "kick", "target_id": int(player.id)});ui.close_dialog())
 
-func hero_detail(player: Dictionary): _hero_detail(player, 0)
+func hero_detail(player: Dictionary, rank: int = 0): _hero_detail(player, rank)
 
 func _hero_detail(player: Dictionary, rank: int):
 	var hero = ui.store.catalog.heroes.get(player.get("hero", ""), {}); var frame = overlay(hero.get("name", "") + " / " + hero.get("subtitle", ""), Vector2(1160, 870), "hero")
@@ -1006,13 +998,17 @@ func achievements():
 
 func _achievements():
 	var me = ui.session.me(); var frame = overlay("王权成就", Vector2(1200, 880), "achievements"); var body = content(frame, Rect2(32, 102, 1136, 730))
+	var preview: Dictionary = me.get("action_previews", {}).get("achievements", {})
 	if not me.is_empty(): adjust(body, "可折抵目标投入战力", int(me.get("strength", 0)), royal_strength, func(value): royal_strength = value;_achievements())
 	body.add_child(wrapped("仅带战力折抵标识的目标使用这笔战力，其他目标仍支付金币。", 19))
 	for public in [true, false]:
 		body.add_child(ui.label("公开成就 / 完成额外获得 1 声望" if public else "私人目标 / 未完成不计分", 25, ui.GOLD))
 		for key in ui.session.game.get("public_achievements", []) if public else me.get("achievements", []):
 			var data = ui.store.catalog.achievements.get(key, {}); var row = HBoxContainer.new();row.add_theme_constant_override("separation", 22)
-			var ready = GuildRulesLogic.achievement_ready(me, ui.session.game, ui.store.catalog, data, royal_strength)
+			var payments: Array = preview.get("public" if public else "private", {}).get(key, [])
+			var quote: Dictionary = {} if payments.is_empty() else payments[mini(royal_strength, payments.size() - 1)]
+			var ready: bool = GuildRulesLogic.achievement_ready(me, ui.session.game, ui.store.catalog, data, royal_strength) if payments.is_empty() else not quote.has("error")
+			var used = int(quote.get("strength", 0)) if not payments.is_empty() else (min(royal_strength, GuildRulesLogic.strength_cap(data, me)) if data.get("can_trans", false) else 0)
 			var panel = ui.panel(row, 20);body.add_child(panel)
 			var frame_style = StyleBoxFlat.new();frame_style.set_border_width_all(2);frame_style.set_corner_radius_all(16)
 			frame_style.content_margin_left = 20;frame_style.content_margin_right = 20;frame_style.content_margin_top = 20;frame_style.content_margin_bottom = 20
@@ -1024,13 +1020,19 @@ func _achievements():
 			row.add_child(ui.card(data.get("source", ""), Vector2(93, 130), func(): art_detail(data.get("source", ""), data.get("name", "王权"))))
 			var descriptions = VBoxContainer.new();descriptions.custom_minimum_size.x = 660;row.add_child(descriptions);descriptions.add_child(ui.label(data.get("name", key), 27));descriptions.add_child(wrapped(data.get("description", ""), 21));descriptions.add_child(wrapped("支付 %s 金币 / 声望 %s" % [int(data.get("price", 0)), int(data.get("point", 0))], 21))
 			if ready: descriptions.add_child(ui.label("◆ 条件与费用均已满足 / 可达成", 20, Color("8a6a1f")))
-			var buttons = VBoxContainer.new();row.add_child(buttons); var used = min(royal_strength, GuildRulesLogic.strength_cap(data, me)) if data.get("can_trans", false) else 0
-			buttons.add_child(ui.button("达成成就 / 抵扣%s力" % used if data.get("can_trans", false) else "达成成就", func(): ui.session.action("achievement", {"id": key, "public": public, "strength": used}), ui.session.can_act(), ready))
+			if quote.has("error"): descriptions.add_child(wrapped(quote.error, 19))
+			if ready and quote.has("gold"): descriptions.add_child(wrapped("本次支付 %s 金币" % int(quote.gold), 19))
+			var buttons = VBoxContainer.new();row.add_child(buttons)
+			buttons.add_child(
+				ui.button("达成成就 / 抵扣%s力" % used if data.get("can_trans", false) else "达成成就",
+				 func(): ui.session.action("achievement", {"id": key, "public": public, "strength": used}),
+				 ui.session.can_act() and (payments.is_empty() or ready),
+				 ready))
+			buttons.custom_minimum_size.x = 240
 			if not public: buttons.add_child(ui.button("放弃 / 获得 5 金币", func(): confirm_discard_royal(key)))
 
 func confirm_discard_royal(key: String):
-	var body = content(overlay("稍作确认", Vector2(840, 330), "confirm"), Rect2(48, 100, 744, 180));body.add_child(wrapped("放弃这个私人目标，立即获得 5 金币？", 27))
-	confirm_row(body, func(): ui.session.action("discard_achievement", {"id": key});_achievements(), true, func(): _achievements())
+	confirm_dialog("稍作确认", "放弃这个私人目标，立即获得 5 金币？", Vector2(840, 330), func(): ui.session.action("discard_achievement", {"id": key});_achievements(), true, func(): _achievements())
 
 func chat():
 	var body = content(overlay("房间聊天", Vector2(900, 760), "chat"), Rect2(32, 102, 834, 600))
@@ -1042,8 +1044,7 @@ func chat():
 	body.add_child(ui.button("发送", send, true, true));field.text_submitted.connect( func(_text): send.call())
 
 func leave():
-	var body = content(overlay("稍作确认", Vector2(840, 400), "confirm"), Rect2(48, 100, 744, 240));body.add_child(wrapped("离开房间？席位会显示为断线；轮到你时可在房间设定的等待时间内用原昵称重连。", 27))
-	confirm_row(body, func():
+	confirm_dialog("稍作确认", "离开房间？席位会显示为断线；轮到你时可在房间设定的等待时间内用原昵称重连。", Vector2(840, 400), func():
 		ui.session.leave_room()
 		ui.close_dialog())
 

@@ -1,0 +1,1060 @@
+[gd_scene format=3]
+
+[ext_resource type="StyleBox" path="res://ui/styles/main_frame.tres" id="1_main_frame"]
+[ext_resource type="FontFile" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="2_ZCOOLKuaiLe_Regular"]
+[ext_resource type="FontFile" path="res://fonts/SourceHanSansLite.ttf" id="3_SourceHanSansLite"]
+[ext_resource type="Script" path="res://scripts/hex_map.gd" id="4_hex_map"]
+[ext_resource type="Texture2D" path="res://ui/symbols/affection.png" id="5_affection"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_normal.tres" id="6_paper_button_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_hover.tres" id="7_paper_button_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_pressed.tres" id="8_paper_button_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_button_disabled.tres" id="9_paper_button_disabled"]
+[ext_resource type="Texture2D" path="res://ui/symbols/pot.png" id="10_pot"]
+[ext_resource type="Texture2D" path="res://ui/symbols/gold.png" id="11_gold"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_normal.tres" id="12_banner_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_pressed.tres" id="13_banner_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_hover.tres" id="14_banner_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="15_banner_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/paper_frame.tres" id="16_paper_frame"]
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="17_player_frame"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.960784, 0.933333, 0.878431, 1)
+border_color = Color(0.109804, 0.101961, 0.117647, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+bg_color = Color(0.960784, 0.933333, 0.878431, 1)
+border_color = Color(0.109804, 0.101961, 0.117647, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 9
+corner_radius_top_right = 9
+corner_radius_bottom_right = 9
+corner_radius_bottom_left = 9
+
+[node name="ClassicLayout" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MapPanel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 364.0
+offset_top = 118.0
+offset_right = 1354.0
+offset_bottom = 812.0
+theme_override_styles/panel = ExtResource("1_main_frame")
+
+[node name="TurnTitle" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 20.0
+offset_right = 510.0
+offset_bottom = 68.0
+text = "公会行动"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("2_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 37
+
+[node name="MapName" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 75.0
+offset_right = 724.0
+offset_bottom = 99.0
+text = "迷宫疆域"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+
+[node name="TableMap" type="Control" parent="MapPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 107.0
+offset_right = 746.0
+offset_bottom = 645.0
+script = ExtResource("4_hex_map")
+
+[node name="LegendExplore" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 659.0
+offset_right = 132.0
+offset_bottom = 683.0
+text = "◇ 可探索"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="LegendChosen" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 659.0
+offset_right = 260.0
+offset_bottom = 683.0
+text = "◇ 已选择"
+theme_override_colors/font_color = Color(0.788235, 0.596078, 0.180392, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="LegendHint" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 659.0
+offset_right = 680.0
+offset_bottom = 683.0
+text = "点击板块查看详情"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="ActionReminders" type="Panel" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 107.0
+offset_right = 962.0
+offset_bottom = 227.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="ReminderTitle" type="Label" parent="MapPanel/ActionReminders"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 5.0
+offset_right = 184.0
+offset_bottom = 25.0
+text = "行动提醒"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 15
+
+[node name="ReminderColumn" type="VBoxContainer" parent="MapPanel/ActionReminders"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 27.0
+offset_right = 184.0
+offset_bottom = 107.0
+theme_override_constants/separation = 2
+
+[node name="AffectionTitle" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 258.0
+offset_right = 970.0
+offset_bottom = 282.0
+text = "好感度"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 22
+
+[node name="AffectionHearts" type="Panel" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 286.0
+offset_right = 962.0
+offset_bottom = 326.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
+
+[node name="HeartsRow" type="HBoxContainer" parent="MapPanel/AffectionHearts"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 0.0
+offset_bottom = 0.0
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Slot0" type="CenterContainer" parent="MapPanel/AffectionHearts/HeartsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Heart" type="TextureRect" parent="MapPanel/AffectionHearts/HeartsRow/Slot0"]
+layout_mode = 2
+custom_minimum_size = Vector2(22, 22)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("5_affection")
+
+[node name="Slot1" type="CenterContainer" parent="MapPanel/AffectionHearts/HeartsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Heart" type="TextureRect" parent="MapPanel/AffectionHearts/HeartsRow/Slot1"]
+layout_mode = 2
+custom_minimum_size = Vector2(22, 22)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("5_affection")
+
+[node name="Slot2" type="CenterContainer" parent="MapPanel/AffectionHearts/HeartsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Heart" type="TextureRect" parent="MapPanel/AffectionHearts/HeartsRow/Slot2"]
+layout_mode = 2
+custom_minimum_size = Vector2(22, 22)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("5_affection")
+
+[node name="Slot3" type="CenterContainer" parent="MapPanel/AffectionHearts/HeartsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Heart" type="TextureRect" parent="MapPanel/AffectionHearts/HeartsRow/Slot3"]
+layout_mode = 2
+custom_minimum_size = Vector2(22, 22)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("5_affection")
+
+[node name="Slot4" type="CenterContainer" parent="MapPanel/AffectionHearts/HeartsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Heart" type="TextureRect" parent="MapPanel/AffectionHearts/HeartsRow/Slot4"]
+layout_mode = 2
+custom_minimum_size = Vector2(22, 22)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("5_affection")
+
+[node name="PotionsTitle" type="Label" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 330.0
+offset_right = 970.0
+offset_bottom = 357.0
+text = "秘药行动"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 22
+
+[node name="Potion_gold" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 360.0
+offset_right = 962.0
+offset_bottom = 408.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_gold"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_gold/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_gold/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_gold/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="Potion_strength" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 412.0
+offset_right = 962.0
+offset_bottom = 460.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_strength"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_strength/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_strength/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_strength/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="Potion_knowledge" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 464.0
+offset_right = 962.0
+offset_bottom = 512.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_knowledge"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_knowledge/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_knowledge/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_knowledge/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="Potion_build" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 516.0
+offset_right = 962.0
+offset_bottom = 564.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_build"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_build/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_build/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_build/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="Potion_free_card" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 568.0
+offset_right = 962.0
+offset_bottom = 616.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_free_card"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_free_card/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_free_card/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_free_card/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="Potion_power" type="Button" parent="MapPanel"]
+layout_mode = 0
+offset_left = 768.0
+offset_top = 620.0
+offset_right = 962.0
+offset_bottom = 668.0
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+custom_minimum_size = Vector2(99, 48)
+
+[node name="Column" type="VBoxContainer" parent="MapPanel/Potion_power"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 4.0
+offset_top = 3.0
+offset_right = -4.0
+offset_bottom = -3.0
+mouse_filter = 2
+theme_override_constants/separation = 1
+
+[node name="Line" type="HBoxContainer" parent="MapPanel/Potion_power/Column"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 1
+alignment = 1
+
+[node name="Alchemy" type="Label" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+text = ""
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 12
+visible = false
+
+[node name="Cost" type="Label" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+text = "1"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="PotIcon" type="TextureRect" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("10_pot")
+
+[node name="Equals" type="Label" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+text = "="
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="RewardIcon" type="TextureRect" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+custom_minimum_size = Vector2(18, 18)
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+texture = ExtResource("11_gold")
+
+[node name="Amount" type="Label" parent="MapPanel/Potion_power/Column/Line"]
+layout_mode = 2
+text = "×8"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 16
+
+[node name="Status" type="Label" parent="MapPanel/Potion_power/Column"]
+layout_mode = 2
+mouse_filter = 2
+horizontal_alignment = 1
+size_flags_horizontal = 3
+text = "可用"
+theme_override_colors/font_color = Color(0.298039, 0.396078, 0.32549, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 14
+
+[node name="CommandsPanel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 1374.0
+offset_top = 116.0
+offset_right = 1908.0
+offset_bottom = 810.0
+theme_override_styles/panel = ExtResource("1_main_frame")
+
+[node name="RoyalTitle" type="Label" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 20.0
+offset_right = 175.0
+offset_bottom = 58.0
+text = "王权议事厅"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("2_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 27
+
+[node name="BtnAllAchievements" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 175.0
+offset_top = 20.0
+offset_right = 282.0
+offset_bottom = 69.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "全部成就 ›"
+
+[node name="Royals" type="ScrollContainer" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 77.0
+offset_right = 512.0
+offset_bottom = 227.0
+horizontal_scroll_mode = 0
+
+[node name="RoyalGrid" type="GridContainer" parent="CommandsPanel/Royals"]
+layout_mode = 2
+columns = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="SelectedTile" type="Control" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 251.0
+offset_right = 512.0
+offset_bottom = 414.0
+
+[node name="BtnSpecial" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 420.0
+offset_right = 172.0
+offset_bottom = 470.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "特殊行动"
+
+[node name="BtnPotions" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 182.0
+offset_top = 420.0
+offset_right = 332.0
+offset_bottom = 470.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "秘药"
+
+[node name="BtnAchievements" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 342.0
+offset_top = 420.0
+offset_right = 492.0
+offset_bottom = 470.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "成就"
+
+[node name="BtnExpansions" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 480.0
+offset_right = 252.0
+offset_bottom = 530.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "扩展行动"
+
+[node name="BtnSeasonClose" type="Button" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 262.0
+offset_top = 480.0
+offset_right = 492.0
+offset_bottom = 530.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "本季闭店"
+
+[node name="MatchLog" type="Panel" parent="CommandsPanel"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 548.0
+offset_right = 512.0
+offset_bottom = 678.0
+theme_override_styles/panel = ExtResource("16_paper_frame")
+
+[node name="LogTitle" type="Label" parent="CommandsPanel/MatchLog"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 8.0
+offset_right = 162.0
+offset_bottom = 33.0
+text = "对局日志"
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+
+[node name="BtnFullLog" type="Button" parent="CommandsPanel/MatchLog"]
+layout_mode = 0
+offset_left = 394.0
+offset_top = 8.0
+offset_right = 478.0
+offset_bottom = 41.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+text = "完整记录"
+
+[node name="LogScroll" type="ScrollContainer" parent="CommandsPanel/MatchLog"]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 37.0
+offset_right = 478.0
+offset_bottom = 122.0
+horizontal_scroll_mode = 0
+
+[node name="LogList" type="VBoxContainer" parent="CommandsPanel/MatchLog/LogScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="HandStrip" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 362.0
+offset_top = 832.0
+offset_right = 1908.0
+offset_bottom = 1022.0
+theme_override_styles/panel = ExtResource("17_player_frame")
+
+[node name="HandTitle" type="Label" parent="HandStrip"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 16.0
+offset_right = 170.0
+offset_bottom = 48.0
+text = "我的手牌"
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 23
+
+[node name="HandCount" type="Label" parent="HandStrip"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 55.0
+offset_right = 170.0
+offset_bottom = 80.0
+text = "0 张情报"
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 17
+
+[node name="BtnMyTiles" type="Button" parent="HandStrip"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 86.0
+offset_right = 162.0
+offset_bottom = 133.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+text = "我的板块"
+
+[node name="BtnSellCards" type="Button" parent="HandStrip"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 139.0
+offset_right = 162.0
+offset_bottom = 186.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+text = "售卖卡牌"
+
+[node name="ExpandHand" type="Button" parent="HandStrip"]
+layout_mode = 0
+offset_left = 1370.0
+offset_top = 18.0
+offset_right = 1520.0
+offset_bottom = 67.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("12_banner_normal")
+theme_override_styles/pressed = ExtResource("13_banner_pressed")
+theme_override_styles/hover = ExtResource("14_banner_hover")
+theme_override_styles/disabled = ExtResource("15_banner_disabled")
+text = "展开全部"
+
+[node name="BtnPrevHand" type="Button" parent="HandStrip"]
+layout_mode = 0
+offset_left = 1370.0
+offset_top = 75.0
+offset_right = 1416.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+text = "<"
+
+[node name="BtnNextHand" type="Button" parent="HandStrip"]
+layout_mode = 0
+offset_left = 1424.0
+offset_top = 75.0
+offset_right = 1470.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = ExtResource("6_paper_button_normal")
+theme_override_styles/pressed = ExtResource("8_paper_button_pressed")
+theme_override_styles/hover = ExtResource("7_paper_button_hover")
+theme_override_styles/disabled = ExtResource("9_paper_button_disabled")
+text = ">"
+
+[node name="FinalStatus" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 375.0
+offset_top = 775.0
+offset_right = 1340.0
+offset_bottom = 818.0
+theme_override_styles/panel = ExtResource("16_paper_frame")
+visible = false
+
+[node name="FinalRow" type="HBoxContainer" parent="FinalStatus"]
+layout_mode = 0
+offset_left = 14.0
+offset_top = 8.0
+offset_right = 951.0
+offset_bottom = 36.0
+theme_override_constants/separation = 22

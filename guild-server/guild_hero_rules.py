@@ -1,19 +1,26 @@
 """Stateful character abilities, using the same serialized choice queue as cards."""
 from copy import deepcopy
-from guild_content import HEROES,CARDS,TILES
+from guild_content import HEROES, TILES
 
 class HeroRules:
     def _draw(self,count):
         # Character-only events leave the game when discarded.
-        self.state['discard']=[c for c in self.state.get('discard',[]) if not CARDS[c].get('special')]
+        self.state['discard']=[c for c in self.state.get('discard',[]) if not self.cards[c].get('special')]
         return super()._draw(count)
+
+    def _setup_hero_extras(self, p):
+        hero=HEROES[p['hero']]
+        p.update(hero_deck=self._draw(hero.get('private_deck',0)),hero_tiles=[],hero_milestones=[],special_adventurer=bool(hero.get('special_adventurer')),special_attached=None)
+        if p['hero']=='macaron_white':
+            p['gold']+=3*sum(c['revealed'] and TILES[c['loot']].get('ishole',False) for c in self.state['board'])
 
     def _setup_heroes(self):
         for p in self.state['players']:
-            hero=HEROES[p['hero']]
-            p.update(hero_deck=self._draw(hero.get('private_deck',0)),hero_tiles=[],hero_milestones=[],special_adventurer=bool(hero.get('special_adventurer')),special_attached=None)
-            if p['hero']=='macaron_white':
-                p['gold']+=3*sum(c['revealed'] and TILES[c['loot']].get('ishole',False) for c in self.state['board'])
+            if p.get('face_chosen', True):
+                self._setup_hero_extras(p)
+            else:
+                # 还没选黑白面：先占位，选面时再补专属牌堆与开场加成。
+                p.update(hero_deck=[],hero_tiles=[],hero_milestones=[],special_adventurer=False,special_attached=None)
 
     def _apply(self,player_id,action):
         p=self._player(player_id)
@@ -60,7 +67,7 @@ class HeroRules:
                     other['gold']+=3;self._log('%s的圣女能力：公开洞穴，金币+3。'%other['name'],other)
 
     def _play(self,p,action,free=False):
-        card=CARDS.get(action.get('card'),{})
+        card=self.cards.get(action.get('card'),{})
         double=action.get('double',False)
         if type(double) is not bool or (double and (p['hero']!='vee_white' or free or action.get('_source') or 'character' in card.get('tags',[]) or card.get('point',0)<0)):
             raise ValueError('此卡不能使用薇伊的双倍打出。')
@@ -77,14 +84,16 @@ class HeroRules:
         if p['hero']=='marta_black' and (not card.get('tags') or set(card['tags'])=={'character'}):p['gold']+=3
         if double:self._enqueue(p,[dict(op='repeat_play',card=card['id'],civ=original_civ)],self._source(p,len(p['played'])-1))
 
-    def _pay(self,p,costs):
+    def _pay(self,p,costs,preview=False):
         costs=dict(costs)
         if p['hero']=='horn_black' and costs.get('pot',0)>p['pot']:
             needed=costs['pot']-p['pot']
             if len(p['tiles'])>=needed:
                 tiles=p['tiles'][:needed];del p['tiles'][:needed];costs['pot']-=needed
-                for tile in tiles:self._emit(p,'consume_tile',dict(tile=tile))
-        return super()._pay(p,costs)
+                if not preview:
+                    for tile in tiles:
+                        self._emit(p,'consume_tile',dict(tile=tile))
+        return super()._pay(p,costs,preview=preview)
 
     def _season(self):
         bonus=[(p,p['gold_pro'],p['str_pro'],p['pot_pro']) for p in self.state['players']
@@ -166,7 +175,7 @@ class HeroRules:
             options=[]
             for n in range(min(5,p['gold_pro'])+1):
                 payment=dict(discount=2*n,costs=dict(gold_pro=n))
-                if any(self._requirements(p,CARDS[c].get('requirements',{}),True) and self._can_nested_play(p,c,payment) for c in p['hand']):
+                if any(self._requirements(p,self.cards[c].get('requirements',{}),True) and self._can_nested_play(p,c,payment) for c in p['hand']):
                     options.append(dict(value=n,label='产能 −%s / 打出费用 −%s'%(n,2*n)))
             self._prompt(task,'减少多少金币产能来打出事件？',options)
         elif op=='refresh_actions':
@@ -178,13 +187,13 @@ class HeroRules:
             self._enqueue(p,[dict(op='explore',discount=10 if p['retreat']>0 else 0)],source,ctx)
         elif op=='melissa_reveal_play':
             cards=self._draw(2)
-            self._log('%s公开牌库顶：%s。'%(p['name'],'、'.join(CARDS[c]['name'] for c in cards)),p)
+            self._log('%s公开牌库顶：%s。'%(p['name'],'、'.join(self.cards[c]['name'] for c in cards)),p)
             task['step']['cards']=cards
             self._prompt(task,'选择一张公开事件，无视打出费用与条件打出',[self._card_option(c,i) for i,c in enumerate(cards)])
         elif op=='pen_reveal_use':
             # 恶魔羽毛笔：翻开牌库顶2张，选1张使用其「打出时效果」，之后翻开的卡片全部弃牌。
             cards=self._draw(2)
-            self._log('%s公开牌库顶：%s。'%(p['name'],'、'.join(CARDS[c]['name'] for c in cards)),p)
+            self._log('%s公开牌库顶：%s。'%(p['name'],'、'.join(self.cards[c]['name'] for c in cards)),p)
             task['step']['cards']=cards
             self._prompt(task,'选择一张公开事件，使用其「打出时效果」',[self._card_option(c,i) for i,c in enumerate(cards)])
         elif op=='draw_to_three':
@@ -193,7 +202,7 @@ class HeroRules:
         elif op=='repeat_play':
             found=self._source_card(source)
             if found and not found[3]['face_down']:
-                card=CARDS[step['card']];action=dict(_source=source,_context=dict(origin='card',on_play=True))
+                card=self.cards[step['card']];action=dict(_source=source,_context=dict(origin='card',on_play=True))
                 self._effects(p,{k:deepcopy(v) for k,v in card.items() if k not in ('costs','tags')},action)
                 for rule in card.get('conditional',[]):
                     if rule.get('civ_min',1)<=step.get('civ',self.state['civ'])<=rule.get('civ_max',10**9) and self._requirements(p,rule.get('requirements',{})):
@@ -211,7 +220,7 @@ class HeroRules:
         elif op=='hero_sacrifice_play':
             if p['strength']<1 or not p['tiles']:raise ValueError('需要1力量及1块可支付的迷宫板块。')
             check=deepcopy(p);check['strength']-=1;check['tiles']=check['tiles'][1:]
-            if not any(CARDS[c]['price']<=14 and self._can_nested_play(check,c,dict(free=True)) for c in p['hand']):raise ValueError('没有费用14以下且能支付额外费用的手牌。')
+            if not any(self.cards[c]['price']<=14 and self._can_nested_play(check,c,dict(free=True)) for c in p['hand']):raise ValueError('没有费用14以下且能支付额外费用的手牌。')
             self._prompt(task,'先支付一个迷宫板块',self._tile_options(p))
         elif op=='hero_tile_discount_play':self._enqueue(p,[dict(op='play',discount=self._stat(p,'pieces')*3)],source)
         elif op=='play_extra_gold':self._enqueue(p,[dict(op='play',filter=dict(extra_cost=True),on_success=dict(gold=5),optional=True)],source)
@@ -263,7 +272,7 @@ class HeroRules:
             # 恶魔羽毛笔：被选卡只结算「打出时效果」，不进疆域、不获得标记；两张翻开卡全部弃牌。
             cards=step['cards'];chosen=cards[values[0]]
             self.state['discard'] += list(cards)
-            card=CARDS[chosen]
+            card=self.cards[chosen]
             action=dict(_source=source,_context=dict(origin='card',on_play=True))
             self._effects(p,{k:deepcopy(v) for k,v in card.items() if k not in ('costs','tags')},action)
             civ=self.state['civ']

@@ -23,7 +23,7 @@ class OctoberUpdate(unittest.TestCase):
         for price in (0,5,10,15,20,25,30,11,16,23):
             with self.subTest(price=price):
                 e=game('bell_white');p=e._player(0);p.update(gold=100,hand=[5],hero_deck=[1],tags=[])
-                with patch.dict(CARDS,{5:dict(CARDS[5],price=price,requirements={},draw=0,gold=0,gold_pro=0,tags=[],steps=[],conditional=[],triggers=[])}):
+                with patch.dict(e.cards,{5:dict(CARDS[5],price=price,requirements={},draw=0,gold=0,gold_pro=0,tags=[],steps=[],conditional=[],triggers=[])}):
                     e._play(p,dict(type='play',card=5,_discount=3));e._drain_effects()
                 p=e._player(0);trigger=price%10 in (0,5)
                 self.assertEqual(p['gold'],100-max(0,price-3)+(2 if trigger else 0))

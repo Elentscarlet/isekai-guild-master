@@ -1,6 +1,6 @@
 """Ordered resolution for the alternative prints in guild_screenshot_heroes."""
 from copy import deepcopy
-from guild_content import CARDS,HEROES,TILES
+from guild_content import HEROES, TILES
 
 
 class ScreenshotRules:
@@ -11,7 +11,7 @@ class ScreenshotRules:
             p['gold']+=3*(p['str_pro']-previous)
 
     def _play(self,p,action,free=False):
-        card=CARDS.get(action.get('card'),{})
+        card=self.cards.get(action.get('card'),{})
         super()._play(p,action,free)
         if p['hero']=='sif_revised_white' and not card.get('tags'):
             p['gold']+=3

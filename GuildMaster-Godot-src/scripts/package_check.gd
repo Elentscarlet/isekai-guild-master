@@ -30,6 +30,20 @@ func find_button(node: Node, text: String):
 		if found: return found
 	return null
 
+# 情报收集后选择本局人物的可用黑白面。
+func choose_face(session) -> bool:
+	var me = session.me()
+	if me == null: return false
+	var character = str(me.get("hero_character", ""))
+	var variants = ui.store.catalog.characters.get(character, {}).get("variants", {})
+	for name in ["white", "black"]:
+		var hero = variants.get(name, "")
+		var data = ui.store.catalog.heroes.get(hero, {})
+		if not data.is_empty() and data.get("available", false):
+			session.action("choose_face", {"variant": name})
+			return true
+	return false
+
 func verify_network(port: int):
 	ui.session.connect_server("127.0.0.1", port, "PackagedLobbyQA");ui.close_dialog()
 	check( await wait_for( func(): return ui.session.directory and find_button(ui.content, "创建公会房间") != null), "exported client displays an empty lobby after delayed handshake")
@@ -48,9 +62,7 @@ func verify_network(port: int):
 			await wait_for( func(): return host.room.players[0].ready)
 			host.send({"type": "start"})
 			if await wait_for( func(): return host.room.get("drafting", false)):
-				var character = host.room.hero_offers[0]; var variants = ui.store.catalog.characters[character].variants
-				var variant = "white" if variants.has("white") and variants.white != "marta_white" else "black"
-				host.send({"type": "set_hero", "character": character, "variant": variant})
+				host.send({"type": "set_hero", "character": host.room.hero_offers[0]})
 	check( await wait_for( func(): return not host.game.is_empty()), "original server starts spectator cleanup test game")
 	if not host.game.is_empty():
 		ui.session.send({"type": "enter_room", "room_id": host.room_id, "role": "spectator"})
@@ -79,8 +91,8 @@ func run(client):
 	for key in ui.store.catalog.heroes:
 		var source = ui.store.portrait_source(key)
 		check(ui.store.portrait(key) != null and ui.store.portrait_bust(key) != null, "portrait and bust load for every print: " + key)
-		if source.begins_with("images/tts/") or source.begins_with("images/standalone/"): portrait_count += 1
-	check(portrait_count == 31, "31 prints use verified standalone artwork")
+		if source.begins_with("images/characters/"): portrait_count += 1
+	check(portrait_count == ui.store.catalog.heroes.size(), "every print uses the character art in art/characters")
 	var voice_result = load("res://scripts/voice_check.gd").new().run(ui)
 	check(voice_result.passed, "all character voices decode and trigger in the exported client")
 	if not output.is_empty():
@@ -104,13 +116,11 @@ func run(client):
 			for face in hero.source: check(ui.store.texture(face) != null, "exported screenshot texture: " + face)
 	ui.prefs.language = "zh_CN";ui.apply_language(false);ui.rerender()
 	await frames()
-	check(ui.store.layouts.size() == 43, "43 original-coordinate layouts load from exported PCK")
+	var missing_tiles = ui.store.tile_paths.filter( func(path): return ui.store.tile_texture(path) == null)
+	check(ui.store.tile_paths.size() == 43 and missing_tiles.is_empty(), "43 tile images load from art/images/piece_png")
 	var card = ui.store.card(1)
-	var tile_layouts = ui.store.layouts.values().filter( func(spec): return spec.kind == "tile")
-	check(tile_layouts.size() == 43 and ui.store.texture(tile_layouts[0].paper) != null, "43 tile composite layouts load from exported PCK")
-	check(ui.store.layouts.values().filter( func(spec): return spec.get("render_mode") == "native_font_text").is_empty(), "real-time native font card text is retired; card faces are scans")
 	for back_source in ["images/piece_png/2.png", "images/piece_png/17.png", "images/tts/083.webp", "images/tts/087.webp", "images/tts/088.webp"]:
-		check(ui.store.tile_texture(back_source) != null, "maze back tile composible from layout: " + back_source)
+		check(ui.store.tile_texture(back_source) != null, "maze back tile loads from unified art: " + back_source)
 	var baked_icons = load("res://scripts/hex_map.gd").new();baked_icons.store = ui.store
 	check(baked_icons.icon("star") != null and baked_icons.icon("dot_dark") != null and baked_icons.icon("dot_light") != null, "hex map bakes anti-aliased star and score dot icons")
 	baked_icons.free()
@@ -158,13 +168,13 @@ func run(client):
 		ui.session.send({"type": "start"})
 		check( await wait_for( func(): return ui.session.room.get("drafting", false)), "offline room provides original hero offers")
 		if ui.session.room.get("drafting", false):
-			var character = ui.session.room.hero_offers[0]; var variants = ui.store.catalog.characters[character].variants
-			var variant = "white" if variants.has("white") and variants.get("white") != "marta_white" else "black"
-			ui.session.send({"type": "set_hero", "character": character, "variant": variant})
+			ui.session.send({"type": "set_hero", "character": ui.session.room.hero_offers[0]})
 			check( await wait_for( func(): return not ui.session.game.is_empty()), "exported client starts original offline rules")
 			if not ui.session.game.is_empty():
 				ui.session.action("research", {"cards": []})
-				check( await wait_for( func(): return ui.session.game.get("phase") == "action", 20), "offline research enters action phase")
+				check( await wait_for( func(): return ui.session.game.get("phase") == "face", 20), "offline research enters face choice")
+				choose_face(ui.session)
+				check( await wait_for( func(): return ui.session.game.get("phase") == "action", 20), "offline face choice enters action phase")
 				await frames()
 				# —— 单人/多人变体卡面：solo 会话须解析出 9B 单人印，multi 须解析出多人印 ——
 				check(ui.store.mode == "solo", "exported offline session switches card faces to the solo print")
@@ -265,13 +275,13 @@ func run(client):
 		ui.session.send({"type": "start"})
 		check( await wait_for( func(): return ui.session.room.get("drafting", false), 20), "deep map room drafts")
 		if ui.session.room.get("drafting", false):
-			var character = ui.session.room.hero_offers[0]; var variants = ui.store.catalog.characters[character].variants
-			var variant = "white" if variants.has("white") and variants.white != "marta_white" else "black"
-			ui.session.send({"type": "set_hero", "character": character, "variant": variant})
+			ui.session.send({"type": "set_hero", "character": ui.session.room.hero_offers[0]})
 			check( await wait_for( func(): return not ui.session.game.is_empty(), 20), "deep map game starts")
 			if not ui.session.game.is_empty():
 				ui.session.action("research", {"cards": []})
-				check( await wait_for( func(): return ui.session.game.get("phase") == "action", 20), "deep map research enters action phase")
+				check( await wait_for( func(): return ui.session.game.get("phase") == "face", 20), "deep map research enters face choice")
+				choose_face(ui.session)
+				check( await wait_for( func(): return ui.session.game.get("phase") == "action", 20), "deep map face choice enters action phase")
 				await frames()
 				var deep_map = ui.find_child("TableMap", true, false)
 				check(deep_map != null and str(ui.session.game.get("rules", {}).get("options", {}).get("map_type", "")) == "deep", "deep map renders the deep board")

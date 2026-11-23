@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """smoke_mode_variants.py — 驗證 B-017/D-002/E-001/E-007 在 solo/multi 兩模式的定義。"""
 import sys
-sys.path.insert(0, r'D:\Users\Simon\Desktop\GuildMaster-Godot-Windows-20261015-A077Fix\GuildMaster-Godot\rules')
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'rules'))
 
 from guild_content import CARDS
-from guild_mode_variants import apply_mode_variants
+from guild_mode_variants import cards_for_mode
 
 arch_before = {cid: CARDS[cid].get('image_path') for cid in (102, 103, 104, 105, 106)}
 
@@ -24,9 +25,9 @@ def fail(msg):
     sys.exit(1)
 
 for mode in ('multi', 'solo'):
-    apply_mode_variants({'solo': mode == 'solo'})
+    cards = cards_for_mode(CARDS, {'solo': mode == 'solo'})
     for code, cid in IDS.items():
-        c = CARDS[cid]
+        c = cards[cid]
         trig = c.get('triggers') or []
         act = c.get('action') or {}
         score = c.get('scoring') or []

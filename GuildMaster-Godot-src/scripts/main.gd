@@ -13,7 +13,7 @@ extends Control
 
 const ThemeBuilder = preload("res://scripts/theme_builder.gd")
 
-const PHASES = {"draft": "开局轮抽", "research": "情报收集", "action": "公会行动", "final": "最终行动", "finished": "终局结算"}
+const PHASES = {"face": "选择黑白面", "draft": "开局轮抽", "research": "情报收集", "action": "公会行动", "final": "最终行动", "finished": "终局结算"}
 const GOLD = Color("874449")
 const INK = Color("343133")
 const MUTED = Color("6b6460")
@@ -29,6 +29,7 @@ var dialogs: GuildOverlayDialogs
 var backdrop: GuildBackdrop
 var sound: AudioStreamPlayer
 var content: Control
+var table_screen: GuildTableScreen
 var modal_layer: Control
 var dialog: Control
 var modal_key = ""
@@ -42,6 +43,7 @@ var research_packet = ""
 var hand_page = 0
 var selected_tile = ""
 var browsing_character = ""
+var candidate_variant = "white"
 var home_portrait = ""
 var choice_states = {}
 var player_clocks = []
@@ -318,10 +320,12 @@ func _render():
 		toaster.hide_final()
 		if modal_key != "settings":
 			close_dialog(false)
-	for child in content.get_children():
-		content.remove_child(child)
-		child.queue_free()
-	preview.clear()
+	if session.game.is_empty() or not is_instance_valid(table_screen):
+		for child in content.get_children():
+			content.remove_child(child)
+			child.queue_free()
+		table_screen = null
+		preview.clear()
 	var freshly_home = session.game.is_empty() and session.room.is_empty() and not session.directory
 	if freshly_home and not backdrop.home:
 		home_portrait = ""
@@ -356,10 +360,10 @@ func _render():
 		close_dialog()
 
 func _render_game(root: Control):
-	if prefs.get("layout", "classic") == "dashboard":
-		GuildTableDashboard.draw(self, root)
+	if is_instance_valid(table_screen):
+		table_screen.refresh()
 	else:
-		GuildTableClassic.draw(self, root)
+		table_screen = GuildScreens.table(self, root)
 
 func _sync_game_feedback():
 	var game = session.game
@@ -375,6 +379,8 @@ func _sync_game_feedback():
 		if phase == "final" and was_phase != "final":
 			play_sound("final")
 			toaster.show_final()
+		elif phase == "face" and was_phase != "face":
+			show_toast("请选择看板娘的白面或黑面。")
 		elif last_feedback != event_id:
 			play_sound(feedback.get("kind", "card"))
 			show_toast(feedback.get("message", ""))

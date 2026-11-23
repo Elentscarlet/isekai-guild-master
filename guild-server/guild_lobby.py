@@ -4,7 +4,7 @@ import logging
 import secrets
 import time
 
-from guild_content import CHARACTERS, HEROES, hero_selection, selectable_hero
+from guild_content import CHARACTERS, HEROES, selectable_hero
 from guild_network import (RoomServer, CLIENT_VERSION, NETWORK_PROTOCOL,
                            _safe_text, _string)
 
@@ -85,7 +85,7 @@ class HostedRoom(RoomServer):
         peer.room_id = self.room_id
         self._peers[peer.sock] = peer
         for pid in set(self._players) - before:
-            self._players[pid].update(hero='bai_white',hero_chosen=False)
+            self._players[pid].update(hero='bai_white',hero_character='',hero_chosen=False)
         if peer.role == 'player' and self._engine is not None:
             self._engine._player(peer.player_id)['connected'] = True
             self._disconnect_deadlines.pop(peer.player_id, None)
@@ -159,15 +159,16 @@ class HostedRoom(RoomServer):
                     offers[pid]=deal_characters(excluded,self.options['hero_draw'],self.options)
                 self.offers=offers;self.drafting=True;self._draft_seed=seed
                 _LOGGER.info('Room %s: draft started with %s player(s)', self.room_id, len(self._players))
-                for pid,p in self._players.items(): p.update(hero=offer_hero(offers[pid]),hero_chosen=False)
+                for pid,p in self._players.items(): p.update(hero=offer_hero(offers[pid]),hero_character='',hero_chosen=False)
             elif kind == 'set_hero':
                 if peer.role != 'player' or self._engine is not None or not self.drafting:
                     raise ValueError('请在房主开始对局并发出候选角色后选择。')
-                hero = (hero_selection(message.get('character'), message.get('variant'))
-                        if 'character' in message else selectable_hero(message.get('hero')))
-                if HEROES[hero]['character'] not in self.offers.get(peer.player_id, []):
+                character = message.get('character')
+                if character is None and 'hero' in message:
+                    character = HEROES[selectable_hero(message.get('hero'))]['character']
+                if character not in CHARACTERS or character not in self.offers.get(peer.player_id, []):
                     raise ValueError('只能从本次抽到的候选角色中选择。')
-                self._players[peer.player_id].update(hero=hero, hero_chosen=True)
+                self._players[peer.player_id].update(hero=offer_hero([character]), hero_character=character, hero_chosen=True)
                 if all(p.get('hero_chosen') for p in self._players.values()):
                     self._finish_draft()
             elif kind=='ready' and self.drafting:
@@ -201,7 +202,7 @@ class HostedRoom(RoomServer):
             if kind == 'return_lobby' and before_engine is not None and self._engine is None and peer.player_id == self._host_id:
                 self.offers = {};self.drafting=False;self.started_at=None;self._disconnect_deadlines.clear()
                 for player in self._players.values():
-                    player.update(hero='bai_white',hero_chosen=False,ready=False)
+                    player.update(hero='bai_white',hero_character='',hero_chosen=False,ready=False)
             self.touched = time.monotonic()
             self._dirty = True
             if kind == 'action':

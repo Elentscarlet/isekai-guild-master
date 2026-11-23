@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://bpxdaokayomku"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/player_frame.tres" id="1_player_frame"]
+[ext_resource type="Script" uid="uid://dh5cf0656aact" path="res://scripts/table_results.gd" id="2_table_results"]
+[ext_resource type="FontFile" uid="uid://ba15cmpajgml6" path="res://fonts/ZCOOLKuaiLe-Regular.ttf" id="3_ZCOOLKuaiLe_Regular"]
+[ext_resource type="FontFile" uid="uid://cii3oduf68wbd" path="res://fonts/SourceHanSansLite.ttf" id="4_SourceHanSansLite"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="5_banner_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="6_banner_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="7_banner_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="8_banner_disabled"]
+
+[node name="Results" type="Panel" unique_id=1105141128]
+offset_left = 362.0
+offset_top = 116.0
+offset_right = 1908.0
+offset_bottom = 1022.0
+theme_override_styles/panel = ExtResource("1_player_frame")
+script = ExtResource("2_table_results")
+
+[node name="ResultsTitle" type="Label" parent="." unique_id=1271436599]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 34.0
+offset_right = 1502.0
+offset_bottom = 99.0
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 45
+text = "这一段冒险，值得铭记。"
+
+[node name="SoloResultDetails" type="Label" parent="." unique_id=1976529105]
+visible = false
+layout_mode = 0
+offset_left = 40.0
+offset_top = 108.0
+offset_right = 1502.0
+offset_bottom = 152.0
+theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
+theme_override_fonts/font = ExtResource("3_ZCOOLKuaiLe_Regular")
+theme_override_font_sizes/font_size = 29
+
+[node name="SeasonLine" type="Label" parent="." unique_id=178190255]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 108.0
+offset_right = 1502.0
+offset_bottom = 143.0
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 23
+text = "第 6 季  /  2 位公会长的最终成绩"
+
+[node name="ScoresScroll" type="ScrollContainer" parent="." unique_id=338727595]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 166.0
+offset_right = 1502.0
+offset_bottom = 736.0
+horizontal_scroll_mode = 0
+
+[node name="ScoresList" type="VBoxContainer" parent="ScoresScroll" unique_id=656997543]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 22
+
+[node name="ResultsNote" type="Label" parent="." unique_id=1878735821]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 765.0
+offset_right = 1502.0
+offset_bottom = 800.0
+theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "扩展资源声望已计入总分。点击公会可查看持有的宝石、庆典与贡献。"
+
+[node name="Buttons" type="HBoxContainer" parent="." unique_id=515129844]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 826.0
+offset_right = 1502.0
+offset_bottom = 880.0
+theme_override_constants/separation = 18
+
+[node name="BtnLog" type="Button" parent="Buttons" unique_id=1785243810]
+custom_minimum_size = Vector2(200, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "查看公会记录"
+
+[node name="BtnRoom" type="Button" parent="Buttons" unique_id=1493169678]
+visible = false
+custom_minimum_size = Vector2(200, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+text = "返回房间"
+
+[node name="BtnMenu" type="Button" parent="Buttons" unique_id=822471093]
+custom_minimum_size = Vector2(200, 46)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.992157, 0.968627, 1)
+theme_override_fonts/font = ExtResource("4_SourceHanSansLite")
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = ExtResource("5_banner_primary")
+theme_override_styles/pressed = ExtResource("7_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("6_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("8_banner_disabled")
+text = "返回主菜单"

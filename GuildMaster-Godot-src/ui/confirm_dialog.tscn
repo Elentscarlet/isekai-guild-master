@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://b1q3j6sr7jjr7"]
+
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_normal.tres" id="1_plaque_normal"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_hover.tres" id="2_plaque_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_pressed.tres" id="3_plaque_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/plaque_disabled.tres" id="4_plaque_disabled"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary.tres" id="5_primary"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_hover.tres" id="6_primary_hover"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="7_primary_pressed"]
+[ext_resource type="StyleBox" path="res://ui/styles/banner_disabled.tres" id="8_primary_disabled"]
+
+[node name="ConfirmDialog" type="VBoxContainer" unique_id=951494055]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 18
+
+[node name="Message" type="Label" parent="." unique_id=1618715798]
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "确认信息"
+autowrap_mode = 3
+
+[node name="Spacer" type="Control" parent="." unique_id=937560855]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Actions" type="HBoxContainer" parent="." unique_id=375276969]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="Cancel" type="Button" parent="Actions" unique_id=1406782587]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("1_plaque_normal")
+theme_override_styles/pressed = ExtResource("3_plaque_pressed")
+theme_override_styles/hover = ExtResource("2_plaque_hover")
+theme_override_styles/disabled = ExtResource("4_plaque_disabled")
+text = "再想一下"
+
+[node name="Confirm" type="Button" parent="Actions" unique_id=2121117584]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.992, 0.969, 1)
+theme_override_colors/font_hover_color = Color(1, 0.992, 0.969, 1)
+theme_override_font_sizes/font_size = 21
+theme_override_styles/normal = ExtResource("5_primary")
+theme_override_styles/pressed = ExtResource("7_primary_pressed")
+theme_override_styles/hover = ExtResource("6_primary_hover")
+theme_override_styles/disabled = ExtResource("8_primary_disabled")
+text = "确认"

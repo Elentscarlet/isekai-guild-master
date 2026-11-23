@@ -1,6 +1,14 @@
 class_name GuildRulesLogic
 extends RefCounted
 
+const DEVELOPMENT_OPTIONS = [
+	["gold", "公会投资", "支付 20 金币"],
+	["strength", "冒险训练", "支付 3 战力"],
+	["pot", "秘药馈赠", "支付 2 秘药"],
+	["territory", "拓展疆域", "控制至少 3 个地图格子"],
+	["cards", "经营有方", "打出至少 8 张事件卡"],
+]
+
 static func can_pay_gold(me: Dictionary, amount: int) -> bool:
 	return int(me.get("gold", 0)) + (5 * int(me.get("strength", 0)) if me.get("strength_as_gold", false) else 0) >= amount
 
@@ -18,9 +26,19 @@ static func piece_cost(card: Dictionary, me: Dictionary, double: bool = false) -
 	return count
 
 static func develop_options(me: Dictionary, game: Dictionary, use_festival: bool = false) -> Array:
-	var controlled = game.get("board", []).filter( func(cell): return cell.get("owner") != null and int(cell.owner) == int(me.id)).size()
+	var controlled = game.get("board", []).filter( func(cell): return cell.get("owner") != null and int(cell.owner) == int(me.get("id", -1))).size()
 	var n = int(me.get("festival_tokens", 0)) if use_festival else 0
-	return [["gold", "公会投资", "支付 20 金币", can_pay_gold(me, max(0, 20 - n * 5))], ["strength", "冒险训练", "支付 3 战力", int(me.get("strength", 0)) + n >= 3], ["pot", "秘药馈赠", "支付 2 秘药", int(me.get("pot", 0)) + n + (me.get("tiles", []).size() if me.get("hero") == "horn_black" else 0) >= 2], ["territory", "拓展疆域", "控制至少 3 个地图格子", controlled >= 3], ["cards", "经营有方", "打出至少 8 张事件卡", me.get("played", []).size() >= 8]]
+	var available = [
+		can_pay_gold(me, max(0, 20 - n * 5)),
+		int(me.get("strength", 0)) + n >= 3,
+		int(me.get("pot", 0)) + n + (me.get("tiles", []).size() if me.get("hero") == "horn_black" else 0) >= 2,
+		controlled >= 3,
+		me.get("played", []).size() >= 8,
+	]
+	var options = DEVELOPMENT_OPTIONS.duplicate(true)
+	for index in range(options.size()):
+		options[index].append(available[index])
+	return options
 
 static func achievement_stat(me: Dictionary, game: Dictionary, catalog: Dictionary, stat: String) -> int:
 	var tag_counts = me.get("tag_counts", {})
@@ -100,3 +118,20 @@ static func payment_limits(payment: Dictionary, selected: Array, strength: int, 
 	var remaining = max(0, ceili(float(gold) / 5) - tiles); var ratio = int(payment.get("potion_strength", 0))
 	pot = min(pot, min(pm, ceili(float(remaining) / ratio) if ratio > 0 else 0));strength = min(strength, min(sm, max(0, remaining - pot * ratio)))
 	return [min(sm, max(0, remaining - pot * ratio)), min(pm, ceili(float(max(0, remaining - strength)) / ratio) if ratio > 0 else 0), strength, pot]
+
+# 秘药状态优先使用服务端下发的 potion_states；旧服务端没有该字段时按本地规则回退。
+static func potion_state(me: Dictionary, game: Dictionary, catalog: Dictionary, key: String, can_act: bool) -> String:
+	var potion = catalog.get("potions", {}).get(key, {})
+	if potion.is_empty(): return "不可用"
+	if game.get("potions_disabled", []).has(key): return "未开放"
+	if game.get("potions_used", []).has(key): return "本轮已用"
+	if me.is_empty(): return "观战"
+	var server_states = me.get("potion_states", {})
+	if server_states is Dictionary and server_states.has(key):
+		return str(server_states[key])
+	if key == "build" and not game.get("board", []).any( func(cell): return cell.get("owner") != null and int(cell.owner) == int(me.get("id", -1)) and not cell.get("base", false)): return "无可据点化营地"
+	if key == "free_card" and me.get("hand", []).is_empty(): return "手牌为空"
+	if int(me.get("pot", 0)) + (me.get("tiles", []).size() if me.get("hero") == "horn_black" else 0) < int(potion.get("cost", 0)): return "数量不足"
+	if me.get("passed", false): return "本季闭店"
+	if not can_act: return "等待行动"
+	return "可用"

@@ -35,15 +35,13 @@ func _draw():
 	var shade = StyleBoxFlat.new();shade.bg_color = Color("070f14")
 	shade.shadow_color = Color(0, 0, 0, 0.4);shade.shadow_size = 10;shade.shadow_offset = Vector2(0, 5)
 	shade.set_corner_radius_all(7);draw_style_box(shade, area)
-	# 卡面一律使用扫描图；card_layouts 仅保留迷宫板块的复合版面。
-	var layout = store.layouts.get(source, {}) if store.layouts.has(source) else {}
-	if layout.get("kind") == "tile" and layout.get("render_mode") != "native_font_text":
-		var paper = store.texture(layout.paper); var atlas = store.texture(layout.atlas)
-		if paper: draw_texture_rect(paper, area, false)
-		if atlas:
-			for part in layout.parts:
-				var b = part.box
-				draw_texture_rect_region(atlas, Rect2(area.position + Vector2(float(part.x), float(part.y)) * factor, Vector2(float(b[2]), float(b[3])) * factor), Rect2(float(b[0]), float(b[1]), float(b[2]), float(b[3])))
+	# 卡面一律使用扫描图；迷宫板块统一从 art/images/piece_png 读取。
+	if store.is_tile(source):
+		var tile_tex = store.tile_texture(source, clampi(int(maxf(size.x, size.y) * 2.0), 160, 750))
+		if tile_tex:
+			draw_set_transform(area.get_center(), store.tile_angle(source), Vector2.ONE)
+			draw_texture_rect(tile_tex, Rect2(-area.size / 2, area.size), false)
+			draw_set_transform(Vector2.ZERO)
 	else:
 		var tex = store.texture(source)
 		if tex: draw_texture_rect(tex, area, false)

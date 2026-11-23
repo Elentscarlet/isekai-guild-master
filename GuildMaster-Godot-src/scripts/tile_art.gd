@@ -6,7 +6,7 @@ func _draw():
 	var edge = min(size.x, size.y) * 0.88
 	var texture = store.tile_texture(source, clamp(int(edge), 160, 750))
 	if texture == null: return
-	draw_set_transform(size / 2, - PI / 6, Vector2.ONE)
+	draw_set_transform(size / 2, store.tile_angle(source), Vector2.ONE)
 	draw_texture_rect(texture, Rect2( - Vector2.ONE * edge / 2, Vector2.ONE * edge), false)
 	draw_set_transform(Vector2.ZERO)
 	if selected:

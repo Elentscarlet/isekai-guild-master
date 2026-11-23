@@ -7,7 +7,7 @@ import threading
 from pathlib import Path
 
 from guild_lobby import LobbyServer
-from guild_replay import ReplayStore, ReplayWeb
+from guild_replay import ReplayRecorder, ReplayStore, ReplayWeb
 from guild_site import SiteWeb
 
 # Built-in fallbacks; server_config.json overrides them, command-line flags override both.
@@ -113,9 +113,10 @@ def main():
     web = ReplayWeb(store, host, replay_port) if enable_replay else None
     site = None
     server = None
+    recorder = ReplayRecorder(store) if record else None
     try:
         server = LobbyServer(host, game_port, max_rooms, args.idle_hours,
-                             replay_store=store if record else None).start()
+                             replay_store=recorder).start()
         if enable_site:
             site = SiteWeb(site_dir, download_dir, host, site_port,
                            portrait_dir=here / 'replay_web' / 'portraits',
@@ -130,6 +131,8 @@ def main():
             web.close()
         if site:
             site.close()
+        if recorder:
+            recorder.close()
         raise
     if web:
         web.start()
@@ -145,9 +148,10 @@ def main():
                 raise RuntimeError('Server network loop stopped unexpectedly')
     finally:
         server.close()
-        if record:
+        if recorder:
             for room in list(server.rooms.values()):
-                store.finish(room.replay_id)
+                recorder.finish(room.replay_id)
+            recorder.close()
         if web:
             web.close()
         if site:

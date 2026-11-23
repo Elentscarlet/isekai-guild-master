@@ -58,6 +58,8 @@
 | `GET /api/daily?date=today&limit=4&offset=0` | 机器人分页预览，包含总场次、已结束、进行中、中断与 `matches` |
 | `GET /api/statistics?date=all&players=5` | 开局行动顺位和角色胜率；省略 `players` 汇总所有多人局 |
 
+进行中对局的摘要只提供房间和席位信息。该局的回放元数据返回 `count: 0`，步骤接口返回 404，直到对局结束或中断。
+
 日期使用北京时间，按对局的开局时间归档。`limit` 为 1–100，`offset` 不小于零。参数不合法时返回 HTTP 400。`preview.players` 包含 `id/name/hero/hero_name/variant/seat/position/score/rank/winner`；`preview.winner_names` 列出最终获胜者。`seat` 只标识预览中的 P1–P5，胜率只统计开局行动顺位 `position`。
 
 `/api/statistics` 返回 `matches`、`positions`、`heroes` 和统计口径 `note`。每行包含 `games/wins/win_rate`，胜率为百分数；角色行额外包含 `hero/name/variant`。仅已结束多人局且有原引擎获胜者时纳入统计；平局并列第一各记一胜，黑白角色版本分别计算。单人、进行中、中断局不进入胜率；旧回放无需迁移或重录。

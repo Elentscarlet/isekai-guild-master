@@ -48,17 +48,17 @@ theme_override_font_sizes/font_size = 14
 text = "GUILD MASTER"
 
 [node name="Gallery" type="Button" parent="Margin/Root/Header/Row" unique_id=1156378501]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(65, 46)
 layout_mode = 2
 text = "图鉴"
 
 [node name="Settings" type="Button" parent="Margin/Root/Header/Row" unique_id=400929530]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(65, 46)
 layout_mode = 2
 text = "设置"
 
 [node name="Leave" type="Button" parent="Margin/Root/Header/Row" unique_id=2022818268]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(65, 46)
 layout_mode = 2
 text = "离开"
 
@@ -81,12 +81,12 @@ theme_override_font_sizes/font_size = 34
 text = "旅人的公会大厅"
 
 [node name="Refresh" type="Button" parent="Margin/Root/Sheet/SheetBox/Bar" unique_id=142278658]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(65, 46)
 layout_mode = 2
 text = "刷新"
 
 [node name="Create" type="Button" parent="Margin/Root/Sheet/SheetBox/Bar" unique_id=1339838328]
-custom_minimum_size = Vector2(0, 46)
+custom_minimum_size = Vector2(135, 46)
 layout_mode = 2
 text = "创建公会房间"
 

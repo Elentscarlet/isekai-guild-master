@@ -54,7 +54,7 @@ func refresh() -> void:
 	if image.is_empty():
 		hide()
 		return
-	var is_tile = ui.store.layouts.get(image, {}).get("kind") == "tile"
+	var is_tile = ui.store.is_tile(image)
 	if (art is GuildTileArt) != is_tile:
 		remove_child(art)
 		art.queue_free()

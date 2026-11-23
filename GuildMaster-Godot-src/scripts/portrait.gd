@@ -4,7 +4,9 @@ extends TextureRect
 var on_click: Callable
 
 func _ready():
-	expand_mode = TextureRect.EXPAND_IGNORE_SIZE;stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	# Callers may pick another fit mode; only replace Godot's plain scale default.
+	if stretch_mode == TextureRect.STRETCH_SCALE: stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	clip_contents = true;mouse_filter = Control.MOUSE_FILTER_STOP;mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 
 func _gui_input(event):
