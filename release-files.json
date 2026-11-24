@@ -1,16 +1,21 @@
 {
-  "version": "4.1.1",
-  "revision": "20261101-4.1.1-ai-portrait-fix",
+  "version": "4.2.2",
+  "revision": "20261116-top-centered-popup",
   "artifacts": [
     {
-      "name": "GuildMaster-Windows-4.1.1.zip",
-      "size_bytes": 292786405,
-      "sha256": "99a0aaf271e6ba8e74924b7302033c7b00cd906500796ec77f877a22d94ffd5f"
+      "name": "GuildMaster-Windows-4.2.2.zip",
+      "size_bytes": 295123274,
+      "sha256": "ab1b6f421fbfc7da101069ebd584b2bf325199785aad9733b3dc39eefa3a85a8"
     },
     {
-      "name": "guild-server-4.1.1.zip",
-      "size_bytes": 69739968,
-      "sha256": "1043279fe50064c17b096685b95004a9c149e07ad658739f9f0afa73259f1b86"
+      "name": "guild-server-4.2.2.zip",
+      "size_bytes": 72046292,
+      "sha256": "b28b2e8d1e18fcb36495d208b5afe60a68a9816a246075d7955652fe151bd938"
+    },
+    {
+      "name": "GuildMaster-Android-4.2.2.apk",
+      "size_bytes": 326218714,
+      "sha256": "ab523183702bd9b024b1978f8b2db9c9989ccacd2c0870b547cc9558279bcb61"
     }
   ]
 }

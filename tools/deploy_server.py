@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import pwd
 import shutil
+import socket
+import struct
 import subprocess
 import sys
 import time
@@ -19,6 +21,28 @@ def digest(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 def command(*args):return subprocess.run(args,check=True,capture_output=True,text=True,timeout=30).stdout.strip()
 def status():
     with urllib.request.urlopen('http://127.0.0.1:6680/api/status',timeout=8) as response:return json.load(response)
+
+
+def ensure_idle():
+    check=status()
+    if check.get('active_room_count') or check.get('connected_people'):
+        raise RuntimeError('Server is in use; deployment deferred')
+    with socket.create_connection(('127.0.0.1',6677),timeout=8) as connection:
+        payload=json.dumps(dict(type='hello',name='DeployIdleCheck',client_version='4.1.0',protocol=3)).encode()
+        connection.sendall(struct.pack('!I',len(payload))+payload)
+        def exact(count):
+            data=b''
+            while len(data)<count:
+                part=connection.recv(count-len(data))
+                if not part:raise RuntimeError('Idle check connection closed')
+                data+=part
+            return data
+        while True:
+            message=json.loads(exact(struct.unpack('!I',exact(4))[0]))
+            if message.get('type')=='error':raise RuntimeError('Idle check rejected')
+            if message.get('type')=='directory':
+                if message.get('rooms'):raise RuntimeError('Rooms exist; deployment deferred')
+                return
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--archive',type=Path,required=True);parser.add_argument('--sha256',required=True)
@@ -44,8 +68,7 @@ def main():
     if not client_check.get('passed') or not client_check.get('package_passed') or client_check.get('clips')!=1134 or client_check.get('manifest_sha256')!=voices.get('manifest_sha256') or set(client_check.get('languages',[]))!={'ja','zh_CN'}:
         raise RuntimeError('The matching exported bilingual client must pass before deployment')
     command(sys.executable,'-m','compileall','-q',str(source))
-    check=status()
-    if check.get('active_room_count') or check.get('connected_people'):raise RuntimeError('Server is in use; deployment deferred')
+    ensure_idle()
     config=production/'server_config.json';config_hash=digest(config) if config.exists() else None
     backup=stage/'previous';backup.mkdir(exist_ok=True)
     plan=[]
@@ -64,7 +87,7 @@ def main():
     account=pwd.getpwnam('guanpeng');stopped=False
     try:
         # Re-check immediately before the short stop, after backing up files.
-        if status().get('connected_people') or status().get('active_room_count'):raise RuntimeError('New connection arrived; deployment deferred')
+        ensure_idle()
         command('systemctl','stop','guanpeng-guild.service');stopped=True
         for item in plan:
             relative=Path(item['path']);destination=production/relative
@@ -81,11 +104,16 @@ def main():
             except OSError:pass
             time.sleep(.5)
         if not online or not online.get('online'):raise RuntimeError('Updated server did not become ready')
-        for path in ('/shots/update-4.1.png','/shots/dlc-guide-4.1.png','/assets/hero/bell_revised_black.png'):
+        for path in ('/shots/update-4.2.png','/shots/dlc-guide-4.1.png','/assets/hero/bell_revised_black.png'):
             with urllib.request.urlopen('http://127.0.0.1:6680'+path,timeout=10) as response:
                 if response.status!=200 or not response.read(8):raise RuntimeError('Missing updated web asset')
         probe="""import guild_engine,guild_network,json,time
-from guild_content import HEROES
+from guild_content import HEROES,CARDS
+assert CARDS[99]['price']==9, 'Cursed fox seal must cost 9 gold'
+army_check=guild_engine.Engine([dict(id=0,name='RuleProbe',hero='bai_white')],options=dict(solo=True,setup_draft=False),seed=18)
+army_player=army_check._player(0);army_player.update(played=[20,6,6],card_states=[])
+army_points=army_check._points(army_player,CARDS[20])
+assert army_points==6, 'Necromancer army must award 2 points per printed strength-payment card'
 c=guild_network.Client('127.0.0.1',6677,'ReleaseProbe',lobby=True).connect()
 seen=set()
 try:
@@ -98,7 +126,7 @@ try:
   time.sleep(.01)
  assert {'server_welcome','directory'}<=seen, 'Missing application welcome or directory'
 finally:c.close()
-print(json.dumps({'module':guild_engine.__file__,'version':guild_network.CLIENT_VERSION,'heroes':len(HEROES),'handshake_complete':True,'directory_received':True}))
+print(json.dumps({'module':guild_engine.__file__,'version':guild_network.CLIENT_VERSION,'heroes':len(HEROES),'card99_price':CARDS[99]['price'],'card20_three_symbols_points':army_points,'handshake_complete':True,'directory_received':True}))
 """
         result=json.loads(subprocess.run([sys.executable,'-c',probe],cwd=production,capture_output=True,text=True,check=True,timeout=20).stdout)
         if result['version']!='4.1.0' or Path(result['module']).parent!=production:raise RuntimeError('Production module identity mismatch')
