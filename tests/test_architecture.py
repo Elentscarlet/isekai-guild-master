@@ -21,6 +21,23 @@ def make_engine(*heroes, **options):
 
 
 class MatchRules(unittest.TestCase):
+    def test_necromancer_army_scores_printed_strength_payment_icons(self):
+        engine = make_engine('bai_white', solo=True)
+        player = engine.state['players'][0]
+        player.update(gold=200, strength=0, hand=[6, 20, 81, 5, 214])
+        for card_id in (6, 20, 81, 5):
+            engine._play(player, dict(type='play', card=card_id, strength=0))
+            engine._drain_effects()
+
+        army = engine.cards[20]
+        self.assertEqual(army['point'], 0)
+        self.assertEqual(engine._points(player, army), 6)
+        engine._flip(engine._source(player, player['played'].index(81)))
+        self.assertEqual(engine._points(player, army), 4)
+        engine._finish()
+        self.assertEqual(engine.state['phase'], 'finished')
+        self.assertEqual(engine.score_breakdown(0)['cards'], 6)
+
     def test_creating_and_restoring_mode_prints_keeps_other_matches_isolated(self):
         card = next(key for key, data in CARDS.items()
                     if data.get('printed_code') == 'D-002' and not data.get('archived_print'))

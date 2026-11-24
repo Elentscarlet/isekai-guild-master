@@ -30,6 +30,10 @@ window/stretch/mode="canvas_items"
 window/size/min_width=1120
 window/size/min_height=700
 
+[editor]
+
+export/convert_text_resources_to_binary=false
+
 [editor_overrides]
 
 text_editor/behavior/indent/type=0

@@ -168,7 +168,10 @@ class HostedRoom(RoomServer):
                     character = HEROES[selectable_hero(message.get('hero'))]['character']
                 if character not in CHARACTERS or character not in self.offers.get(peer.player_id, []):
                     raise ValueError('只能从本次抽到的候选角色中选择。')
-                self._players[peer.player_id].update(hero=offer_hero([character]), hero_character=character, hero_chosen=True)
+                player = self._players[peer.player_id]
+                if player.get('hero_chosen') and player.get('hero_character') != character:
+                    raise ValueError('本局角色已经锁定。')
+                player.update(hero=offer_hero([character]), hero_character=character, hero_chosen=True)
                 if all(p.get('hero_chosen') for p in self._players.values()):
                     self._finish_draft()
             elif kind=='ready' and self.drafting:

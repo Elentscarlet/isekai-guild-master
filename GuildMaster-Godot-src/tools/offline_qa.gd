@@ -74,12 +74,21 @@ func run():
 		check(false, "character offers are present")
 		quit(1);return
 	await frames(8)
-	var candidate = ui.content.find_child("CandidatePortrait", true, false)
-	check(candidate != null and candidate.stretch_mode == TextureRect.STRETCH_KEEP_ASPECT_CENTERED, "character selection shows the full portrait")
-	ui.session.send({"type": "set_hero", "character": offers[0]})
+	var candidate = ui.content.find_child("CandidatePortrait0", true, false) as GuildPortrait
+	check(candidate != null and candidate.texture != null, "character selection displays the portrait")
+	if candidate == null:
+		quit(1);return
+	await click(candidate)
+	check(ui.session.game.is_empty() and ui.session.selected_character == offers[0], "clicking a portrait selects it before confirming")
+	var confirm_character = ui.content.find_child("CandidateConfirm", true, false) as Button
+	check(confirm_character != null and not confirm_character.disabled, "a selected portrait can be confirmed")
+	if confirm_character == null:
+		quit(1);return
+	await click(confirm_character)
 	check(await wait_for(func(): return not ui.session.game.is_empty()), "offline game starts")
 	if ui.session.game.is_empty():
 		quit(1);return
+	check(ui.session.me().get("hero_character") == offers[0], "confirm locks the selected portrait")
 	await frames(8)
 	var phase = str(ui.session.game.get("phase", ""))
 	check(phase in ["draft", "research"], "game starts in draft or research (%s)" % phase)

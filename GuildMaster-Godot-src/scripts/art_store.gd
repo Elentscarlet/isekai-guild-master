@@ -80,6 +80,18 @@ func natural_size(source: String) -> Vector2:
 
 func card(number) -> Dictionary: return catalog.cards.get(str(int(number)), {})
 
+func character_faces(character: String, solo: bool) -> Dictionary:
+	var faces := {}
+	var variants: Dictionary = catalog.characters.get(character, {}).get("variants", {})
+	for face in ["white", "black"]:
+		var key = str(variants.get(face, ""))
+		var hero: Dictionary = catalog.heroes.get(key, {})
+		if not hero.get("available", false):
+			continue
+		var replacement = str(hero.get("solo_replacement", ""))
+		faces[face] = replacement if solo and catalog.heroes.has(replacement) else key
+	return faces
+
 func portrait_source(hero_key: String) -> String:
 	return str(portrait_sources.get(hero_key, ""))
 

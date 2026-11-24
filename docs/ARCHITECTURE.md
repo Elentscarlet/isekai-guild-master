@@ -39,7 +39,8 @@ GuildMaster-Godot-src/
 │   └── styles/*.tres                按钮与面板样式（编辑器预览用）
 ├── scripts/
 │   ├── ui_kit.gd                    控件工厂：label/button/panel/card/scroll…
-│   ├── preview.gd                   按住 Alt 的放大预览
+│   ├── preview.gd                   对局卡牌悬停预览与 Alt 大图
+│   ├── music.gd / music_panel.gd     本地曲目、音乐音轨与常驻音乐栏
 │   ├── toaster.gd                   提示条与终局公告
 │   ├── preferences.gd               preferences.cfg 的键名、默认值与迁移
 │   ├── theme_builder.gd             主题（字体、按钮、滚动条样式）
@@ -83,7 +84,7 @@ GuildMaster-Godot-src/
 
 ### 开局顺序
 
-1. 房间准备页：每人从自己的候选里选**人物**，不区分白面/黑面。
+1. 房间准备页：展示本席全部候选人物的完整肖像。点选肖像后，可查看 1–3 级卡面、切换黑白面预览，再确认锁定人物。黑白面留到情报收集后选择。
 2. 房主开始：服务端按人物创建引擎；`setup_draft` 开启且 2 人以上时先进入
    `phase = "draft"` 做开局轮抽。
 3. 轮抽结束进入 `phase = "research"`（情报收集）。此时黑白面未定，只按两版中

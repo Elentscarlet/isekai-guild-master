@@ -19,6 +19,8 @@ dist/
 GuildMaster-Godot-src/art/
 GuildMaster-Godot-src/rules/
 GuildMaster-Godot-src/runtime/
+GuildMaster-Godot-src/music/*
+!GuildMaster-Godot-src/music/.gdignore
 guild-server/replays/
 guild-server/downloads/
 

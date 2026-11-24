@@ -34,6 +34,13 @@
 python3 server.py --host 0.0.0.0 --port 6677 --web-port 6767 --site-port 6680
 ```
 
+## 本地音乐
+
+游戏右下角的音乐栏可以随时播放、暂停、选曲、切歌和调节音量。用「文件夹」放入 MP3、OGG Vorbis、WAV 或 FLAC，再点「刷新」。启动时若已有曲目，会自动播放并按顺序连播。默认音乐音量为 33.75%，手动调整后会保存。
+
+导出客户端读取 `GuildMaster.exe` 同目录的 `music/`。从 Godot 编辑器运行时，读取 `GuildMaster-Godot-src/music/`。
+FLAC 通过 Windows 的媒体组件在后台解码，读取完成后即以 16 位 PCM 播放，并保留原采样率。
+
 ## 从源代码运行
 
 客户端源码在 `GuildMaster-Godot-src/`，使用 Godot 4.7.2。将 `GuildMaster-Godot/` 下 `art/`、`rules/`、`runtime/` 复制至源码目录，可按 F5 运行。规则源文件以 `guild-server/` 为准，`python tools/prepare_update.py` 同步到离线客户端。目录职责与「想改哪里」见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。

@@ -75,6 +75,32 @@ class WebSocketIntegration(unittest.TestCase):
         client.send(dict(type='leave_room'))
         self.assertEqual(client.wait('left_room')['type'], 'left_room')
 
+    def test_character_stays_locked_while_another_player_is_choosing(self):
+        host = self.client()
+        guest = self.client()
+        for client, name in ((host, 'Host'), (guest, 'Guest')):
+            client.send(dict(type='hello', name=name, client_version='4.1.0', protocol=3))
+            client.wait('server_welcome')
+        host.send(dict(type='create_room', room_name='CharacterLock', max_players=2))
+        room_id = host.wait('welcome')['room_id']
+        guest.send(dict(type='enter_room', room_id=room_id, role='player'))
+        guest.wait('welcome')
+        for client in (host, guest):
+            client.send(dict(type='ready', ready=True))
+        self.wait_snapshot(host, lambda s: len(s['room']['players']) == 2 and
+                           all(p['ready'] for p in s['room']['players']))
+        host.send(dict(type='start'))
+        room = self.wait_snapshot(host, lambda s: s['room']['drafting'])['room']
+        first, other = room['hero_offers']
+        host.send(dict(type='set_hero', character=first))
+        self.wait_snapshot(host, lambda s: s['room']['players'][0]['hero_chosen'])
+        host.send(dict(type='set_hero', character=other))
+        self.assertEqual(host.wait('error')['message'], '本局角色已经锁定。')
+        guest_room = self.wait_snapshot(guest, lambda s: s['room']['drafting'])['room']
+        guest.send(dict(type='set_hero', character=guest_room['hero_offers'][0]))
+        game = self.wait_snapshot(host, lambda s: bool(s.get('game')))['game']
+        self.assertEqual(game['players'][0]['hero_character'], first)
+
     def test_fragmented_application_hello_and_ping(self):
         client = self.client()
         data = json.dumps(dict(type='hello', name='Fragments', client_version='4.1.0', protocol=3)).encode()

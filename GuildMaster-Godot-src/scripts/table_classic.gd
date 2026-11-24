@@ -181,7 +181,7 @@ static func hand(ui, parent: Control, me: Dictionary) -> void:
 			child.queue_free()
 	for i in range(shown.size()):
 		var number = int(shown[i])
-		GuildTableWidgets.at(parent, ui.card(ui.store.card_face(ui.store.card(number)), Vector2(100, 140), func(): ui.dialogs.card_detail(number, true), 5.0), Rect2(190 + i * 116, 18, 100, 140), "HandCard" + str(i))
+		GuildTableWidgets.at(parent, ui.card(ui.store.card_face(ui.store.card(number)), Vector2(100, 140), func(): ui.dialogs.card_detail(number, true)), Rect2(190 + i * 116, 18, 100, 140), "HandCard" + str(i))
 
 static func final_status(ui, layout: Control, game: Dictionary, phase: String) -> void:
 	var frame = layout.get_node("FinalStatus") as Panel

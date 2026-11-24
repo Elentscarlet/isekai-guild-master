@@ -5,7 +5,7 @@ extends Control
 #
 # 具体分工：
 #   ui_kit.gd      控件工厂（label/button/panel/card…）
-#   preview.gd     按住 Alt 的放大预览
+#   preview.gd     悬停预览与 Alt 大图
 #   toaster.gd     提示条与终局公告
 #   preferences.gd preferences.cfg 的键名与读写
 #   screens.gd     实例化 home/room 场景
@@ -28,6 +28,8 @@ var voice: GuildVoice
 var dialogs: GuildOverlayDialogs
 var backdrop: GuildBackdrop
 var sound: AudioStreamPlayer
+var music: GuildMusic
+var music_bar: GuildMusicPanel
 var content: Control
 var table_screen: GuildTableScreen
 var modal_layer: Control
@@ -42,8 +44,6 @@ var selection_scroll_states = {}
 var research_packet = ""
 var hand_page = 0
 var selected_tile = ""
-var browsing_character = ""
-var candidate_variant = "white"
 var home_portrait = ""
 var choice_states = {}
 var player_clocks = []
@@ -112,11 +112,15 @@ func _ready():
 	voice = GuildVoice.new()
 	add_child(voice)
 	voice.setup(self)
+	music_bar = GuildMusicPanel.new()
+	music_bar.name = "MusicBar"
+	add_child(music_bar)
+	music_bar.setup(self)
 
 	session.changed.connect( func(): dirty = true)
 	session.notice.connect(show_toast)
 	session.connected.connect( func(): show_toast("公会连接成功。" if session.local_mode else "服务器已确认连接。"))
-	resized.connect(preview.place)
+	resized.connect(preview.refresh)
 	resized.connect(toaster.reposition)
 	_render()
 
@@ -185,8 +189,8 @@ func scroll(child: Control, dimensions: Vector2 = Vector2.ZERO) -> ScrollContain
 func preserve_selection_scroll(scroller: ScrollContainer, context: String, packet: String) -> void:
 	kit.preserve_selection_scroll(scroller, context, packet)
 
-func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Callable = Callable(), magnification: float = 2.5) -> GuildCardArt:
-	return kit.card(source, dimensions, callback, magnification)
+func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Callable = Callable()) -> GuildCardArt:
+	return kit.card(source, dimensions, callback)
 
 # ---------------------------------------------------------------- 偏好与外观
 
@@ -207,6 +211,8 @@ func apply_language(persist: bool = false):
 	if persist:
 		save_preferences()
 	_build_theme()
+	if is_instance_valid(music_bar):
+		music_bar.apply_language()
 	DisplayServer.window_set_title(GuildLang.t("异世界公会长 · Godot"))
 
 func set_language(code: String):
@@ -236,6 +242,9 @@ func _setup_audio():
 	sound.bus = "SFX"
 	sound.max_polyphony = 4
 	add_child(sound)
+	music = GuildMusic.new()
+	add_child(music)
+	music.setup(float(prefs.music_volume))
 	_apply_audio()
 
 func _apply_audio():
@@ -244,6 +253,7 @@ func _apply_audio():
 	var index = AudioServer.get_bus_index("SFX")
 	AudioServer.set_bus_volume_db(index, linear_to_db(max(0.0001, float(prefs.sound_volume))))
 	AudioServer.set_bus_mute(index, not prefs.sounds)
+	music.set_volume(float(prefs.music_volume))
 
 func play_sound(kind: String = "click"):
 	if not prefs.sounds:
@@ -259,6 +269,8 @@ func stop_audio():
 		sound.stream = null
 	if is_instance_valid(voice):
 		voice.stop()
+	if is_instance_valid(music):
+		music.stop()
 
 # ---------------------------------------------------------------- 每帧状态
 
@@ -277,7 +289,7 @@ func _process(_delta):
 		dirty = false
 		var copy = session.game.duplicate(true)
 		copy.erase("clock")
-		var signature = JSON.stringify([session.room, copy, session.rooms, session.active, session.synchronized, session.directory, session.room_connected, session.role, session.player_id])
+		var signature = JSON.stringify([session.room, copy, session.rooms, session.active, session.synchronized, session.directory, session.room_connected, session.role, session.player_id, session.selected_character, session.pending_character])
 		if signature != last_signature:
 			last_signature = signature
 			_render()
@@ -307,6 +319,8 @@ func _input(event):
 func _render():
 	if is_instance_valid(voice):
 		voice.sync()
+	if modal_key == "candidate_details" and session.character_choice() != dialogs.previewed_character:
+		close_dialog(false)
 	if session.game.is_empty():
 		toaster.hide_final()
 		last_phase = ""

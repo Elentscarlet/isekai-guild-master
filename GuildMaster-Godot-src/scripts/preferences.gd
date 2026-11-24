@@ -13,6 +13,7 @@ const DEFAULTS := {
 	"port": 6677,
 	"sounds": true,
 	"sound_volume": 0.65,
+	"music_volume": 0.3375,
 	"voices": false,
 	"voice_volume": 0.85,
 	"voice_language": "ja",

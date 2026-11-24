@@ -181,7 +181,7 @@ func restore_selection_scroll(scroller: ScrollContainer, state: Dictionary) -> v
 	scroller.scroll_vertical = int(state.vertical)
 	scroller.get_v_scroll_bar().value_changed.connect( func(value): state.vertical = int(value))
 
-func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Callable = Callable(), magnification: float = 2.5) -> GuildCardArt:
+func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Callable = Callable()) -> GuildCardArt:
 	var art: GuildCardArt = GuildTileArt.new() if ui.store.is_tile(source) else GuildCardArt.new()
 	art.interactive = true
 	art.motion = ui.prefs.motion
@@ -189,9 +189,8 @@ func card(source: String, dimensions: Vector2 = Vector2(150, 208), callback: Cal
 		if callback.is_valid():
 			ui.play_sound("card")
 			callback.call()
-	art.on_hover = func(image):
-		ui.preview.hover(image, dimensions, magnification)
-	art.on_leave = func(image):
-		ui.preview.leave(image)
+	art.mouse_entered.connect(ui.preview.hover.bind(art))
+	art.mouse_exited.connect(ui.preview.leave.bind(art))
+	art.tree_exiting.connect(ui.preview.forget.bind(art))
 	art.configure(ui.store, source, dimensions)
 	return art

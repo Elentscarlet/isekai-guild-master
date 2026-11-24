@@ -604,6 +604,7 @@ def _stat_label(stat):
     if stat.startswith('tag:'):
         return TAG_NAMES.get(stat[4:], stat[4:]) + '标记'
     return {'extra_cost_cards':'已打出且有额外费用的正面事件', 'tiles': '持有迷宫板块', 'pieces': '持有迷宫板块',
+            'strength_payment_cards': '张带战力支付图标的正面事件卡',
             'controlled': '控制区域', 'played': '已打出事件卡', 'cards': '已打出事件卡',
             'available': '未使用冒险者', 'bases': '据点', 'holes':'深渊洞穴', 'holes_or_variable':'洞穴或变动板块',
             'untagged':'无标记正面事件', 'permanent_cards':'有永久效果的事件', 'minimum_tags':'三种基础标记的最少数量', 'maximum_tags':'三种基础标记的最多数量',

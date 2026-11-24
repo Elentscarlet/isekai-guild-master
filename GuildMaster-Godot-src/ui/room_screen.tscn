@@ -442,3 +442,41 @@ theme_override_styles/pressed = ExtResource("style_banner_pressed")
 theme_override_styles/hover = ExtResource("style_banner_hover")
 theme_override_styles/disabled = ExtResource("style_banner_disabled")
 text = "房间聊天"
+
+[node name="CandidateName" type="Label" parent="RightPanel" unique_id=192917237]
+visible = false
+layout_mode = 0
+offset_left = 30.0
+offset_top = 168.0
+offset_right = 616.0
+offset_bottom = 216.0
+theme_override_colors/font_color = Color(0.529, 0.267, 0.286, 1)
+theme_override_fonts/font = ExtResource("3_body")
+theme_override_font_sizes/font_size = 25
+text = "已选中"
+
+[node name="CandidateConfirm" type="Button" parent="RightPanel" unique_id=1368946461]
+visible = false
+layout_mode = 0
+offset_left = 30.0
+offset_top = 228.0
+offset_right = 310.0
+offset_bottom = 290.0
+theme_override_styles/normal = ExtResource("style_banner_primary")
+theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
+theme_override_styles/hover = ExtResource("style_banner_primary_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "确认角色"
+
+[node name="CandidateDetails" type="Button" parent="RightPanel" unique_id=33319157]
+visible = false
+layout_mode = 0
+offset_left = 330.0
+offset_top = 228.0
+offset_right = 616.0
+offset_bottom = 290.0
+theme_override_styles/normal = ExtResource("style_banner_normal")
+theme_override_styles/pressed = ExtResource("style_banner_pressed")
+theme_override_styles/hover = ExtResource("style_banner_hover")
+theme_override_styles/disabled = ExtResource("style_banner_disabled")
+text = "查看卡牌信息"

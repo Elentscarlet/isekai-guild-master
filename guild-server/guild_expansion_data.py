@@ -142,7 +142,9 @@ E(15,"异世界杂货铺",15,tags=["gold","scrap"],requirements={"pieces":1},gol
 E(16,"异世界时尚表演",18,requirements={"tags":{"scrap":2}},gold_pro=5,affection=1,civ=1,point=1)
 E(18,"八卦欧巴桑协会",5,tags=["civ"],gold_pro=2,steps=[{"op":"discard_draw","max":5,"optional":True}])
 E(19,"最前线魔物研究所",13,costs={"pot":1},pot_pro=1,civ=1,steps=[{"op":"build","free":True}])
-E(20,"死灵王的大军势",30,can_trans=True,pot=3,point=2,steps=[{"op":"all","effect":{"pot":1}}])
+E(20,"死灵王的大军势",30,can_trans=True,pot=3,point=0,
+  scoring=[{"stat":"strength_payment_cards","per":1,"point":2}],
+  steps=[{"op":"all","effect":{"pot":1}}])
 E(23,"悬赏怪物通缉令",9,tags=["gold"],gold_pro=2,pot=1,steps=[{"op":"reveal","count":2}])
 E(25,"新型马车开发",16,tags=["civ","gold"],requirements={"tags":{"scrap":2}},civ=1,point=2,
   scaled=[{"resource":"gold","stat":"tag:civ","multiplier":2},{"resource":"gold","stat":"tag:gold","multiplier":2}])

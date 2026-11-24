@@ -22,7 +22,7 @@ grow_vertical = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 24
+theme_override_constants/margin_bottom = 42
 
 [node name="Root" type="VBoxContainer" parent="Margin" unique_id=1729179561]
 layout_mode = 2

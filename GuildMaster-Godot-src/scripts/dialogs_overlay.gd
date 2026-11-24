@@ -5,6 +5,7 @@ var card_state = {"double": false, "strength": 0, "pieces": []}
 var develop_state = {"slots": [], "festival": false}
 var potion_tab = ""
 var royal_strength = 0
+var previewed_character := ""
 
 # ----------------------------------------------------------------
 # 基础：遮罩、外框、内容区、菜单容器
@@ -570,7 +571,7 @@ func settings():
 		motion.add_child(ui.button(pair[0], func():
 			ui.prefs.motion = pair[1];ui.save_preferences()
 			ui.close_dialog(false);ui.dialogs.settings(), true, active))
-	body.add_child(wrapped("将鼠标移到卡牌上，按住 Alt 查看大图；松开后收起。", 23))
+	body.add_child(wrapped("对局中悬停卡牌可预览；按住 Alt 查看更大的卡面。", 23))
 	frame_settings(body)
 	body.add_child(ui.label("操作提示", 26)); var hints = HBoxContainer.new();body.add_child(hints)
 	for pair in [["显示", true], ["收起", false]]:
@@ -615,7 +616,7 @@ func help():
 	var body = menu("游玩指南", "help")
 	body.add_child(wrapped("经营公会、收集情报、探索迷宫、发展好感度、完成王权。轮到自己时进行行动；关闭公会后等待下一季。", 27))
 	body.add_child(wrapped("先点击地图选择板块，再点击「派遣冒险者」。翻开后按服务器给出的费用支付。售卖卡牌不消耗行动，闭店后仍可操作。", 24))
-	body.add_child(wrapped("Alt 放大卡片；Esc 打开设置。联机与离线使用相同的原版规则。", 24))
+	body.add_child(wrapped("悬停卡牌可预览，按住 Alt 可进一步放大。按 Esc 打开设置。联机与离线使用相同的原版规则。", 24))
 	body.add_child(ui.label("扩充规则", 32, ui.GOLD))
 	body.add_child(wrapped("开局时可勾选下列扩充，本局规则随之改变。下面依扩充分别说明。", 21))
 	for section in expansion_guide():
@@ -688,6 +689,37 @@ func confirm_kick(player: Dictionary):
 	confirm_dialog("稍作确认", "将%s移出房间？" % player.name, Vector2(840, 400), func(): ui.session.send({"type": "kick", "target_id": int(player.id)});ui.close_dialog())
 
 func hero_detail(player: Dictionary, rank: int = 0): _hero_detail(player, rank)
+
+func candidate_details(character: String, face: String = "") -> void:
+	if character != ui.session.character_choice():
+		return
+	var solo = bool(ui.session.room.get("options", {}).get("solo", false))
+	var faces: Dictionary = ui.store.character_faces(character, solo)
+	if faces.is_empty():
+		return
+	if not faces.has(face):
+		face = "white" if faces.has("white") else "black"
+	var hero: Dictionary = ui.store.catalog.heroes[faces[face]]
+	var identity: Dictionary = ui.store.catalog.characters.get(character, {})
+	var name: String = identity.get("pool_name", identity.get("name", character))
+	var white = face == "white"
+	var side = "白面" if white else "黑面"
+	var other = "black" if white else "white"
+	var can_switch = faces.has(other)
+	var frame = overlay(name + " · " + side, Vector2(1536, 578), "candidate_details")
+	previewed_character = character
+	GuildTableWidgets.caption(ui, frame, "情报收集后决定本局的黑白面。", Rect2(76, 101, 880, 44), 22, ui.MUTED)
+	var switch_text = ("切换黑面" if white else "切换白面") if can_switch else "仅有" + side
+	GuildTableWidgets.action(ui, frame, switch_text, Rect2(1124, 98, 334, 48),
+		func(): candidate_details(character, other), can_switch, "CandidateFaceSwitch")
+	var sources: Array = hero.get("source", [])
+	for rank in range(3):
+		var x = 62 + rank * 478
+		var title = GuildTableWidgets.caption(ui, frame, "%d 级" % (rank + 1), Rect2(x, 159, 456, 36), 24, ui.GOLD)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		if rank < sources.size():
+			var rect = Rect2(x, 198, 456, 310)
+			GuildTableWidgets.at(frame, ui.card(sources[rank], rect.size), rect, "CandidateRank%d" % (rank + 1))
 
 func _hero_detail(player: Dictionary, rank: int):
 	var hero = ui.store.catalog.heroes.get(player.get("hero", ""), {}); var frame = overlay(hero.get("name", "") + " / " + hero.get("subtitle", ""), Vector2(1160, 870), "hero")

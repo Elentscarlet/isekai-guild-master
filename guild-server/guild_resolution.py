@@ -61,6 +61,8 @@ class ResolutionRules:
     def _stat(self, p, stat):
         if stat == 'extra_cost_cards':
             return sum(bool(c.get('costs') or c.get('consume_piece')) for _, c, _ in self._active_cards(p))
+        if stat == 'strength_payment_cards':
+            return sum(bool(card.get('can_trans')) for _, card, _ in self._active_cards(p))
         if stat in ('holes', 'holes_or_variable', 'strong_tiles', 'boss_tiles'):
             tiles = p['tiles'] + [t for m in self._card_states(p) if not m['face_down'] for t in m['tiles']]
             if stat == 'holes':

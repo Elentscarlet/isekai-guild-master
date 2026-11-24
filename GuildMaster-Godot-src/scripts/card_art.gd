@@ -11,8 +11,6 @@ var highlight = false:
 		highlight = value;queue_redraw()
 var interactive = false
 var on_click: Callable
-var on_hover: Callable
-var on_leave: Callable
 var motion = true
 var tween: Tween
 
@@ -89,11 +87,9 @@ func _hover():
 		if tween: tween.kill()
 		tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.tween_property(self, "scale", Vector2(1.075, 1.075), 0.16)
-	if on_hover.is_valid(): on_hover.call(source)
 
 func _leave():
 	z_index = 0
 	if tween: tween.kill()
 	if motion: create_tween().tween_property(self, "scale", Vector2.ONE, 0.12)
 	else: scale = Vector2.ONE
-	if on_leave.is_valid(): on_leave.call(source)

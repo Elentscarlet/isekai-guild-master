@@ -38,6 +38,8 @@ var reconnect_room = {}
 var synchronized = false
 var room_connected = false
 var rules_catalog = {}
+var selected_character := ""
+var pending_character := ""
 
 static func normalize(value):
 
@@ -94,6 +96,8 @@ func _disconnect_transport():
 	peer.disconnect_from_host()
 	if websocket != null: websocket.close();websocket = null
 	websocket_mode = false
+	selected_character = ""
+	pending_character = ""
 
 func _try_fallback() -> bool:
 	if local_mode or handshake_complete or fallback_attempted or port != 6677 or address.to_lower() not in ["guanpeng666.cn", "154.36.164.109"]: return false
@@ -208,6 +212,40 @@ func action(kind: String, args: Dictionary = {}):
 	var command = args.duplicate(true);command["type"] = kind
 	send({"type": "action", "action": command})
 
+func character_selector() -> Dictionary:
+	if role != "player" or not room.get("drafting", false):
+		return {}
+	var seat = int(room.get("selecting_seat", player_id)) if local_mode else player_id
+	for player in room.get("players", []):
+		if int(player.id) == seat:
+			return player
+	return {}
+
+func can_select_character() -> bool:
+	var seat = character_selector()
+	return active and synchronized and room_connected and pending_character.is_empty() and not seat.is_empty() and not seat.get("hero_chosen", false)
+
+func select_character(character: String) -> void:
+	if selected_character == character or not can_select_character() or not room.get("hero_offers", []).has(character):
+		return
+	selected_character = character
+	changed.emit()
+
+func character_choice() -> String:
+	var seat = character_selector()
+	if seat.is_empty():
+		return ""
+	if seat.get("hero_chosen", false):
+		return str(seat.get("hero_character", ""))
+	return selected_character
+
+func confirm_character() -> void:
+	if not can_select_character() or not room.get("hero_offers", []).has(selected_character):
+		return
+	pending_character = selected_character
+	send({"type": "set_hero", "character": pending_character})
+	changed.emit()
+
 func leave_room():
 	if local_mode or (room.is_empty() and game.is_empty()):
 		close()
@@ -251,9 +289,18 @@ func _receive(message: Dictionary):
 			game = message.get("game") if message.get("game") is Dictionary else {}
 			if local_mode and not game.is_empty() and game.get("view_player") != null:
 				player_id = int(game.view_player)
-		"left_room": room = {};game = {};player_id = -1;role = "browser";room_id = "";resume_token = "";room_connected = false;directory = true
+			if not selected_character.is_empty():
+				var seat = character_selector()
+				if seat.is_empty() or seat.get("hero_chosen", false) or not room.get("hero_offers", []).has(selected_character):
+					selected_character = ""
+					pending_character = ""
+		"left_room":
+			selected_character = ""
+			pending_character = ""
+			room = {};game = {};player_id = -1;role = "browser";room_id = "";resume_token = "";room_connected = false;directory = true
 		"error":
 			if not handshake_complete: _fail(message.get("message", "服务器拒绝连接。"));return
+			pending_character = ""
 			notice.emit(message.get("message", ""))
 		"notice", "chat": notice.emit(message.get("message", ""))
 	changed.emit()
