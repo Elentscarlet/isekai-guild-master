@@ -1,6 +1,20 @@
 class_name GuildArtStore
 extends RefCounted
 
+const BASE_ATLAS = preload("res://ui/new_base_atlas.png")
+const BASE_CENTERS := [220, 591, 960, 1328, 1700]
+const BASE_TOP := 169
+const BASE_SIZE := Vector2i(372, 432)
+# The five badges share a gilded silhouette over an opaque paper backdrop.
+const BASE_OUTLINE := [
+	Vector2(169, 0), Vector2(185, 15), Vector2(195, 38), Vector2(211, 54),
+	Vector2(228, 67), Vector2(237, 94), Vector2(251, 109), Vector2(274, 128),
+	Vector2(302, 147), Vector2(330, 161), Vector2(359, 171), Vector2(389, 176),
+	Vector2(406, 181), Vector2(429, 176), Vector2(455, 169), Vector2(484, 156),
+	Vector2(510, 139), Vector2(536, 116), Vector2(559, 90), Vector2(575, 64),
+	Vector2(586, 33), Vector2(593, 7), Vector2(601, 0),
+]
+
 var catalog = {}
 var portrait_sources = {}
 var textures = {}
@@ -110,18 +124,41 @@ func portrait_bust(hero_key: String, affection: int = 0) -> Texture2D:
 	return remember(key, result)
 
 func adventurer_token(player_id: int, is_base: bool = false) -> Texture2D:
-	var key = ("base:" if is_base else "adventurer:") + str(posmod(player_id, 5))
+	var color_index := posmod(player_id, 5)
+	var key = ("base:" if is_base else "adventurer:") + str(color_index)
 	if textures.has(key): return textures[key]
-	var source = "images/ui/base_atlas.png" if is_base else "images/ui/" + ["red", "yellow", "blue", "green", "white"][posmod(player_id, 5)] + ".png"
+	if is_base:
+		return remember(key, _base_token(color_index))
+	var source = "images/ui/" + ["red", "yellow", "blue", "green", "white"][color_index] + ".png"
 	var base = texture(source)
 	if base == null: return null
 	var bitmap = base.get_image()
-	if is_base: bitmap = bitmap.get_region(Rect2i([16, 445, 875, 1304, 1733][posmod(player_id, 5)], 144, 420, 420))
 	bitmap.convert(Image.FORMAT_RGBA8);bitmap.resize(96, 96, Image.INTERPOLATE_LANCZOS)
 	for y in range(96):
 		for x in range(96):
 			if Vector2(x + 0.5, y + 0.5).distance_to(Vector2(48, 48)) > 47: bitmap.set_pixel(x, y, Color.TRANSPARENT)
 	return remember(key, ImageTexture.create_from_image(bitmap))
+
+func _base_token(color_index: int) -> Texture2D:
+	var region := Rect2i(Vector2i(BASE_CENTERS[color_index] - BASE_SIZE.x / 2, BASE_TOP), BASE_SIZE)
+	var badge := BASE_ATLAS.get_image().get_region(region)
+	var height := 96
+	var width := roundi(float(BASE_SIZE.x) / BASE_SIZE.y * height)
+	badge.convert(Image.FORMAT_RGBA8)
+	badge.resize(width, height, Image.INTERPOLATE_LANCZOS)
+	var segment := 0
+	for y in range(height):
+		var source_y := BASE_TOP + (y + 0.5) * BASE_SIZE.y / height
+		while source_y > BASE_OUTLINE[segment + 1].x:
+			segment += 1
+		var upper: Vector2 = BASE_OUTLINE[segment]
+		var lower: Vector2 = BASE_OUTLINE[segment + 1]
+		var half_width := lerpf(upper.y, lower.y, inverse_lerp(upper.x, lower.x, source_y)) * width / BASE_SIZE.x
+		for x in range(width):
+			var pixel := badge.get_pixel(x, y)
+			pixel.a = clampf(half_width - absf(x + 0.5 - width / 2.0), 0.0, 1.0)
+			badge.set_pixel(x, y, pixel)
+	return ImageTexture.create_from_image(badge.get_region(badge.get_used_rect()))
 
 func tile_texture(source: String, resolution: int = 160) -> Texture2D:
 	var key = source + "@" + str(resolution)

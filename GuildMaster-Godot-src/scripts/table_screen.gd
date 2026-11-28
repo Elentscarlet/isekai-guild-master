@@ -3,13 +3,12 @@ extends GuildScreen
 
 # 对局桌面外壳：顶栏、左侧座位列、布局槽与阶段槽都在 table_screen.tscn 里摆好。
 # 这里只填状态文字、显隐和回调，并按阶段挂入：
-#   table_layout_classic.tscn / table_layout_dashboard.tscn  行动与最终行动
+#   table_layout_classic.tscn                                行动与最终行动
 #   table_face.tscn                                          选择黑白面
 #   table_selection.tscn                                     轮抽 / 情报收集
 #   table_results.tscn                                       终局结算
 
 const CLASSIC_LAYOUT = preload("res://ui/table_layout_classic.tscn")
-const DASHBOARD_LAYOUT = preload("res://ui/table_layout_dashboard.tscn")
 const FACE_SCENE = preload("res://ui/table_face.tscn")
 const SELECTION_SCENE = preload("res://ui/table_selection.tscn")
 const RESULTS_SCENE = preload("res://ui/table_results.tscn")
@@ -32,16 +31,19 @@ func refresh() -> void:
 	me = ui.session.me()
 	phase = str(game.get("phase", ""))
 	ui.player_clocks = []
-	var scene = DASHBOARD_LAYOUT if ui.prefs.get("layout", "classic") == "dashboard" else CLASSIC_LAYOUT
+	var scene = CLASSIC_LAYOUT
 	if phase == "finished":
 		scene = RESULTS_SCENE
 	elif phase == "face":
 		scene = FACE_SCENE
 	elif (phase == "draft" or (phase == "research" and not me.get("researched", false))) and not me.is_empty():
 		scene = SELECTION_SCENE
-	var layout = scene == CLASSIC_LAYOUT or scene == DASHBOARD_LAYOUT
-	$Header.visible = scene != DASHBOARD_LAYOUT
-	$PlayerSeats.visible = scene != DASHBOARD_LAYOUT
+	var layout = scene == CLASSIC_LAYOUT
+	$PlayerSeats.position.x = 12.0 if scene == RESULTS_SCENE else 220.0
+	$ReputationBoard.visible = scene != RESULTS_SCENE
+	if $ReputationBoard.visible:
+		$ReputationBoard.position.y = 116.0
+		$ReputationBoard.set_players(game.get("players", []), ui.store)
 	$LayoutSlot.visible = layout
 	$PhaseSlot.visible = not layout
 	var locale: String = ui.prefs.get("language", "zh_CN")
@@ -50,9 +52,8 @@ func refresh() -> void:
 		GuildTableWidgets.reset_scene_fonts($Header)
 		GuildTableWidgets.reset_scene_fonts($PlayerSeats)
 		apply_language()
-	if $Header.visible:
-		_bind_header()
-		_bind_seats()
+	_bind_header()
+	_bind_seats()
 	if active_scene != scene or not layout:
 		if is_instance_valid(active_view):
 			active_view.get_parent().remove_child(active_view)
@@ -63,9 +64,7 @@ func refresh() -> void:
 		var slot = $LayoutSlot if layout else $PhaseSlot
 		slot.add_child(active_view)
 		GuildTableWidgets.reset_scene_fonts(active_view)
-	if scene == DASHBOARD_LAYOUT:
-		GuildTableDashboard.fill(ui, self, active_view)
-	elif scene == CLASSIC_LAYOUT:
+	if scene == CLASSIC_LAYOUT:
 		GuildTableClassic.fill(ui, self, active_view)
 	else:
 		active_view.call("bind", ui, self)

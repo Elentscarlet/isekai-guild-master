@@ -18,7 +18,6 @@ const DEFAULTS := {
 	"voice_volume": 0.85,
 	"voice_language": "ja",
 	"voice_settings_version": 1,
-	"layout": "classic",
 	"motion": true,
 	"hints": true,
 	"frame_limit": 240,

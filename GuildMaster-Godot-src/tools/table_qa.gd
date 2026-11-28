@@ -148,7 +148,6 @@ func run():
 	if not output.is_empty():
 		DirAccess.make_dir_recursive_absolute(output)
 	ui = load("res://main.tscn").instantiate();root.add_child(ui);await frames()
-	ui.prefs.layout = "classic"
 	await check_character_selection()
 	var game = use_fixture(2)
 
@@ -202,7 +201,6 @@ func run():
 	ui.close_dialog(false);ui._render();await frames(6)
 	check(visible("Spectator"), "spectator face panel")
 	game.phase = "action"
-	ui.prefs.layout = "classic"
 	ui.close_dialog(false);ui._render();await frames(6)
 	check(ui.content.find_child("TableScreen", true, false) != null and visible("MapPanel"), "spectator action layout")
 
@@ -253,20 +251,10 @@ func run():
 	else:
 		check(false, "hand cards are available for the hover test")
 
-	# 总览布局复用同一套阶段场景。
-	ui.session.role = "player";ui.session.player_id = 0
-	game.phase = "face"
-	for player in game.players:
-		player.face_chosen = false
-	ui.prefs.layout = "dashboard"
-	ui.close_dialog(false);ui._render();await frames(6)
-	check(ui.content.find_child("TableScreen", true, false) != null and ui.content.find_child("DashboardMap", true, false) == null and visible("FacePhase"), "dashboard uses phase scene")
-
 	# 最终行动状态条。
 	game.phase = "final"
 	game.final_remaining = [2, 2]
 	game.turn = 0
-	ui.prefs.layout = "classic"
 	ui.close_dialog(false);ui._render();await frames(6)
 	check(visible("FinalStatus"), "final status row")
 

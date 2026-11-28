@@ -52,9 +52,9 @@ grow_vertical = 2
 
 [node name="MapPanel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 364.0
+offset_left = 528.0
 offset_top = 118.0
-offset_right = 1354.0
+offset_right = 1414.0
 offset_bottom = 812.0
 theme_override_styles/panel = ExtResource("1_main_frame")
 
@@ -84,7 +84,7 @@ theme_override_font_sizes/font_size = 18
 layout_mode = 0
 offset_left = 22.0
 offset_top = 107.0
-offset_right = 746.0
+offset_right = 670.0
 offset_bottom = 645.0
 script = ExtResource("4_hex_map")
 
@@ -123,9 +123,9 @@ theme_override_font_sizes/font_size = 17
 
 [node name="ActionReminders" type="Panel" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 107.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 227.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 
@@ -133,7 +133,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_1")
 layout_mode = 0
 offset_left = 10.0
 offset_top = 5.0
-offset_right = 184.0
+offset_right = 156.0
 offset_bottom = 25.0
 text = "行动提醒"
 theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
@@ -144,15 +144,15 @@ theme_override_font_sizes/font_size = 15
 layout_mode = 0
 offset_left = 10.0
 offset_top = 27.0
-offset_right = 184.0
+offset_right = 156.0
 offset_bottom = 107.0
 theme_override_constants/separation = 2
 
 [node name="AffectionTitle" type="Label" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 258.0
-offset_right = 970.0
+offset_right = 866.0
 offset_bottom = 282.0
 text = "好感度"
 theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
@@ -161,9 +161,9 @@ theme_override_font_sizes/font_size = 22
 
 [node name="AffectionHearts" type="Panel" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 286.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 326.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_2")
 
@@ -241,9 +241,9 @@ texture = ExtResource("5_affection")
 
 [node name="PotionsTitle" type="Label" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 330.0
-offset_right = 970.0
+offset_right = 866.0
 offset_bottom = 357.0
 text = "秘药行动"
 theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
@@ -252,9 +252,9 @@ theme_override_font_sizes/font_size = 22
 
 [node name="Potion_gold" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 360.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 408.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -337,9 +337,9 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Potion_strength" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 412.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 460.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -422,9 +422,9 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Potion_knowledge" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 464.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 512.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -507,9 +507,9 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Potion_build" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 516.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 564.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -592,9 +592,9 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Potion_free_card" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 568.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 616.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -677,9 +677,9 @@ theme_override_font_sizes/font_size = 14
 
 [node name="Potion_power" type="Button" parent="MapPanel"]
 layout_mode = 0
-offset_left = 768.0
+offset_left = 692.0
 offset_top = 620.0
-offset_right = 962.0
+offset_right = 858.0
 offset_bottom = 668.0
 theme_override_styles/normal = ExtResource("6_paper_button_normal")
 theme_override_styles/hover = ExtResource("7_paper_button_hover")
@@ -762,7 +762,7 @@ theme_override_font_sizes/font_size = 14
 
 [node name="CommandsPanel" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 1374.0
+offset_left = 1434.0
 offset_top = 116.0
 offset_right = 1908.0
 offset_bottom = 810.0
@@ -798,7 +798,7 @@ text = "全部成就 ›"
 layout_mode = 0
 offset_left = 22.0
 offset_top = 77.0
-offset_right = 512.0
+offset_right = 452.0
 offset_bottom = 227.0
 horizontal_scroll_mode = 0
 
@@ -812,14 +812,14 @@ theme_override_constants/v_separation = 10
 layout_mode = 0
 offset_left = 22.0
 offset_top = 251.0
-offset_right = 512.0
+offset_right = 452.0
 offset_bottom = 414.0
 
 [node name="BtnSpecial" type="Button" parent="CommandsPanel"]
 layout_mode = 0
 offset_left = 22.0
 offset_top = 420.0
-offset_right = 172.0
+offset_right = 222.0
 offset_bottom = 470.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -830,26 +830,11 @@ theme_override_styles/hover = ExtResource("14_banner_hover")
 theme_override_styles/disabled = ExtResource("15_banner_disabled")
 text = "特殊行动"
 
-[node name="BtnPotions" type="Button" parent="CommandsPanel"]
-layout_mode = 0
-offset_left = 182.0
-offset_top = 420.0
-offset_right = 332.0
-offset_bottom = 470.0
-theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
-theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
-theme_override_font_sizes/font_size = 24
-theme_override_styles/normal = ExtResource("12_banner_normal")
-theme_override_styles/pressed = ExtResource("13_banner_pressed")
-theme_override_styles/hover = ExtResource("14_banner_hover")
-theme_override_styles/disabled = ExtResource("15_banner_disabled")
-text = "秘药"
-
 [node name="BtnAchievements" type="Button" parent="CommandsPanel"]
 layout_mode = 0
-offset_left = 342.0
+offset_left = 234.0
 offset_top = 420.0
-offset_right = 492.0
+offset_right = 434.0
 offset_bottom = 470.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -864,7 +849,7 @@ text = "成就"
 layout_mode = 0
 offset_left = 22.0
 offset_top = 480.0
-offset_right = 252.0
+offset_right = 222.0
 offset_bottom = 530.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -877,9 +862,9 @@ text = "扩展行动"
 
 [node name="BtnSeasonClose" type="Button" parent="CommandsPanel"]
 layout_mode = 0
-offset_left = 262.0
+offset_left = 234.0
 offset_top = 480.0
-offset_right = 492.0
+offset_right = 434.0
 offset_bottom = 530.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -894,7 +879,7 @@ text = "本季闭店"
 layout_mode = 0
 offset_left = 22.0
 offset_top = 548.0
-offset_right = 512.0
+offset_right = 452.0
 offset_bottom = 678.0
 theme_override_styles/panel = ExtResource("16_paper_frame")
 
@@ -911,9 +896,9 @@ theme_override_font_sizes/font_size = 18
 
 [node name="BtnFullLog" type="Button" parent="CommandsPanel/MatchLog"]
 layout_mode = 0
-offset_left = 394.0
+offset_left = 334.0
 offset_top = 8.0
-offset_right = 478.0
+offset_right = 418.0
 offset_bottom = 41.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -928,7 +913,7 @@ text = "完整记录"
 layout_mode = 0
 offset_left = 12.0
 offset_top = 37.0
-offset_right = 478.0
+offset_right = 418.0
 offset_bottom = 122.0
 horizontal_scroll_mode = 0
 
@@ -939,7 +924,7 @@ theme_override_constants/separation = 5
 
 [node name="HandStrip" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 362.0
+offset_left = 526.0
 offset_top = 832.0
 offset_right = 1908.0
 offset_bottom = 1022.0
@@ -999,9 +984,9 @@ text = "售卖卡牌"
 
 [node name="ExpandHand" type="Button" parent="HandStrip"]
 layout_mode = 0
-offset_left = 1370.0
+offset_left = 1206.0
 offset_top = 18.0
-offset_right = 1520.0
+offset_right = 1356.0
 offset_bottom = 67.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -1014,9 +999,9 @@ text = "展开全部"
 
 [node name="BtnPrevHand" type="Button" parent="HandStrip"]
 layout_mode = 0
-offset_left = 1370.0
+offset_left = 1206.0
 offset_top = 75.0
-offset_right = 1416.0
+offset_right = 1252.0
 offset_bottom = 108.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -1029,9 +1014,9 @@ text = "<"
 
 [node name="BtnNextHand" type="Button" parent="HandStrip"]
 layout_mode = 0
-offset_left = 1424.0
+offset_left = 1260.0
 offset_top = 75.0
-offset_right = 1470.0
+offset_right = 1306.0
 offset_bottom = 108.0
 theme_override_colors/font_color = Color(0.203922, 0.192157, 0.2, 1)
 theme_override_fonts/font = ExtResource("3_SourceHanSansLite")
@@ -1044,9 +1029,9 @@ text = ">"
 
 [node name="FinalStatus" type="Panel" parent="."]
 layout_mode = 0
-offset_left = 375.0
+offset_left = 539.0
 offset_top = 775.0
-offset_right = 1340.0
+offset_right = 1400.0
 offset_bottom = 818.0
 theme_override_styles/panel = ExtResource("16_paper_frame")
 visible = false
@@ -1055,6 +1040,6 @@ visible = false
 layout_mode = 0
 offset_left = 14.0
 offset_top = 8.0
-offset_right = 951.0
+offset_right = 815.0
 offset_bottom = 36.0
 theme_override_constants/separation = 22

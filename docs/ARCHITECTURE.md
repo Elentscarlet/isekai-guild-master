@@ -29,8 +29,7 @@ GuildMaster-Godot-src/
 │   ├── lobby_screen.tscn            大厅（房间列表）
 │   ├── room_screen.tscn             房间准备页
 │   ├── table_screen.tscn            对局外壳：顶栏、左侧座位、布局槽、阶段槽
-│   ├── table_layout_classic.tscn    经典桌面：地图 / 王权命令 / 手牌
-│   ├── table_layout_dashboard.tscn  总览桌面：侧栏 / 公共区 / 地图 / 资源条
+│   ├── table_layout_classic.tscn    桌面：地图 / 王权命令 / 手牌
 │   ├── table_face.tscn              情报收集后选择黑白面
 │   ├── table_selection.tscn         开局轮抽与情报收集
 │   ├── table_results.tscn           终局结算
@@ -52,7 +51,6 @@ GuildMaster-Godot-src/
 │   ├── screens.gd                   实例化 home/room/table 场景
 │   ├── table_screen.gd              对局外壳：顶栏、座位列、阶段分发
 │   ├── table_classic.gd             经典布局填数值与动态列表
-│   ├── table_dashboard.gd           总览布局填数值与动态列表
 │   ├── table_face.gd                选面阶段
 │   ├── table_selection.gd           轮抽 / 情报收集阶段
 │   ├── table_results.gd             终局结算
@@ -72,11 +70,11 @@ GuildMaster-Godot-src/
 1. `main.tscn` 启动，`main.gd` 读取偏好、建主题、加载目录数据。
 2. `session.gd` 连服务器（`4 字节大端长度 + JSON`），收到 `snapshot` 后触发重绘。
 3. `GuildScreens.table()` 挂入 `table_screen.tscn`；它按状态选择内容：
-   - 行动 / 最终行动 → `table_layout_classic.tscn` 或 `table_layout_dashboard.tscn`
+   - 行动 / 最终行动 → `table_layout_classic.tscn`
    - 选黑白面 → `table_face.tscn`
    - 轮抽 / 情报收集 → `table_selection.tscn`
    - 终局 → `table_results.tscn`
-   顶栏与左侧座位始终由 `table_screen.tscn` 提供（总览布局在行动阶段隐藏它们）。
+   顶栏与左侧座位始终由 `table_screen.tscn` 提供。
    有房间 → `room_screen.tscn`；没有房间没有对局 → `home_screen.tscn`；大厅列表 → `lobby_screen.tscn`。
    对局期间保留桌面外壳和当前行动布局。手牌、公共王权、日志和选中板块按各自的数据变化更新。
 4. 弹窗走 `dialogs_overlay.overlay()` → `dialog_frame.tscn`；大厅类简单弹窗走
@@ -110,7 +108,7 @@ GuildMaster-Godot-src/
 ### 界面改造约定
 
 - 场景里能摆的节点尽量摆进 `.tscn`；`*_screen.gd` / `table_*.gd` 只填文字、显隐和回调。
-- 对局桌面同样拆成场景：顶栏与座位在 `table_screen.tscn`，两种布局与各阶段各有自己的场景。
+- 对局桌面同样拆成场景：顶栏与座位在 `table_screen.tscn`，行动布局与各阶段各有自己的场景。
   卡牌、日志行、玩家行、王权卡等**数量随数据变化**的列表才在代码里生成。
 - 场景按钮统一用 `GuildScreen.wire_button()` 或 `GuildTableWidgets.scene_button()`，
   保证字号、纸张样式、点击音效和代码生成的按钮一致。
@@ -136,7 +134,6 @@ GuildMaster-Godot-src/
 | 主页/房间/桌面的位置、尺寸 | 对应 `.tscn`，编辑器里直接拖 |
 | 对局顶栏、左侧座位 | `ui/table_screen.tscn` |
 | 经典桌面的地图/命令/手牌 | `ui/table_layout_classic.tscn` + `table_classic.gd` |
-| 总览桌面的侧栏/公共区/资源条 | `ui/table_layout_dashboard.tscn` + `table_dashboard.gd` |
 | 选黑白面、轮抽、情报收集、结算 | `ui/table_face.tscn` / `table_selection.tscn` / `table_results.tscn` |
 | 场景按钮的行为 | 对应的 `*_screen.gd` / `table_*.gd` |
 | 按钮样式（颜色、底图） | `ui/styles/*.tres`（编辑器）+ `paper_skin.gd`（运行时） |
@@ -180,7 +177,7 @@ godot --path GuildMaster-Godot-src -s res://tools/table_qa.gd -- --qa-output=<�
 # 真实离线开局：开始冒险 → 选人 → 情报收集 → 选面 → 公会行动
 godot --headless --path GuildMaster-Godot-src -s res://tools/offline_qa.gd
 
-# 主页/两种桌面布局/设置，并把截图写到 qa/ 目录
+# 主页/桌面/设置，并把截图写到 qa/ 目录
 godot --path GuildMaster-Godot-src -s res://tools/update_qa.gd -- --qa-output=<绝对路径>\qa
 
 # 改动前后各截一套图再对比（输出在 tools/regression/out/）

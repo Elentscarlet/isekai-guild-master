@@ -62,6 +62,7 @@ static func action_reminders(ui, parent: Control) -> void:
 	if not hints is Dictionary:
 		hints = {}
 	var frame = parent.get_node("ActionReminders") as Panel
+	var content_width: float = frame.size.x - 20.0
 	var enabled = ui.session.can_act()
 	if not GuildTableWidgets.region_changed(frame, "hints", [hints, ui.session.player_id, enabled, GuildLang.traditional]):
 		return
@@ -86,18 +87,20 @@ static func action_reminders(ui, parent: Control) -> void:
 	if rows.is_empty():
 		var text = "观战中" if ui.session.me().is_empty() else "暂无可操作的行动"
 		if notice == null:
-			notice = GuildTableWidgets.caption(ui, frame, text, Rect2(10, 27, 174, 18), 14, ui.MUTED)
+			notice = GuildTableWidgets.caption(ui, frame, text, Rect2(10, 27, content_width, 18), 14, ui.MUTED)
 			notice.name = "EmptyNotice"
 		else:
 			notice.text = GuildLang.t(text)
 		return
 	column.position = Vector2(10, 27)
-	column.size = Vector2(174, rows.size() * 21 + (rows.size() - 1) * 2)
+	column.size = Vector2(content_width, rows.size() * 21 + (rows.size() - 1) * 2)
 	for i in range(rows.size()):
 		var node = ui.button(rows[i][0], rows[i][1], enabled)
 		node.name = "ActionHint" + str(i)
 		node.tooltip_text = GuildLang.t(rows[i][2])
-		node.custom_minimum_size = Vector2(174, 21)
+		node.custom_minimum_size = Vector2(content_width, 21)
+		node.clip_text = true
+		node.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		node.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		node.add_theme_font_size_override("font_size", 13)
 		for state in ["normal", "hover", "pressed", "disabled"]:
@@ -115,7 +118,7 @@ static func commands(ui, layout: Control, map: GuildHexMap, game: Dictionary, me
 		clear(grid)
 		for key in public_cards:
 			var data = ui.store.catalog.achievements.get(key, {})
-			grid.add_child(ui.card(data.get("source", ""), Vector2(148, 140), func(): ui.dialogs.achievements()))
+			grid.add_child(ui.card(data.get("source", ""), Vector2(133, 126), func(): ui.dialogs.achievements()))
 	var selected = panel.get_node("SelectedTile") as Control
 	if not map.has_meta("guild_selection_click"):
 		map.set_meta("guild_selection_click", true)
@@ -129,7 +132,6 @@ static func commands(ui, layout: Control, map: GuildHexMap, game: Dictionary, me
 	GuildTableWidgets.draw_selection(ui, selected, existing[0] if not existing.is_empty() else {})
 	var can = ui.session.can_act()
 	GuildTableWidgets.scene_button(ui, panel.get_node("BtnSpecial") as Button, func(): ui.dialogs.abilities(), can)
-	GuildTableWidgets.scene_button(ui, panel.get_node("BtnPotions") as Button, func(): ui.dialogs.potions(), can)
 	GuildTableWidgets.scene_button(ui, panel.get_node("BtnAchievements") as Button, func(): ui.dialogs.achievements(), true)
 	GuildTableWidgets.scene_button(ui, panel.get_node("BtnExpansions") as Button, func(): ui.dialogs.expansions(), not me.is_empty())
 	GuildTableWidgets.scene_button(ui, panel.get_node("BtnSeasonClose") as Button, func(): ui.dialogs.confirm_pass(), can)
@@ -182,7 +184,7 @@ static func hand(ui, parent: Control, me: Dictionary) -> void:
 			child.queue_free()
 	for i in range(shown.size()):
 		var number = int(shown[i])
-		GuildTableWidgets.at(parent, ui.card(ui.store.card_face(ui.store.card(number)), Vector2(100, 140), func(): ui.dialogs.card_detail(number, true)), Rect2(190 + i * 116, 18, 100, 140), "HandCard" + str(i))
+		GuildTableWidgets.at(parent, ui.card(ui.store.card_face(ui.store.card(number)), Vector2(94, 132), func(): ui.dialogs.card_detail(number, true)), Rect2(190 + i * 102, 18, 94, 132), "HandCard" + str(i))
 
 static func final_status(ui, layout: Control, game: Dictionary, phase: String) -> void:
 	var frame = layout.get_node("FinalStatus") as Panel

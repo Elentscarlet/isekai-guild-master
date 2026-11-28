@@ -35,8 +35,7 @@ func run():
 	check("75s" in ui.clock_text(1), "inactive reserve does not drain")
 	await capture("mobile-table" if ui.mobile else "desktop-table")
 	if not ui.mobile:
-		ui.prefs.layout = "dashboard";ui._render();await frames();check(ui.player_clocks.size() == 2, "dashboard includes player countdowns")
-		ui.prefs.layout = "classic";ui._render()
+		check(ui.player_clocks.size() == 2, "classic layout includes player countdowns")
 	ui.session._receive({"type": "chat", "name": "测试公会长", "message": "你好"});await frames()
 	var danmaku = ui.announcements.find_child("ChatDanmaku", true, false)
 	check(danmaku != null and danmaku.text == "测试公会长：你好", "chat scrolls as name: message")

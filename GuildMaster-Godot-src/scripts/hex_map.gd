@@ -154,10 +154,14 @@ func draw_static(canvas: Control):
 		if cell.get("outer", false): canvas.draw_string(font, p + Vector2(-8, 7), "+", HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("bd1630"));continue
 		if cell.get("owner") != null:
 			var color = owner_colors[int(cell.owner) % 5]
-			var token = store.adventurer_token(int(cell.owner), cell.get("base", false))
-			if token: canvas.draw_texture_rect(token, Rect2(p - Vector2(step * 0.285, step * 0.33), Vector2.ONE * step * 0.57), false)
+			var is_base: bool = cell.get("base", false)
+			var token: Texture2D = store.adventurer_token(int(cell.owner), is_base)
+			if token:
+				var token_size: Vector2 = token.get_size() * (step * (0.67 if is_base else 0.57) / token.get_height())
+				var token_center: Vector2 = p - Vector2(0.0, step * (0.10 if is_base else 0.045))
+				canvas.draw_texture_rect(token, Rect2(token_center - token_size / 2.0, token_size), false)
 			else: canvas.draw_circle(p, step * 0.23, color)
-			var caption = GuildLang.t("据点 ×2" if cell.get("base", false) else "营地")
+			var caption = GuildLang.t("据点 ×2" if is_base else "营地")
 			var text_size = clampi(int(step * 0.15), 10, 14)
 			canvas.draw_string(font, p + Vector2( - font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size).x / 2, step * 0.36), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, text_size, Color("343133"))
 		elif cell.get("revealed", false):

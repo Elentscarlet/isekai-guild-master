@@ -25,7 +25,7 @@ func bind(owner, screen = null) -> void:
 		grid.remove_child(child)
 		child.queue_free()
 	for index in range(cards.size()):
-		var art = ui.card(ui.store.card_face(ui.store.card(cards[index])), Vector2(262, 345), func():
+		var art = ui.card(ui.store.card_face(ui.store.card(cards[index])), Vector2(205, 270), func():
 			if ui.selected_research.has(index):
 				ui.selected_research.erase(index)
 			elif draft:

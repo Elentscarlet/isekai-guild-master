@@ -13,7 +13,7 @@
 [ext_resource type="StyleBox" path="res://ui/styles/banner_primary_pressed.tres" id="11_banner_primary_pressed"]
 [node name="SelectionPhase" type="Panel"]
 layout_mode = 0
-offset_left = 362.0
+offset_left = 526.0
 offset_top = 116.0
 offset_right = 1908.0
 offset_bottom = 1022.0
@@ -24,7 +24,7 @@ script = ExtResource("2_table_selection")
 layout_mode = 0
 offset_left = 32.0
 offset_top = 28.0
-offset_right = 1502.0
+offset_right = 1250.0
 offset_bottom = 76.0
 text = "初次情报收集"
 theme_override_colors/font_color = Color(0.529412, 0.266667, 0.286275, 1)
@@ -35,7 +35,7 @@ theme_override_font_sizes/font_size = 36
 layout_mode = 0
 offset_left = 32.0
 offset_top = 87.0
-offset_right = 1502.0
+offset_right = 1250.0
 offset_bottom = 122.0
 text = "选择要保留的事件卡；保留费用与打出费用分别计算。"
 theme_override_colors/font_color = Color(0.419608, 0.392157, 0.376471, 1)
@@ -46,7 +46,7 @@ theme_override_font_sizes/font_size = 22
 layout_mode = 0
 offset_left = 32.0
 offset_top = 143.0
-offset_right = 1146.0
+offset_right = 920.0
 offset_bottom = 891.0
 horizontal_scroll_mode = 0
 
@@ -59,9 +59,9 @@ theme_override_constants/v_separation = 14
 
 [node name="SideScroll" type="ScrollContainer" parent="."]
 layout_mode = 0
-offset_left = 1182.0
+offset_left = 960.0
 offset_top = 160.0
-offset_right = 1482.0
+offset_right = 1260.0
 offset_bottom = 864.0
 horizontal_scroll_mode = 0
 

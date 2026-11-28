@@ -36,11 +36,10 @@ func run():
 		var fixture = GuildSession.normalize(JSON.parse_string(FileAccess.get_file_as_string("res://data/qa-%s.json" % seats)))
 		ui.session.set_process(false);ui.session.game = fixture.game;ui.session.room = fixture.room
 		ui.session.player_id = 0;ui.session.role = "player";ui.session.active = true;ui.session.local_mode = false;ui.session.synchronized = true;ui.session.room_connected = true
-		for layout in ["classic", "dashboard"]:
-			ui.prefs.layout = layout;ui.close_dialog(false);ui._render();await frames(7)
-			var panel = ui.content.find_child("DashboardMap" if layout == "dashboard" else "MapPanel", true, false)
-			check(panel != null and panel.is_visible_in_tree(), "%s layout with %s players" % [layout, seats])
-			await capture("%s-%s" % [layout, seats])
+		ui.close_dialog(false);ui._render();await frames(7)
+		var panel = ui.content.find_child("MapPanel", true, false)
+		check(panel != null and panel.is_visible_in_tree(), "classic layout with %s players" % seats)
+		await capture("classic-%s" % seats)
 	ui.dialogs.settings();await capture("settings")
 	ui.close_dialog(false);ui.session.game = {};ui.session.room = {};ui.session.directory = false;ui._render();await capture("home")
 	ui.stop_audio();ui.session.close();print("UPDATE_QA " + ("PASSED" if failures.is_empty() else "FAILED"))

@@ -5,7 +5,7 @@ extends RefCounted
 #
 # 本项目沿用 Ren'Py 参考版的绝对坐标布局：at() 把控件摆进给定矩形，
 # surface()/caption()/action() 再套上统一的纸张皮肤。具体界面布局见
-# table_classic.gd（经典桌面）与 table_dashboard.gd（总览桌面）。
+# table_classic.gd（经典桌面）。
 
 # ---------------------------------------------------------------- 排版工具
 
@@ -234,23 +234,24 @@ static func fill_potion(ui, node: Button, key: String) -> Button:
 		mask.queue_free()
 	return node
 
-# 地图右侧「已选板块」详情面板（经典桌面与总览桌面共用）。
+# 地图右侧「已选板块」详情面板（经典桌面使用）。
 static func draw_selection(ui, parent: Control, cell: Dictionary) -> void:
 	if not region_changed(parent, "selected_tile", [cell, GuildLang.traditional, ui.session.can_act(), ui.session.player_id]):
 		return
 	for child in parent.get_children(): parent.remove_child(child);child.queue_free()
 	var data = ui.store.catalog.tiles.get(cell.get("loot", ""), {}) if cell.get("revealed", false) else {}
 	var source = data.get("source", cell.get("back_source", "images/piece_png/17.png"))
+	var text_width := parent.size.x - 172.0
 	at(parent, ui.card(source, Vector2(126, 126), func(): ui.dialogs.art_detail(source, data.get("name", "未揭示板块"))), Rect2(10, 14, 126, 126))
-	caption(ui, parent, data.get("name", "选择一个迷宫板块" if cell.is_empty() else "未揭示的迷宫"), Rect2(160, 0, 308, 35), 23)
+	caption(ui, parent, data.get("name", "选择一个迷宫板块" if cell.is_empty() else "未揭示的迷宫"), Rect2(160, 0, text_width, 35), 23)
 	if cell.is_empty():
-		caption(ui, parent, "选择地图亮边区域开始探索" if ui.session.can_act() else "等待其他公会完成行动", Rect2(160, 43, 308, 65), 20, ui.MUTED)
+		caption(ui, parent, "选择地图亮边区域开始探索" if ui.session.can_act() else "等待其他公会完成行动", Rect2(160, 43, text_width, 65), 20, ui.MUTED)
 		return
 	var owner = cell.get("owner")
 	var me = ui.session.me()
 	if owner != null:
-		caption(ui, parent, "P%s / %s" % [int(owner) + 1, "据点" if cell.get("base", false) else "营地"], Rect2(160, 43, 308, 30), 21)
+		caption(ui, parent, "P%s / %s" % [int(owner) + 1, "据点" if cell.get("base", false) else "营地"], Rect2(160, 43, text_width, 30), 21)
 		action(ui, parent, "建设据点", Rect2(160, 81, 200, 50), func(): ui.session.action("build", {"tile": cell.id}), ui.session.can_act() and not me.is_empty() and int(owner) == int(me.id) and not cell.get("base", false), "BuildBase", true)
 	else:
-		caption(ui, parent, "★ %s / 声望 %s" % [int(data.get("star", 0)), int(data.get("point", 0))] if not data.is_empty() else "翻开后支付探索费用", Rect2(160, 43, 308, 30), 19, ui.MUTED)
+		caption(ui, parent, "★ %s / 声望 %s" % [int(data.get("star", 0)), int(data.get("point", 0))] if not data.is_empty() else "翻开后支付探索费用", Rect2(160, 43, text_width, 30), 19, ui.MUTED)
 		action(ui, parent, "派遣冒险者", Rect2(160, 81, 200, 50), func(): ui.session.action("explore", {"tile": cell.id}), ui.session.can_act() and cell.get("eligible_for", []).has(ui.session.player_id), "Explore", true)

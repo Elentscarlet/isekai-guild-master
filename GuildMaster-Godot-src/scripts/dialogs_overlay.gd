@@ -548,11 +548,6 @@ func menu(title: String, key: String) -> VBoxContainer:
 # ----------------------------------------------------------------
 func settings():
 	var body = menu("偏好设置", "settings");body.add_child(wrapped("让这间公会，更合你的习惯。", 25))
-	body.add_child(ui.label("桌面布局", 30, ui.GOLD))
-	var layouts = HBoxContainer.new();body.add_child(layouts)
-	for pair in [["经典布局", "classic"], ["总览布局", "dashboard"]]:
-		layouts.add_child(ui.button(pair[0], func(): ui.prefs.layout = pair[1];ui.save_preferences();ui.rerender();ui.close_dialog(false);ui.dialogs.settings(), true, ui.prefs.get("layout", "classic") == pair[1]))
-	body.add_child(wrapped("总览布局参考所提供的面板位置，沿用当前纸面与配色；切换不影响对局。", 20))
 	body.add_child(ui.label("语言 / 語言", 30, ui.GOLD))
 	var langs = HBoxContainer.new();body.add_child(langs)
 	for pair in [["简体中文", "zh_CN"], ["繁體中文", "zh_TW"]]:
