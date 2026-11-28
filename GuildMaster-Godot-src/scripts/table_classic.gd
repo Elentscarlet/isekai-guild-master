@@ -120,6 +120,7 @@ static func commands(ui, layout: Control, map: GuildHexMap, game: Dictionary, me
 	if not map.has_meta("guild_selection_click"):
 		map.set_meta("guild_selection_click", true)
 		map.cell_clicked.connect(func(cell):
+			ui.play_sound("wooden_click")
 			ui.selected_tile = cell.get("id", "")
 			map.chosen_ids = [ui.selected_tile]
 			map.queue_redraw()

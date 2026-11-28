@@ -1,13 +1,14 @@
+@tool
 class_name GuildBannerBox
 extends StyleBox
 
 # 橫幅按鈕底圖：兩端裝飾以高度等比縮放（不變形），中段平坦區水平拉伸。
 # 標準九宮格在「裝飾佔滿整個高度」的圖上會把端飾拉扁或拆開，因此改為自繪。
 
-var texture: Texture2D
-var cap_left: float = 128.0
-var cap_right: float = 123.0
-var tint: Color = Color.WHITE
+@export var texture: Texture2D
+@export var cap_left: float = 128.0
+@export var cap_right: float = 123.0
+@export var tint: Color = Color.WHITE
 
 static func create(source: Texture2D, tint_color: Color, padding_side: float, padding_y: float) -> GuildBannerBox:
 	var box = GuildBannerBox.new()

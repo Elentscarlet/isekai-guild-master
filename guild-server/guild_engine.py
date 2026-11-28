@@ -1255,3 +1255,7 @@ from guild_screenshot_rules import ScreenshotRules
 
 class Engine(ScreenshotRules, VariantRules, HeroRules, FullRules, CoreEngine):
     """Single authoritative engine, including ordered full-deck effects."""
+
+    def _play(self, player, action, free=False):
+        with self._track_card_gold(player):
+            super()._play(player, action, free)

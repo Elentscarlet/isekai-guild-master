@@ -5,6 +5,7 @@ owned by an authenticated player, carries a monotonically increasing ID, and
 contains server-generated options. Hidden choices are stripped from views.
 """
 from collections import Counter
+from contextlib import contextmanager
 from copy import deepcopy
 
 from guild_content import HEROES, TILES, POTIONS, ACHIEVEMENTS
@@ -152,6 +153,9 @@ class ResolutionRules:
         for key, amount in budget.items():
             if amount < 0:
                 raise ValueError(LABELS[key] + '不足。')
+        watch = getattr(self, '_card_gold_watch', None)
+        if not preview and watch is not None and watch['player'] is p:
+            watch['balance'] -= p['gold'] - budget['gold']
         p.update(budget)
         if costs.get('gold',0)>0:
             p['gold_payment_strength'] = 0
@@ -164,7 +168,27 @@ class ResolutionRules:
             budget['gold'] = 0
         return all(v >= 0 for v in budget.values())
 
+    @contextmanager
+    def _track_card_gold(self, p, active=True):
+        previous = getattr(self, '_card_gold_watch', None)
+        if not active or (previous is not None and previous['player'] is p):
+            yield
+            return
+        watch = dict(player=p, balance=p['gold'])
+        self._card_gold_watch = watch
+        try:
+            yield
+        finally:
+            self._card_gold_watch = previous
+        # Compare against the balance after payments so a card can give gold
+        # even if playing it cost more than the amount it awarded.
+        if p['gold'] > watch['balance']:
+            self.state['card_coin_serial'] = self.state.get('card_coin_serial', 0) + 1
+            p['card_coin_serial'] = p.get('card_coin_serial', 0) + 1
+
     def _enqueue(self, p, steps, source=None, context=None, front=False):
+        if getattr(self, '_card_gold_watch', None) is not None:
+            context = dict(context or {}, card_play=True)
         tasks = [dict(player=p['id'], step=deepcopy(step), source=deepcopy(source),
                       context=deepcopy(context or {})) for step in steps]
         queue = self.state.setdefault('effects', [])
@@ -271,12 +295,14 @@ class ResolutionRules:
         self.state['pending'] = None
         old_queue = self.state['effects']
         self.state['effects'] = []
-        if skipping:
-            task = pending['task']
-            self._effects(p, task['step'].get('otherwise', {}), dict(_source=task['source'], _context=task['context']))
-        else:
-            values = [deepcopy(pending['options'][i]['value']) for i in selected]
-            self._complete_step(p, pending['task'], values, action.get('action', {}))
+        task = pending['task']
+        context = task['context']
+        with self._track_card_gold(p, context.get('card_play') or context.get('on_play')):
+            if skipping:
+                self._effects(p, task['step'].get('otherwise', {}), dict(_source=task['source'], _context=context))
+            else:
+                values = [deepcopy(pending['options'][i]['value']) for i in selected]
+                self._complete_step(p, task, values, action.get('action', {}))
         self.state['effects'].extend(old_queue)
         self._drain_effects()
 
@@ -320,7 +346,9 @@ class ResolutionRules:
 
     def _run_step(self, p, task):
         before=self._card_effect_counts(p)
-        self._execute_step(p,task)
+        context = task['context']
+        with self._track_card_gold(p, context.get('card_play') or context.get('on_play')):
+            self._execute_step(p,task)
         self._log_card_effect_counts(p,task,before)
 
     def _execute_step(self, p, task):

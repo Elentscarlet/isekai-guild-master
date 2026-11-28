@@ -442,6 +442,7 @@ class FullRules(ResolutionRules):
             cost = self.rules['build_cost']
         self._pay(p,{'gold':max(0,cost-self.rules['build_cost']) if free else cost})
         self._cell(tile_id)['base'] = True
+        p['build_serial'] = p.get('build_serial', 0) + 1
         self._emit(p,'build')
 
     @staticmethod

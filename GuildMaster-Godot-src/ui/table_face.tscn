@@ -138,6 +138,7 @@ theme_override_styles/pressed = ExtResource("6_banner_primary_pressed")
 theme_override_styles/hover = ExtResource("7_banner_primary_hover")
 theme_override_styles/disabled = ExtResource("8_banner_disabled")
 text = "选择白面"
+metadata/guild_silent_click = true
 
 [node name="BlackOption" type="Control" parent="."]
 layout_mode = 0
@@ -189,3 +190,4 @@ theme_override_styles/pressed = ExtResource("6_banner_primary_pressed")
 theme_override_styles/hover = ExtResource("7_banner_primary_hover")
 theme_override_styles/disabled = ExtResource("8_banner_disabled")
 text = "选择黑面"
+metadata/guild_silent_click = true

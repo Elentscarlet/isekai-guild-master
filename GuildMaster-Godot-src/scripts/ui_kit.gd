@@ -51,7 +51,8 @@ func wire_button(node: Button, callback: Callable, enabled: bool = true, primary
 	if already_wired:
 		return node
 	node.pressed.connect( func():
-		ui.play_sound("click")
+		if not node.get_meta("guild_silent_click", false):
+			ui.play_sound("click")
 		var action: Callable = node.get_meta("guild_pressed")
 		action.call())
 	node.mouse_entered.connect( func():

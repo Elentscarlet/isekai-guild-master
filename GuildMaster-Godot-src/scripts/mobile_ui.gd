@@ -13,7 +13,7 @@ static func sheet(ui, title: String, key: String, closable: bool = true) -> VBox
 	return body
 
 static func home(ui, parent: Control):
-	var T = GuildRenpyTable
+	var T = GuildTableWidgets
 	T.caption(ui, parent, "异世界公会长", Rect2(42, 50, 760, 86), 62, Color("fff8eb"))
 	T.caption(ui, parent, "经营公会 · 探索迷宫 · 与同伴一起成长", Rect2(42, 148, 840, 52), 30, Color("fff8eb"))
 	var menu = VBoxContainer.new();menu.add_theme_constant_override("separation", 20);T.at(parent, menu, Rect2(42, 238, 700, 438))
@@ -27,7 +27,7 @@ static func home(ui, parent: Control):
 	T.at(parent, portrait, Rect2(826, 40, 400, 640))
 
 static func room(ui, parent: Control):
-	var room_data = ui.session.room;var T = GuildRenpyTable;var mine = {};var host = int(room_data.get("host_id", -1)) == ui.session.player_id
+	var room_data = ui.session.room;var T = GuildTableWidgets;var mine = {};var host = int(room_data.get("host_id", -1)) == ui.session.player_id
 	for player in room_data.get("players", []):
 		if int(player.id) == ui.session.player_id: mine = player
 	T.caption(ui, parent, room_data.get("name", "公会房间"), Rect2(24, 12, 930, 60), 38, Color("fff8eb"))
@@ -57,7 +57,7 @@ static func room(ui, parent: Control):
 		column.add_child(ui.button("选择白版" if variant == "white" else "选择黑版", func(): ui.session.send({"type": "set_hero", "character": ui.browsing_character, "variant": variant}), hero.get("available", false), true))
 
 static func table(ui, parent: Control):
-	var T = GuildRenpyTable;var game = ui.session.game;var me = ui.session.me();var phase = str(game.get("phase", ""))
+	var T = GuildTableWidgets;var game = ui.session.game;var me = ui.session.me();var phase = str(game.get("phase", ""))
 	var actor = game.players[int(game.get("turn", 0))];var focus = me if not me.is_empty() else actor
 	var header = T.surface(ui, parent, Rect2(12, 8, 1256, 82), "MobileHeader")
 	T.caption(ui, header, "%s · 第%s季" % [ui.PHASES.get(phase, phase), int(game.round)], Rect2(16, 4, 490, 36), 28, ui.GOLD)
@@ -115,7 +115,7 @@ static func selection(ui, parent: Control, game: Dictionary, me: Dictionary, pha
 	var draft = phase == "draft";var cards = me.get("draft_cards", []) if draft else me.get("offered", []);var signature = JSON.stringify([phase, game.round, game.get("draft_step"), cards])
 	if ui.research_packet != signature: ui.research_packet = signature;ui.selected_research = []
 	var grid = GridContainer.new();grid.columns = 4;grid.add_theme_constant_override("h_separation", 12);grid.add_theme_constant_override("v_separation", 14)
-	var scroller = ui.scroll(grid);GuildRenpyTable.at(parent, scroller, Rect2(16, 162, 918, 542));ui.preserve_selection_scroll(scroller, "research", signature)
+	var scroller = ui.scroll(grid);GuildTableWidgets.at(parent, scroller, Rect2(16, 162, 918, 542));ui.preserve_selection_scroll(scroller, "research", signature)
 	for i in range(cards.size()):
 		var art = ui.card(ui.store.card_face(ui.store.card(cards[i])), Vector2(214, 300), func():
 			if ui.selected_research.has(i): ui.selected_research.erase(i)
@@ -123,15 +123,15 @@ static func selection(ui, parent: Control, game: Dictionary, me: Dictionary, pha
 			else: ui.selected_research.append(i)
 			ui.rerender())
 		art.selected = ui.selected_research.has(i);art.name = "SelectionCard" + str(i);grid.add_child(art)
-	var side = VBoxContainer.new();GuildRenpyTable.at(parent, ui.panel(ui.scroll(side), 12), Rect2(948, 162, 316, 542))
+	var side = VBoxContainer.new();GuildTableWidgets.at(parent, ui.panel(ui.scroll(side), 12), Rect2(948, 162, 316, 542))
 	side.add_child(ui.label("已选 %s 张" % ui.selected_research.size(), 32, ui.GOLD))
 	if draft:
 		side.add_child(ui.button("确认留牌", func(): ui.session.action("draft_pick", {"index": int(ui.selected_research[0]), "draft_step": int(game.draft_step)}), ui.selected_research.size() == 1 and not me.get("draft_ready", false) and game.get("pending") == null, true))
 	else:
 		var selected = []
 		for index in ui.selected_research: selected.append(int(cards[index]))
-		var total = GuildRenpyLogic.research_price(me, game, selected.size());var limit = int(me.get("research_initial_limit", 8)) if int(game.round) == 1 else cards.size()
-		side.add_child(ui.label("费用 %s 金币" % total, 28));side.add_child(ui.button("确认情报", func(): ui.session.action("research", {"cards": selected}), GuildRenpyLogic.can_pay_gold(me, total) and selected.size() <= limit and game.get("pending") == null, true))
+		var total = GuildRulesLogic.research_price(me, game, selected.size());var limit = int(me.get("research_initial_limit", 8)) if int(game.round) == 1 else cards.size()
+		side.add_child(ui.label("费用 %s 金币" % total, 28));side.add_child(ui.button("确认情报", func(): ui.session.action("research", {"cards": selected}), GuildRulesLogic.can_pay_gold(me, total) and selected.size() <= limit and game.get("pending") == null, true))
 		if int(game.round) == 1 and not me.get("mulligan_done", false): side.add_child(ui.button("更换所选牌", func(): ui.session.action("mulligan", {"cards": selected});ui.selected_research = [], selected.size() > 0 and selected.size() <= 5 and game.get("pending") == null))
 	side.add_child(ui.button("查看手牌", func(): ui.dialogs.hand()));side.add_child(ui.button("全部取消", func(): ui.selected_research = [];ui.rerender()))
 	if not ui.selected_research.is_empty(): side.add_child(ui.button("查看选中卡", func(): ui.dialogs.card_detail(cards[ui.selected_research[-1]])))
@@ -144,10 +144,10 @@ static func card_detail(ui, number: int, playable: bool, free: bool):
 	options.add_child(ui.dialogs.wrapped(data.get("ui_summary", data.get("description", "")), 28))
 	if not playable or not me.get("hand", []).has(number): return
 	if me.get("hero") == "vee_white": options.add_child(ui.button("● 双倍打出" if state.double else "双倍打出", func(): state.double = not state.double;state.pieces = [];state.strength = 0;card_detail(ui, number, playable, free)))
-	var cap = GuildRenpyLogic.strength_cap(data, me, free, 2 if state.double else 1);state.strength = mini(state.strength, cap)
+	var cap = GuildRulesLogic.strength_cap(data, me, free, 2 if state.double else 1);state.strength = mini(state.strength, cap)
 	if cap > 0: ui.dialogs.adjust(options, "战力折抵", cap, state.strength, func(value): state.strength = value;card_detail(ui, number, playable, free))
 	options.add_child(ui.label("金币费用 %s · 投入战力 %s" % [0 if free else maxi(0, int(data.price) * (2 if state.double else 1) - 5 * int(state.strength)), int(state.strength)], 28, ui.GOLD))
-	var required = GuildRenpyLogic.piece_cost(data, me, state.double)
+	var required = GuildRulesLogic.piece_cost(data, me, state.double)
 	if required > 0:
 		options.add_child(ui.label("选择支付板块 %s / %s" % [state.pieces.size(), required], 28));var tiles = HFlowContainer.new();options.add_child(tiles)
 		for index in range(me.get("tiles", []).size()):
@@ -198,7 +198,7 @@ static func pending(ui, request: Dictionary):
 	if options.is_empty() and payment.has("target_image"): choices.add_child(ui.card(payment.target_image, Vector2(640, 500)))
 	var side = VBoxContainer.new();side.custom_minimum_size.x = 354;row.add_child(ui.scroll(side))
 	side.add_child(ui.label("已选 %s / %s" % [selected.size(), int(request.get("max", 0))], 30, ui.GOLD))
-	var limits = GuildRenpyLogic.payment_limits(payment, selected, int(cache.strength), int(cache.pot), cache.flash);cache.strength = limits[2];cache.pot = limits[3]
+	var limits = GuildRulesLogic.payment_limits(payment, selected, int(cache.strength), int(cache.pot), cache.flash);cache.strength = limits[2];cache.pot = limits[3]
 	if payment.get("target", false): side.add_child(ui.label("金币 %s" % maxi(0, int(payment.get("gold_flash" if cache.flash else "gold_base", 0)) - 5 * (int(cache.strength) + int(cache.pot) * int(payment.get("potion_strength", 0)) + (selected.size() if payment.get("tiles_as_strength", false) else 0))), 30))
 	if int(payment.get("strength_max", 0)) > 0: ui.dialogs.adjust(side, "战力", limits[0], cache.strength, func(value): cache.strength = value;pending(ui, request))
 	if int(payment.get("pot_max", 0)) > 0: ui.dialogs.adjust(side, "秘药", limits[1], cache.pot, func(value): cache.pot = value;pending(ui, request))

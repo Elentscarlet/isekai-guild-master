@@ -17,6 +17,56 @@ def game(hero='skadi_white'):
 
 
 class GameplayRegression(unittest.TestCase):
+    def test_build_feedback_advances_only_on_successful_construction(self):
+        engine, player = game('bai_white')
+        tile = next(cell for cell in engine.state['board'] if not cell.get('boss'))
+        tile.update(owner=0, base=False)
+        action = dict(type='build', tile=tile['id'])
+        player['gold'] = 0
+        with self.assertRaises(ValueError):
+            engine.apply(0, action)
+        self.assertNotIn('build_serial', engine.view(0)['players'][0])
+
+        player['gold'] = 100
+        built = engine.apply(0, action)
+        self.assertEqual(built['players'][0]['build_serial'], 1)
+        self.assertNotIn('build_serial', built['players'][1])
+        restored = engine.apply(0, dict(type='undo', undo_id=built['undo']['id']))
+        self.assertEqual(restored['players'][0]['build_serial'], 1)
+        self.assertEqual(engine.apply(0, action)['players'][0]['build_serial'], 2)
+
+    def test_card_coin_feedback_counts_rewards_after_payment_and_undo(self):
+        engine, player = game('bai_white')
+        player.update(gold=100, hand=[211])
+
+        played = engine.apply(0, dict(type='play', card=211))
+        self.assertEqual(played['players'][0]['gold'], 92)
+        self.assertEqual(played['card_coin_serial'], 1)
+        self.assertEqual(played['players'][0]['card_coin_serial'], 1)
+        self.assertNotIn('card_coin_serial', played['players'][1])
+
+        restored = engine.apply(0, dict(type='undo', undo_id=played['undo']['id']))
+        self.assertEqual(restored['players'][0]['gold'], 100)
+        self.assertEqual(restored['card_coin_serial'], 1)
+        self.assertEqual(restored['players'][0]['card_coin_serial'], 1)
+        replayed = engine.apply(0, dict(type='play', card=211))
+        self.assertEqual(replayed['card_coin_serial'], 2)
+        self.assertEqual(replayed['players'][0]['card_coin_serial'], 2)
+
+    def test_card_coin_feedback_waits_for_the_gold_choice(self):
+        for option, expected_gold, expected_serial in ((0, 98, 0), (1, 108, 1)):
+            with self.subTest(option=option):
+                engine, player = game('bai_white')
+                player.update(gold=100, hand=[330], tiles=['tile1', 'tile3', 'tile4', 'tile5'])
+                played = engine.apply(0, dict(type='play', card=330))
+                self.assertEqual(played.get('card_coin_serial', 0), 0)
+
+                settled = engine.apply(0, dict(type='choice', choice_id=played['pending']['id'], selected=[option]))
+                self.assertEqual(settled['action_count'], played['action_count'])
+                self.assertEqual(settled['players'][0]['gold'], expected_gold)
+                self.assertEqual(settled.get('card_coin_serial', 0), expected_serial)
+                self.assertEqual(settled['players'][0].get('card_coin_serial', 0), expected_serial)
+
     def test_cursed_fox_seal_can_be_played_with_nine_gold(self):
         engine, player = game('bai_white')
         player.update(gold=9, strength=0, hand=[99], tiles=['tile21'])

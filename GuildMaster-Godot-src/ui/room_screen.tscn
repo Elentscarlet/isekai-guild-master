@@ -467,6 +467,7 @@ theme_override_styles/pressed = ExtResource("style_banner_primary_pressed")
 theme_override_styles/hover = ExtResource("style_banner_primary_hover")
 theme_override_styles/disabled = ExtResource("style_banner_disabled")
 text = "确认角色"
+metadata/guild_silent_click = true
 
 [node name="CandidateDetails" type="Button" parent="RightPanel" unique_id=33319157]
 visible = false

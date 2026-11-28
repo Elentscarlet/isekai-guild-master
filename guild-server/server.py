@@ -3,6 +3,7 @@ import argparse
 import json
 import logging
 import signal
+import sys
 import threading
 from pathlib import Path
 
@@ -68,7 +69,8 @@ def load_config(path):
 def main():
     parser = argparse.ArgumentParser(description='Isekai Guild Master multiplayer server')
     here = Path(__file__).resolve().parent
-    parser.add_argument('--config', default=str(here / 'server_config.json'),
+    data_dir = Path(sys.executable).resolve().parent if getattr(sys, 'frozen', False) else here
+    parser.add_argument('--config', default=str(data_dir / 'server_config.json'),
                         help='JSON config file; command-line flags override it')
     parser.add_argument('--host', default=None, help='listen address (config: host)')
     parser.add_argument('--port', type=int, default=None, help='game port (config: game_port)')
@@ -95,9 +97,9 @@ def main():
     record = settings['record_replays'] and not args.no_record
     enable_replay = settings['enable_replay'] and not args.no_replay
     enable_site = settings['enable_site'] and not args.no_site
-    replay_dir = args.replay_dir or str(here / 'replays')
+    replay_dir = args.replay_dir or str(data_dir / 'replays')
     site_dir = args.site_dir or str(here / 'site')
-    download_dir = args.download_dir or str(here / 'downloads')
+    download_dir = args.download_dir or str(data_dir / 'downloads')
     max_rooms = 32 if args.max_rooms is None else args.max_rooms
 
     stop = threading.Event()

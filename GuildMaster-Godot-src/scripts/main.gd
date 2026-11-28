@@ -28,6 +28,8 @@ var voice: GuildVoice
 var dialogs: GuildOverlayDialogs
 var backdrop: GuildBackdrop
 var sound: AudioStreamPlayer
+var coin_sound: AudioStreamPlayer
+var build_sound: AudioStreamPlayer
 var music: GuildMusic
 var music_bar: GuildMusicPanel
 var content: Control
@@ -50,6 +52,7 @@ var player_clocks = []
 var renpy_reference = {}
 
 var last_feedback = -1
+var action_sound_played = false
 var last_phase = ""
 var last_round = -1
 var last_view_player = -1
@@ -118,6 +121,7 @@ func _ready():
 	music_bar.setup(self)
 
 	session.changed.connect( func(): dirty = true)
+	session.snapshot_received.connect(_on_game_snapshot)
 	session.notice.connect(show_toast)
 	session.connected.connect( func(): show_toast("公会连接成功。" if session.local_mode else "服务器已确认连接。"))
 	resized.connect(preview.refresh)
@@ -242,6 +246,14 @@ func _setup_audio():
 	sound.bus = "SFX"
 	sound.max_polyphony = 4
 	add_child(sound)
+	coin_sound = AudioStreamPlayer.new()
+	coin_sound.bus = "SFX"
+	coin_sound.stream = preload("res://audio/get_coin.mp3")
+	add_child(coin_sound)
+	build_sound = AudioStreamPlayer.new()
+	build_sound.bus = "SFX"
+	build_sound.stream = preload("res://audio/guild_build.wav")
+	add_child(build_sound)
 	music = GuildMusic.new()
 	add_child(music)
 	music.setup(float(prefs.music_volume))
@@ -258,7 +270,7 @@ func _apply_audio():
 func play_sound(kind: String = "click"):
 	if not prefs.sounds:
 		return
-	var path = "res://audio/guild_" + kind + ".wav"
+	var path = "res://audio/wooden_click.mp3" if kind == "wooden_click" else "res://audio/guild_" + kind + ".wav"
 	if ResourceLoader.exists(path):
 		sound.stream = load(path)
 		sound.play()
@@ -267,6 +279,10 @@ func stop_audio():
 	if is_instance_valid(sound):
 		sound.stop()
 		sound.stream = null
+	if is_instance_valid(coin_sound):
+		coin_sound.stop()
+	if is_instance_valid(build_sound):
+		build_sound.stop()
 	if is_instance_valid(voice):
 		voice.stop()
 	if is_instance_valid(music):
@@ -325,6 +341,7 @@ func _render():
 		toaster.hide_final()
 		last_phase = ""
 		last_feedback = -1
+		action_sound_played = false
 		last_round = -1
 		last_action_count = -1
 		feedback_scope = ""
@@ -379,6 +396,37 @@ func _render_game(root: Control):
 	else:
 		table_screen = GuildScreens.table(self, root)
 
+func _on_game_snapshot(previous_game: Dictionary, starting_game: bool) -> void:
+	var game = session.game
+	if game.is_empty() or (previous_game.is_empty() and not starting_game):
+		action_sound_played = false
+		return
+	if not prefs.sounds or session.role != "player" or previous_game.get("phase") == "face":
+		return
+	# On a shared device, settlement may already have moved the view to the next seat.
+	var seat_id = session.player_id
+	if session.local_mode and previous_game.get("view_player") != null:
+		seat_id = int(previous_game.view_player)
+	var previous_player := {}
+	for player in previous_game.get("players", []):
+		if int(player.id) == seat_id:
+			previous_player = player
+			break
+	for player in game.get("players", []):
+		if int(player.id) != seat_id:
+			continue
+		var balance = int(player.get("gold", 0))
+		var previous_balance = int(previous_player.get("gold", 0 if starting_game else balance))
+		# A card can reward this player even when its cost exceeds the gold gained.
+		var card_reward = not previous_player.is_empty() and int(player.get("card_coin_serial", 0)) > int(previous_player.get("card_coin_serial", 0))
+		if balance > previous_balance or card_reward:
+			coin_sound.play()
+			action_sound_played = true
+		if not previous_player.is_empty() and int(player.get("build_serial", 0)) > int(previous_player.get("build_serial", 0)):
+			build_sound.play()
+			action_sound_played = true
+		break
+
 func _sync_game_feedback():
 	var game = session.game
 	var phase = game.get("phase", "")
@@ -389,21 +437,24 @@ func _sync_game_feedback():
 	var actions = int(game.get("action_count", 0))
 	var was_scope = feedback_scope
 	var was_phase = last_phase
-	if not was_phase.is_empty() and was_scope == scope:
+	if not was_phase.is_empty() and was_phase != "face" and was_scope == scope:
 		if phase == "final" and was_phase != "final":
 			play_sound("final")
 			toaster.show_final()
 		elif phase == "face" and was_phase != "face":
 			show_toast("请选择看板娘的白面或黑面。")
 		elif last_feedback != event_id:
-			play_sound(feedback.get("kind", "card"))
+			var kind = feedback.get("kind", "card")
+			if kind != "coin":
+				play_sound(kind)
 			show_toast(feedback.get("message", ""))
 		elif was_phase != phase or last_round != round_number:
 			play_sound("season")
-		elif last_action_count != actions:
+		elif last_action_count != actions and not action_sound_played:
 			play_sound("card")
 	feedback_scope = scope
 	last_feedback = event_id
+	action_sound_played = false
 	last_phase = phase
 	last_round = round_number
 	last_action_count = actions

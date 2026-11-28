@@ -21,7 +21,7 @@ def install(ns):
         upgrade2=steps(dict(op='pay_effect',costs=dict(str_pro=1),effect=dict(gold_pro=6))),
         upgrade3=steps(dict(op='screenshot_sif_income')),
         description='每打出没有标记的事件，获得3金币。二级：可将力量产能降低1，使金币产能增加6。三级：每3张已打出的无标记事件，或每个人物标记，获得2金币。')
-    add('sif_revised_black','希芙','black',gold=35,gold_pro=19,points=3,
+    add('sif_revised_black','希芙','black',gold=35,gold_pro=19,str_pro=1,strength=1,points=3,
         ability=steps(dict(op='consume_tiles',min=1,max=1,per=dict(strength=3)),dict(op='screenshot_recall',optional=True)),
         upgrade2=steps(dict(op='screenshot_sif_blank',optional=True)),
         upgrade3=dict(scaled=[dict(resource='strength',stat='controlled',per=2,multiplier=1)]),

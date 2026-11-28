@@ -55,8 +55,10 @@ def restore(engine, player_id, action):
     if restored.get('pending'):
         restored['pending']['id'] = restored['choice_serial']
     restored.pop('feedback', None)
+    if 'card_coin_serial' in current:
+        restored['card_coin_serial'] = current['card_coin_serial']
     for old, live in zip(restored['players'], current['players']):
-        for key in ('connected', 'withdrawn', 'timeout_round'):
+        for key in ('connected', 'withdrawn', 'timeout_round', 'card_coin_serial', 'build_serial'):
             if key in live:
                 old[key] = live[key]
     clock = deepcopy(current.get('_clock'))

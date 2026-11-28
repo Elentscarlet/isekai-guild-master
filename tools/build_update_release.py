@@ -8,8 +8,8 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
-from PIL import Image
 
 ROOT=Path(__file__).resolve().parents[1]
 SRC=ROOT/'GuildMaster-Godot-src';PACK=ROOT/'GuildMaster-Godot';SERVER=ROOT/'guild-server'
@@ -30,22 +30,56 @@ def files(folder):
         if path.name=='.gdignore' or path.suffix in ('.pyc','.pyo','.import'):continue
         yield path
 
-def manifest(folder):
+def package_files(folder, exclude=()):
+    excluded = {'tools', 'replays', 'downloads', 'replay-cache', *exclude}
+    for path in files(folder):
+        if excluded.isdisjoint(path.relative_to(folder).parts):
+            yield path
+
+def build_info(hashes):
     data=dict(version=VERSION,revision=REVISION,upstream='cat90132-beep/isekai-guild-master@refactor',
-              files={p.relative_to(folder).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in files(folder) if p.name!='BUILD_INFO.json' and not any(k in p.relative_to(folder).parts for k in ('tools','replays','downloads','replay-cache'))})
+              files=hashes)
     voice=json.loads((ROOT/'docs/VOICE_VALIDATION.json').read_text('utf8'))
     data['voice_validation']={k:v for k,v in voice.items() if k!='files'}
-    (folder/'BUILD_INFO.json').write_text(json.dumps(data,ensure_ascii=False,indent=2),'utf8')
+    return json.dumps(data,ensure_ascii=False,indent=2)
 
-def package(folder,target):
-    with zipfile.ZipFile(target,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as archive:
-        for path in files(folder):
-            if any(k in path.relative_to(folder).parts for k in ('tools','replays','downloads','replay-cache')):continue
-            archive.write(path,folder.name+'/'+path.relative_to(folder).as_posix())
-    with zipfile.ZipFile(target) as archive:assert archive.testzip() is None
-    return dict(name=target.name,size_bytes=target.stat().st_size,sha256=hashlib.sha256(target.read_bytes()).hexdigest())
+def manifest(folder):
+    hashes = {path.relative_to(folder).as_posix(): hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in package_files(folder) if path.name != 'BUILD_INFO.json'}
+    (folder/'BUILD_INFO.json').write_text(build_info(hashes),'utf8')
+
+def package(folder, target, *, exclude=(), refresh_manifest=False):
+    with tempfile.NamedTemporaryFile(dir=target.parent, suffix='.zip', delete=False) as pending:
+        temporary = Path(pending.name)
+    try:
+        with zipfile.ZipFile(temporary, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+            hashes = {}
+            for path in package_files(folder, exclude):
+                relative = path.relative_to(folder).as_posix()
+                name = f'{folder.name}/{relative}'
+                if not refresh_manifest:
+                    archive.write(path, name)
+                elif relative != 'BUILD_INFO.json':
+                    content = path.read_bytes()
+                    entry = zipfile.ZipInfo.from_file(path, name)
+                    archive.writestr(entry, content, zipfile.ZIP_DEFLATED, compresslevel=6)
+                    hashes[relative] = hashlib.sha256(content).hexdigest()
+            if refresh_manifest:
+                archive.writestr(f'{folder.name}/BUILD_INFO.json', build_info(hashes))
+        with zipfile.ZipFile(temporary) as archive:
+            corrupt = archive.testzip()
+            if corrupt is not None:
+                raise RuntimeError(f'ZIP integrity check failed: {corrupt}')
+        artifact = dict(name=target.name, size_bytes=temporary.stat().st_size,
+                        sha256=hashlib.sha256(temporary.read_bytes()).hexdigest())
+        temporary.replace(target)
+        return artifact
+    finally:
+        temporary.unlink(missing_ok=True)
 
 def main():
+    from PIL import Image
+
     parser=argparse.ArgumentParser();parser.add_argument('--skip-export',action='store_true');parser.add_argument('--server-only',action='store_true');args=parser.parse_args()
     from validate_voice_assets import validate
     validate()

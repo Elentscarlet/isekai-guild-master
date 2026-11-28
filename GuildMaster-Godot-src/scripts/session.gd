@@ -2,6 +2,7 @@ class_name GuildSession
 extends Node
 
 signal changed
+signal snapshot_received(previous_game: Dictionary, starting_game: bool)
 signal notice(message: String)
 signal connected
 
@@ -284,8 +285,13 @@ func _receive(message: Dictionary):
 			player_id = int(message.get("player_id", -1)) if message.get("player_id") != null else -1
 			role = message.get("role", "player");resume_token = message.get("resume_token", "");room_id = message.get("room_id", "")
 		"snapshot":
+			var next_room: Dictionary = message.get("room") if message.get("room") is Dictionary else {}
+			var same_room = synchronized and room.get("id", room_id) == next_room.get("id", room_id)
+			var previous_game = game if same_room else {}
+			var starting_game = same_room and previous_game.is_empty() and not room.is_empty() and not local_mode and (
+				not room.get("started", false) and not room.get("drafting", false))
 			synchronized = true
-			room = message.get("room") if message.get("room") is Dictionary else {}
+			room = next_room
 			game = message.get("game") if message.get("game") is Dictionary else {}
 			if local_mode and not game.is_empty() and game.get("view_player") != null:
 				player_id = int(game.view_player)
@@ -294,6 +300,7 @@ func _receive(message: Dictionary):
 				if seat.is_empty() or seat.get("hero_chosen", false) or not room.get("hero_offers", []).has(selected_character):
 					selected_character = ""
 					pending_character = ""
+			snapshot_received.emit(previous_game, starting_game)
 		"left_room":
 			selected_character = ""
 			pending_character = ""
